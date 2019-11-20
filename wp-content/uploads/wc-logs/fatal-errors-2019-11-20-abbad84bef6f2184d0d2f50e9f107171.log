@@ -1,0 +1,24 @@
+2019-11-20T02:59:51+00:00 CRITICAL syntax error, unexpected '?', expecting end of file en /home/vagrant/code/analogo2/wp-content/themes/semantic/header.php en la línea 121
+
+2019-11-20T03:40:53+00:00 CRITICAL Uncaught Error: Call to undefined function get_post_thumbnail_url() in /home/vagrant/code/analogo2/wp-content/themes/semantic/search.php:16
+Stack trace:
+#0 /home/vagrant/code/analogo2/wp-includes/template-loader.php(78): include()
+#1 /home/vagrant/code/analogo2/wp-blog-header.php(19): require_once('/home/vagrant/c...')
+#2 /home/vagrant/code/analogo2/index.php(17): require('/home/vagrant/c...')
+#3 {main}
+  thrown en /home/vagrant/code/analogo2/wp-content/themes/semantic/search.php en la línea 16
+
+2019-11-20T03:55:32+00:00 CRITICAL syntax error, unexpected 'have_posts' (T_STRING), expecting '(' en /home/vagrant/code/analogo2/wp-content/themes/semantic/search.php en la línea 10
+
+2019-11-20T03:56:05+00:00 CRITICAL syntax error, unexpected 'have_posts' (T_STRING), expecting '(' en /home/vagrant/code/analogo2/wp-content/themes/semantic/search.php en la línea 10
+
+2019-11-20T03:56:38+00:00 CRITICAL syntax error, unexpected 'have_posts' (T_STRING), expecting '(' en /home/vagrant/code/analogo2/wp-content/themes/semantic/search.php en la línea 10
+
+2019-11-20T04:03:14+00:00 CRITICAL syntax error, unexpected '$text' (T_VARIABLE), expecting ')' en /home/vagrant/code/analogo2/wp-content/themes/semantic/search.php en la línea 24
+
+2019-11-20T04:55:36+00:00 CRITICAL Cannot use empty array elements in arrays en /home/vagrant/code/analogo2/wp-content/themes/semantic/functions.php en la línea 38
+
+2019-11-20T04:55:59+00:00 CRITICAL Cannot use empty array elements in arrays en /home/vagrant/code/analogo2/wp-content/themes/semantic/functions.php en la línea 38
+
+2019-11-20T04:56:06+00:00 CRITICAL Cannot use empty array elements in arrays en /home/vagrant/code/analogo2/wp-content/themes/semantic/functions.php en la línea 39
+

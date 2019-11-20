@@ -13,18 +13,8 @@
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 	<script src="<?php bloginfo('stylesheet_directory'); ?>/css/semantic.js"></script>
-		<?php if (is_front_page()):?>
-		<script type="text/javascript">
-		$(function(){
-				var images = $('.carousel'),
-						 imgIx = 0;
-
-				(function nextImage(){
-						$(images[imgIx++] || images[imgIx = 0, imgIx++]).fadeIn(1000).delay(4000).fadeOut(1000, nextImage);
-				})();
-		});
-		</script>
-		<?php endif;?>
+	<script type="text/javascript">var site_url= "<?php echo get_site_url(); ?>"</script>
+	<script type="text/javascript" src="<?php bloginfo('stylesheet_directory'); ?>/js/functions.js"/>
    <?php if(is_single()||is_page()):?>
     	<meta property="og:title" content="<?php echo the_title(); ?>"/>
 	    <title><?php echo the_title(); ?></title>
@@ -46,28 +36,28 @@
  		<?php elseif(is_front_page()) :?>
 			<title><?php bloginfo('name'); ?></title>
 			<meta property="og:title" content="<?php bloginfo('name'); ?>"/>
-      <meta property="og:description" content="El Centro de Capacitación Ocupacional José Pedro Varela es creado para atender a personas que tienen grandes necesidades de educarse para más tarde emplearse de manera práctica y rápida; de modo que esta opción brinda una ocupación certificada en un año de estudios."/>
+      <meta property="og:description" content="La Venganza del Análogo"/>
 	    <meta property="og:type" content="article"/>
-	    <meta property="og:url" content="http://www.ccjpv.com"/>
+	    <meta property="og:url" content="<?php echo site_url(); ?>"/>
 	    <meta property="og:site_name" content="<?php echo get_bloginfo(); ?>"/>
 	    <meta name="twitter:card" content="summary" />
 	    <meta name="twitter:site" content="@ccjpv" />
 	    <meta name="twitter:title" content="<?php bloginfo('name'); ?>" />
-	    <meta name="twitter:text:description" content="El Centro de Capacitación Ocupacional José Pedro Varela es creado para atender a personas que tienen grandes necesidades de educarse para más tarde emplearse de manera práctica y rápida; de modo que esta opción brinda una ocupación certificada en un año de estudios." />
+	    <meta name="twitter:text:description" content="La Venganza del Análogo" />
       <meta property="og:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg"/>
 		 	<meta name="twitter:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg" />
 
 		<?php else :?>
 			<title><?php bloginfo('name'); ?></title>
 			<meta property="og:title" content="<?php bloginfo('name'); ?>"/>
-      <meta property="og:description" content="Centro de Capacitación José Pedro Varela"/>
+      <meta property="og:description" content="La Venganza del Análogo"/>
 	    <meta property="og:type" content="article"/>
 	    <meta property="og:url" content="<?php echo the_permalink(); ?>"/>
 	    <meta property="og:site_name" content="<?php echo get_bloginfo(); ?>"/>
 	    <meta name="twitter:card" content="summary" />
 	    <meta name="twitter:site" content="@ccjpv" />
 	    <meta name="twitter:title" content="<?php bloginfo('name'); ?>" />
-	    <meta name="twitter:text:description" content="Centro de Capacitación José Pedro Varela" />
+	    <meta name="twitter:text:description" content="La Venganza del Análogo" />
       <meta property="og:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg"/>
 		 	<meta name="twitter:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg" />
     <?php endif;
@@ -100,7 +90,7 @@
 				<?php
 				$items = wp_get_nav_menu_items ('Main Menu');
 				$item_number_array = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']; ?>
-				<div class="ui stackable <?php echo $item_number_array[count($items)]; ?> item inverted menu">
+				<div class="ui top attached <?php echo $item_number_array[count($items)]; ?> inverted menu">
 					<!-- ITEMS -->
 
 					<?php
@@ -109,15 +99,25 @@
 							<a class="item" href="<?php echo $item->url?>" id="menu<?php echo $item->ID;?>"><?php echo $item->title?></a>
 						<?php }?>
 					<?php endforeach;?>
+						<div class="right menu">
 							<a class="item" href="<?php echo wc_get_cart_url(); ?>" title="Ver carrito">
 								<i class="cart large icon"></i>
 								<?php
 									$cart_item_number = WC()->cart->get_cart_contents_count();
 									if ($cart_item_number):
 								?>
-								<div class="floating ui red label"><?php echo $cart_item_number ?></div>
-							<?php endif; ?>
+									<div class="floating ui red label"><?php echo $cart_item_number ?></div>
+								<?php endif; ?>
 							</a>
+							<div class="item">
+								<div class="ui action input">
+									<input id="search_input" name="s" type="text" placeholder="Buscar..." data-content="Ingresa lo que quieres encontrar en nuestra tienda">
+									<button id="search_button" class="ui blue icon button" type="submit">
+										<i class="search icon"></i>
+									</button>
+								</div>
+							</div>
+						</div>
 				</div>
 			</nav>
 		</div>

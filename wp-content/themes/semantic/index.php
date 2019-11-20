@@ -61,7 +61,7 @@ $(function(){
 		</div><br>
 
 		<div class="ui segment">
-			<h2 class="ui dividing header">Noticias</h2>
+			<h2 class="ui dividing header">Posts</h2>
 			<div class="ui stackable four column grid">
 				<?php foreach ($ultimos as $post):?>
 					<div class="column">
@@ -78,33 +78,5 @@ $(function(){
 				$eventos_request = file_get_contents("http://matriculas.ccjpv.com/api/evento/obtenerUltimosEventos");
 				$eventos = json_decode($eventos_request);
 			?>
-		<div class="ui segment">
-			<h2 class="ui dividing header">Cursos</h2>
-			<div class="ui stackable four column grid">
-				<?php foreach ($eventos as $evento):?>
-					<div class="column">
-						<a href="<?php echo $evento->url;?>" class="ui fluid image">
-							<img src="<?php echo $evento->imagenEvento?>">
-							<div class="ui pink right ribbon label">
-              <i class="dollar sign icon"></i> <?php echo number_format($evento->costoEvento, 2) ?>
-            </div>
-						</a>
-						<br>
-						<a href="<?php echo $evento->url;?>" class= "ui teal sub header" style="font-size:14px;">
-							<?php echo $evento->tituloEvento;?>
-						</a>
-						<div>
-							<strong>Empieza: </strong><br /><?php echo $evento->fechaInicioEvento ?><br/>
-							<strong>Termina: </strong><br /><?php echo $evento->fechaFinEvento ?><br>
-						</div>
-						<div>
-							<strong>Descripción:</strong><br />
-							<?php echo substr ($evento->descripcionEvento, 0, strpos( $evento->descripcionEvento, '</p>' ) + 4) ?>
-						</div>
-						<a class="ui teal right floated basic button" href="<?php echo $evento->url ?>">Ver más</a>
-					</div>
-				<?php endforeach;?>
-			</div>
-		</div>
 	</div>
 <?php get_footer(); ?>

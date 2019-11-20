@@ -4,7 +4,7 @@ get_header();
 ?>
 
 <div class="ui container">
-	<div class="ui segment">
+	<div class="ui segment" style="margin-top: 2vh">
 		<?php
 		// Start the Loop.
 		while ( have_posts() ) : the_post();?>
@@ -29,5 +29,5 @@ get_header();
 
 
 <?php
-get_footer(); 
+get_footer();
 ?>

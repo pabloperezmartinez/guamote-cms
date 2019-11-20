@@ -10,7 +10,7 @@ $slider = get_posts( $args );
 get_header();
 ?>
   <div class="ui container">
-    <div class="ui segment">
+    <div class="ui segment" style="margin-top: 2vh;">
       <?php woocommerce_content(); ?>
     </div>
   </div>
