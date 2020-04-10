@@ -1,4 +1,7 @@
 <?php
+
+use Automattic\Jetpack\Status;
+
 /**
  * This is the base class for every Core API endpoint Jetpack uses.
  *
@@ -196,7 +199,7 @@ class Jetpack_Core_API_Module_List_Endpoint {
 			if (
 				isset( $modules[ $slug ]['requires_connection'] )
 				&& $modules[ $slug ]['requires_connection']
-				&& Jetpack::is_development_mode()
+				&& ( new Status() )->is_development_mode()
 			) {
 				$modules[ $slug ]['activated'] = false;
 			}
@@ -363,7 +366,7 @@ class Jetpack_Core_API_Data extends Jetpack_Core_API_XMLRPC_Consumer_Endpoint {
 			if (
 				isset( $module['requires_connection'] )
 				&& $module['requires_connection']
-				&& Jetpack::is_development_mode()
+				&& ( new Status() )->is_development_mode()
 			) {
 				$module['activated'] = false;
 			}
@@ -461,6 +464,11 @@ class Jetpack_Core_API_Data extends Jetpack_Core_API_XMLRPC_Consumer_Endpoint {
 						'installWooCommerce' => is_plugin_active( 'woocommerce/woocommerce.php' ),
 						'stats' => Jetpack::is_active() && Jetpack::is_module_active( 'stats' ),
 					);
+					break;
+
+				case 'search_auto_config':
+					// Only writable.
+					$response[ $setting ] = 1;
 					break;
 
 				default:
@@ -737,6 +745,24 @@ class Jetpack_Core_API_Data extends Jetpack_Core_API_XMLRPC_Consumer_Endpoint {
 
 					// If option value was the same, consider it done.
 					$updated = $grouped_options_current != $grouped_options ? Jetpack_Options::update_option( 'relatedposts', $grouped_options ) : true;
+					break;
+
+				case 'search_auto_config':
+					if ( ! $value ) {
+						$updated = true;
+					} elseif ( class_exists( 'Jetpack_Search' ) ) {
+						$jps = Jetpack_Search::instance();
+						if ( is_a( $jps, 'Jetpack_Instant_Search' ) ) {
+							$jps->auto_config_search();
+							$updated = true;
+						} else {
+							$updated = new WP_Error( 'instant_search_disabled', 'Instant Search Disabled', array( 'status' => 400 ) );
+							$error   = $updated->get_error_message();
+						}
+					} else {
+						$updated = new WP_Error( 'search_disabled', 'Search Disabled', array( 'status' => 400 ) );
+						$error   = $updated->get_error_message();
+					}
 					break;
 
 				case 'google':
@@ -1643,7 +1669,8 @@ class Jetpack_Core_API_Module_Data_Endpoint {
 				'code'    => 'success',
 				'message' => esc_html(
 					sprintf(
-						__( 'Your site was successfully backed-up %s ago.', 'jetpack' ),
+						/* translators: placeholder is a unit of time (1 hour, 5 days, ...) */
+						esc_html__( 'Your site was successfully backed up %s ago.', 'jetpack' ),
 						human_time_diff(
 							$data->backups->last_backup,
 							current_time( 'timestamp' )
