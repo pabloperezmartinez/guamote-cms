@@ -87,9 +87,17 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
 
         // see if we have a session id and a campaign id, also only do this when this user is not the admin.
         $campaign_id = $this->getCampaignTrackingID();
+        if (empty($campaign_id)) {
+            $campaign_id =  get_post_meta($order_id, 'mailchimp_woocommerce_campaign_id', true);
+            if (!$campaign_id) $campaign = null;
+        }
 
         // grab the landing site cookie if we have one here.
         $landing_site = $this->getLandingSiteCookie();
+        if (empty($landing_site)) {
+            $landing_site =  get_post_meta($order_id, 'mailchimp_woocommerce_landing_site', true);
+            if (!$landing_site) $campaign = null;
+        }
 
         // expire the landing site cookie so we can rinse and repeat tracking
         $this->expireLandingSiteCookie();
@@ -114,11 +122,13 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
         $tracking = null;
         $newOrder = false;
 
-        if ("pending" == $old_status && "processing" == $new_status) {
+        if ("pending" == $old_status && ("processing" == $new_status || "completed" == $new_status)) {
             $tracking = $this->onNewOrder($order_id);
             $newOrder = true;
         }
-        
+
+        mailchimp_log('debug', "Order ID {$order_id} was {$old_status} and is now {$new_status}", array('new_order' => $newOrder, 'tracking' => $tracking));
+
         $this->onOrderSave($order_id, $tracking, $newOrder);
     }
 
@@ -133,6 +143,12 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
         // queue up the single order to be processed.
         $campaign_id = isset($tracking) && isset($tracking['campaign_id']) ? $tracking['campaign_id'] : null;
         $landing_site = isset($tracking) && isset($tracking['landing_site']) ? $tracking['landing_site'] : null;
+
+        if (isset($tracking)) {
+            // update the post meta with campaing tracking details for future sync
+            update_post_meta($order_id, 'mailchimp_woocommerce_campaign_id', $campaign_id);
+            update_post_meta($order_id, 'mailchimp_woocommerce_landing_site', $landing_site);
+        }
 
         $handler = new MailChimp_WooCommerce_Single_Order($order_id, null, $campaign_id, $landing_site);
         $handler->is_update = $newOrder ? !$newOrder : null;
@@ -270,7 +286,8 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
             if ('product' == $post->post_type) {
                 mailchimp_handle_or_queue(new MailChimp_WooCommerce_Single_Product($post_id), 5);
             } elseif ('shop_order' == $post->post_type) {
-                $this->onOrderSave($post_id);
+                $tracking = $this->onNewOrder($post_id);
+                $this->onOrderSave($post_id, $tracking, !$update);
             }
         }
     }
@@ -341,7 +358,7 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
         update_user_meta($user_id, 'mailchimp_woocommerce_is_subscribed', $subscribed);
 
         if ($subscribed) {
-            mailchimp_handle_or_queue(new MailChimp_WooCommerce_User_Submit($user_id, $subscribed));
+            mailchimp_handle_or_queue(new MailChimp_WooCommerce_User_Submit($user_id, $subscribed, null, substr( get_locale(), 0, 2 )));
         }
     }
 
@@ -360,7 +377,7 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
         if ($is_subscribed === '' || $is_subscribed === null) return;
 
         // only send this update if the user actually has a boolean value.
-        mailchimp_handle_or_queue(new MailChimp_WooCommerce_User_Submit($user_id, (bool) $is_subscribed, $old_user_data));
+        mailchimp_handle_or_queue(new MailChimp_WooCommerce_User_Submit($user_id, (bool) $is_subscribed, $old_user_data, substr( get_locale(), 0, 2 )));
     }
 
     /**
@@ -456,12 +473,12 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
             }
         }
 
-        if (isset($_REQUEST['mc_cid'])) {
-            $this->setCampaignTrackingID($_REQUEST['mc_cid'], $cookie_duration);
+        if (isset($_GET['mc_cid'])) {
+            $this->setCampaignTrackingID($_GET['mc_cid'], $cookie_duration);
         }
 
-        if (isset($_REQUEST['mc_eid'])) {
-            @setcookie('mailchimp_email_id', trim($_REQUEST['mc_eid']), $cookie_duration, '/' );
+        if (isset($_GET['mc_eid'])) {
+            @setcookie('mailchimp_email_id', trim($_GET['mc_eid']), $cookie_duration, '/' );
         }
     }
 
@@ -472,7 +489,7 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
     {
         $cookie = $this->cookie('mailchimp_campaign_id', false);
         if (empty($cookie)) {
-            $cookie = $this->getWooSession('mailchimp_tracking_id', false);
+            $cookie = $this->getWooSession('mailchimp_campaign_id', false);
         }
 
         return $cookie;
@@ -803,8 +820,16 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
         exit;
     }
 
-    public function mailchimp_process_single_job($obj_id) {
+    /**
+     * @param null $obj_id
+     * @return bool
+     */
+    public function mailchimp_process_single_job($obj_id = null) {
         try {
+            // not sure why this is happening - but we need to prepare for it and return false when it does.
+            if (empty($obj_id)) {
+                return false;
+            }
             // get job row from db
             global $wpdb;
             $sql = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}mailchimp_jobs	WHERE obj_id = %s", $obj_id );
@@ -818,19 +843,19 @@ class MailChimp_Service extends MailChimp_WooCommerce_Options
             $job = unserialize($job_row->job);
             
             $job_id =$job_row->id;
-            
+
             // process job
             //mailchimp_debug('action_scheduler.process_job', get_class($job) . ' :: obj_id '.$job->id);
             $job->handle();
-    
+            
             // delete processed job
             $sql = $wpdb->prepare("DELETE FROM {$wpdb->prefix}mailchimp_jobs WHERE id = %s AND obj_id = %s", array($job_id, $obj_id));
             $wpdb->query($sql);
             
         } catch (\Exception $e) {
-            mailchimp_debug('action_scheduler.process_job.fail', get_class($job) . ' :: obj_id '.$obj_id, $e->message);
+            $message = !empty($e->getMessage()) ? ' - ' . $e->getMessage() :'';
+            mailchimp_debug('action_scheduler.process_job.fail', get_class($job) . ' :: obj_id '.$obj_id . ' :: ' .get_class($e) . $message);
         }
         return true;
     }
-
 }

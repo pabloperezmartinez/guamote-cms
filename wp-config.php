@@ -16,16 +16,16 @@
 
 // ** Ajustes de MySQL. Solicita estos datos a tu proveedor de alojamiento web. ** //
 /** El nombre de tu base de datos de WordPress */
-define( 'DB_NAME', 'analogo2' );
+define( 'DB_NAME', 'analogo' );
 
 /** Tu nombre de usuario de MySQL */
-define( 'DB_USER', 'homestead' );
+define( 'DB_USER', 'root' );
 
 /** Tu contraseña de MySQL */
-define( 'DB_PASSWORD', 'secret' );
+define( 'DB_PASSWORD', 'root' );
 
 /** Host de MySQL (es muy probable que no necesites cambiarlo) */
-define( 'DB_HOST', 'localhost' );
+define( 'DB_HOST', 'db' );
 
 /** Codificación de caracteres para la base de datos. */
 define( 'DB_CHARSET', 'utf8mb4' );
@@ -79,4 +79,3 @@ if ( !defined('ABSPATH') )
 
 /** Sets up WordPress vars and included files. */
 require_once(ABSPATH . 'wp-settings.php');
-

@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - ./mysql-dump:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: analogo
+      MYSQL_USER: analogo
+      MYSQL_PASSWORD: analogo
+      MYSQL_ROOT_PASSWORD: root
+
+  web:
+    build: .
+    command: php -S 0.0.0.0:8000 -t /code
+    domainname: venganza-analogo.test
+    ports:
+      - "80:8000"
+    links:
+      - db
+    volumes:
+      - .:/code
+    depends_on:
+      - db
