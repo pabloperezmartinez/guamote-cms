@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the WordPress - 5.4.x - Development package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-04-02 14:28:19+0000\n"
+"PO-Revision-Date: 2020-04-16 08:11:26+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1742,7 +1742,7 @@ msgstr "Añadido:"
 msgid "Whether posts of this status may have floating published dates."
 msgstr "Si las entradas de este estado pueden tener fechas de publicación variables."
 
-#: wp-includes/rest-api/endpoints/class-wp-rest-revisions-controller.php:392
+#: wp-includes/rest-api/endpoints/class-wp-rest-revisions-controller.php:415
 msgid "Sorry, you are not allowed to delete revisions of this post."
 msgstr "Lo siento, no tienes permiso para borrar las revisiones de esta entrada."
 
@@ -11131,7 +11131,7 @@ msgstr "Original: %s"
 
 #: wp-includes/customize/class-wp-customize-nav-menu-item-control.php:133
 msgid "The description will be displayed in the menu if the current theme supports it."
-msgstr "La descripción se mostrará en los menús si el tema actual lo soporta."
+msgstr "La descripción se mostrará en el menú si el tema actual lo permite."
 
 #: wp-includes/customize/class-wp-customize-nav-menu-item-control.php:125
 msgid "Link Relationship (XFN)"
@@ -11793,7 +11793,7 @@ msgstr "Selección múltiple"
 
 #. translators: %s: Taxonomy label, %l: List of terms formatted as per
 #. $term_template.
-#: wp-includes/taxonomy.php:4341
+#: wp-includes/taxonomy.php:4343
 msgid "%s: %l."
 msgstr "%s: %l."
 
@@ -15581,7 +15581,7 @@ msgstr "Falta la hoja de estilo."
 msgid "The parent theme is missing. Please install the \"%s\" parent theme."
 msgstr "No encontramos el tema principal. Por favor, instala el tema principal «%s»."
 
-#: wp-includes/taxonomy.php:4414
+#: wp-includes/taxonomy.php:4416
 msgid "Invalid object ID."
 msgstr "ID de objeto no válido."
 

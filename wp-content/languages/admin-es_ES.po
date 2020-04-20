@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the WordPress - 5.4.x - Development - Administration package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-04-01 23:53:07+0000\n"
+"PO-Revision-Date: 2020-04-17 07:21:46+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -457,7 +457,7 @@ msgstr "<a href=\"https://wordpress.org/support/article/appearance-widgets-scree
 
 #: wp-admin/import.php:31
 msgid "<a href=\"https://wordpress.org/support/article/tools-import-screen/\">Documentation on Import</a>"
-msgstr "<a href=\"https://wordpress.org/support/article/tools-import-screen/\">Documentación sobre como importar</a>"
+msgstr "<a href=\"https://wordpress.org/support/article/tools-import-screen/\">Documentación sobre cómo importar</a>"
 
 #: wp-admin/tools.php:55
 msgid "<a href=\"https://wordpress.org/support/article/tools-screen/\">Documentation on Tools</a>"
@@ -1061,7 +1061,7 @@ msgstr "Pruebas completadas"
 
 #: wp-admin/site-health.php:20
 msgid "Sorry, you are not allowed to access site health information."
-msgstr "Lo sentimos. No tienes acceso a la información de salud de tu sitio."
+msgstr "Lo siento, no tienes permiso para acceder a la información de salud de tu sitio."
 
 #: wp-admin/site-health-info.php:100
 msgid "Copy site info to clipboard"
@@ -3973,7 +3973,7 @@ msgstr "Tus cambios programados recién publicados"
 
 #: wp-admin/options-discussion.php:54
 msgid "Allow link notifications from other blogs (pingbacks and trackbacks) on new posts"
-msgstr "Permitir avisos de enlaces desde otros blogs (pingbacks y trackbacks) en las nuevas entradas."
+msgstr "Permitir avisos de enlaces de otros blogs (pingbacks y trackbacks) en las nuevas entradas"
 
 #: wp-admin/includes/class-wp-media-list-table.php:228
 msgid "No media files found."
@@ -4223,7 +4223,7 @@ msgstr "Buscar plugins por:"
 
 #: wp-admin/includes/import.php:227
 msgid "Import posts, pages, comments, custom fields, categories, and tags from a WordPress export file."
-msgstr "Importar entradas, páginas, comentarios, campos personalizados, categorías y etiquetas de un archivo de exportación de WordPress."
+msgstr "Importa entradas, páginas, comentarios, campos personalizados, categorías y etiquetas de un archivo de exportación de WordPress."
 
 #: wp-admin/includes/import.php:221
 msgid "Import posts &amp; media from Tumblr using their API."
@@ -4231,15 +4231,15 @@ msgstr "Importa entradas y medios de Tumblr usando su API."
 
 #: wp-admin/includes/import.php:215
 msgid "Import posts from an RSS feed."
-msgstr "Importar entradas de un feed RSS."
+msgstr "Importa entradas de un feed RSS."
 
 #: wp-admin/includes/import.php:209
 msgid "Import posts and comments from a Movable Type or TypePad blog."
-msgstr "Importar entradas y comentarios de un blog Movable Type o TypePad."
+msgstr "Importa entradas y comentarios de un blog Movable Type o TypePad."
 
 #: wp-admin/includes/import.php:203
 msgid "Import posts from LiveJournal using their API."
-msgstr "Importar entradas de LiveJournal usando su API."
+msgstr "Importa entradas de LiveJournal usando su API."
 
 #: wp-admin/includes/import.php:197
 msgid "Convert existing categories to tags or tags to categories, selectively."
@@ -4857,7 +4857,7 @@ msgstr "Ayuda para escalar imágenes"
 
 #: wp-admin/includes/file.php:37
 msgid "Single Page"
-msgstr "Página simple"
+msgstr "Página individual"
 
 #: wp-admin/includes/file.php:35
 msgid "Singular Template"
@@ -5140,7 +5140,7 @@ msgstr "El tema no tiene la hoja de estilos %s."
 
 #: wp-admin/theme-install.php:195
 msgid "If you have marked themes as favorites on WordPress.org, you can browse them here."
-msgstr "Si has marcado temas como favoritos en WordPress.org podrás verlos aquí."
+msgstr "Si has marcado temas como favoritos en WordPress.org, podrás verlos aquí."
 
 #: wp-admin/theme-install.php:178
 msgctxt "themes"
@@ -5847,7 +5847,7 @@ msgctxt "Active plugin installations"
 msgid "%s+ Million"
 msgid_plural "%s+ Million"
 msgstr[0] "%s+ millón"
-msgstr[1] "%s+ millón"
+msgstr[1] "%s+ millones"
 
 #. translators: 1: Error message, 2: Line number.
 #: wp-admin/link-parse-opml.php:89
@@ -7786,7 +7786,7 @@ msgstr "Depende de los motores de búsqueda atender esta petición o no."
 #: wp-admin/options-reading.php:184 wp-admin/options-reading.php:204
 #: wp-admin/install.php:193 wp-admin/install.php:201
 msgid "Discourage search engines from indexing this site"
-msgstr "Disuade a los motores de búsqueda de indexar este sitio"
+msgstr "Disuadir a los motores de búsqueda de indexar este sitio"
 
 #: wp-admin/options-reading.php:182 wp-admin/install.php:191
 msgid "Allow search engines to index this site"
@@ -7813,7 +7813,7 @@ msgstr "Tu nombre de usuario en WordPress.org"
 
 #: wp-admin/includes/plugin-install.php:370
 msgid "If you have marked plugins as favorites on WordPress.org, you can browse them here."
-msgstr "Si has marcado plugins cómo favoritos en WordPress.org, puedes verlos aquí."
+msgstr "Si has marcado plugins como favoritos en WordPress.org, podrás verlos aquí."
 
 #: wp-admin/includes/dashboard.php:1907
 msgid "View your site"
@@ -7851,7 +7851,7 @@ msgstr "o <a href=\"%s\">cambia tu tema por completo</a>"
 
 #: wp-admin/includes/dashboard.php:1878
 msgid "Get Started"
-msgstr "Comienza"
+msgstr "Primeros pasos"
 
 #: wp-admin/includes/dashboard.php:1874
 msgid "We&#8217;ve assembled some links to get you started:"
@@ -8117,7 +8117,7 @@ msgstr "https://es.wordpress.org/about/"
 #: wp-admin/update-core.php:325 wp-admin/update-core.php:433
 #: wp-admin/update-core.php:475 wp-admin/update-core.php:515
 msgid "Select All"
-msgstr "Seleccionar todos"
+msgstr "Seleccionar todo"
 
 #: wp-admin/includes/media.php:1385 wp-admin/includes/media.php:2956
 msgid "Enter a link URL or click above for presets."
@@ -8228,7 +8228,7 @@ msgstr "Texto de cabecera"
 #: wp-admin/includes/theme.php:231 wp-admin/includes/update.php:493
 #: wp-admin/includes/update.php:678
 msgid "There is a new version of %1$s available. <a href=\"%2$s\" %3$s>View version %4$s details</a> or <a href=\"%5$s\" %6$s>update now</a>."
-msgstr "Hay disponible una nueva versión de %1$s. <a href=\"%2$s\" %3$s>Revisa los detalles de la versión %4$s</a> o <a href=\"%5$s\" %6$s>actualízala ahora</a>."
+msgstr "Hay disponible una nueva versión de %1$s. <a href=\"%2$s\" %3$s>Revisa los detalles de la versión %4$s</a> o <a href=\"%5$s\" %6$s>actualízalo ahora</a>."
 
 #. translators: %s: Plugin author.
 #: wp-admin/includes/plugin.php:214
@@ -10090,7 +10090,7 @@ msgstr "Las cajas para el nombre del enlace, dirección web y descripción tiene
 
 #: wp-admin/update-core.php:255
 msgid "An updated version of WordPress is available."
-msgstr "Hay disponible una nueva versión actualizada de WordPress."
+msgstr "Está disponible una versión actualizada de WordPress."
 
 #: wp-admin/update-core.php:451
 msgid "Your themes are all up to date."
@@ -10106,7 +10106,7 @@ msgstr "Tus plugins están actualizados."
 
 #: wp-admin/update-core.php:278
 msgid "While your site is being updated, it will be in maintenance mode. As soon as your updates are complete, your site will return to normal."
-msgstr "Mientras se actualiza tu sitio, permanecerá en modo mantenimiento. Tan pronto como finalicen las actualizaciones, tu sitio volverá a su estado normal."
+msgstr "Tu sitio permanecerá en modo mantenimiento mientras que se actualiza. Volverá a su estado normal en cuanto terminen las actualizaciones."
 
 #: wp-admin/theme-editor.php:169 wp-admin/plugin-editor.php:169
 msgid "Function Name&hellip;"
@@ -11203,7 +11203,7 @@ msgstr "Comparar revisiones de &#171;%s&#187;"
 
 #: wp-admin/post.php:143
 msgid "You can&#8217;t edit this item because it is in the Trash. Please restore it and try again."
-msgstr "No puedes editar esto ya que está en la Papelera. Sácala de la Papelera e inténtalo de nuevo."
+msgstr "No puedes editar este elemento ya que está en la papelera. Restáuralo e inténtalo de nuevo."
 
 #: wp-admin/edit-tags.php:173 wp-admin/includes/post.php:1947
 #: wp-admin/includes/class-wp-screen.php:295 wp-admin/async-upload.php:49
@@ -11642,7 +11642,7 @@ msgstr "Lista negra de comentarios"
 
 #: wp-admin/options-discussion.php:200
 msgid "When a comment contains any of these words in its content, name, URL, email, or IP address, it will be held in the <a href=\"edit-comments.php?comment_status=moderated\">moderation queue</a>. One word or IP address per line. It will match inside words, so &#8220;press&#8221; will match &#8220;WordPress&#8221;."
-msgstr "Cuando un comentario contiene alguna de estas palabras en su contenido, nombre, URL, correo electrónico o IP se mantendrá en la <a href=\"edit-comments.php?comment_status=moderated\">cola de moderación</a>. Pon una palabra o dirección IP por línea. También afectará a las palabras contenidas dentro de otras, como «press», que está dentro de «WordPress»"
+msgstr "Cuando un comentario contiene alguna de estas palabras en su contenido, nombre, URL, correo electrónico o IP se mantendrá en la <a href=\"edit-comments.php?comment_status=moderated\">cola de moderación</a>. Pon una palabra o dirección IP por línea. También afectará a las palabras contenidas dentro de otras, como «press», que está dentro de «WordPress»."
 
 #. translators: %s: Number of links.
 #: wp-admin/options-discussion.php:194
@@ -11690,7 +11690,7 @@ msgstr "más antiguos"
 #. page, 2: Form field control for the 'first' or 'last' page.
 #: wp-admin/options-discussion.php:138
 msgid "Break comments into pages with %1$s top level comments per page and the %2$s page displayed by default"
-msgstr "Separa los comentarios en páginas de %1$s comentarios por página y se muestra la %2$s página por defecto"
+msgstr "Separar los comentarios en páginas de %1$s comentarios por página y mostrar la %2$s página por defecto"
 
 #: wp-admin/options-discussion.php:135
 msgid "first"
@@ -11724,7 +11724,7 @@ msgstr "Otros ajustes de comentarios"
 
 #: wp-admin/options-discussion.php:60
 msgid "These settings may be overridden for individual posts."
-msgstr "Estos ajustes pueden ser anulados en las entradas individuales."
+msgstr "Estos ajustes pueden ser anulados en las entradas individuales"
 
 #: wp-admin/edit-form-advanced.php:401 wp-admin/options-discussion.php:15
 msgid "Discussion Settings"
@@ -11819,7 +11819,7 @@ msgstr "Estás intentando editar un adjunto que no existe. ¿Lo has borrado?"
 
 #: wp-admin/media.php:23 wp-admin/media.php:61
 msgid "Sorry, you are not allowed to edit this attachment."
-msgstr "Lo siento, no tienes permisos para editar este adjunto."
+msgstr "Lo siento, no tienes permiso para editar este adjunto."
 
 #: wp-admin/media-new.php:42
 msgid "Upload New Media"
@@ -12280,11 +12280,11 @@ msgstr "Borrador automático"
 
 #: wp-admin/includes/post.php:36 wp-admin/includes/post.php:81
 msgid "Sorry, you are not allowed to edit posts as this user."
-msgstr "Lo siento, no tienes permisos para editar entradas con este usuario."
+msgstr "Lo siento, no tienes permiso para editar entradas con este usuario."
 
 #: wp-admin/includes/post.php:34 wp-admin/includes/post.php:79
 msgid "Sorry, you are not allowed to edit pages as this user."
-msgstr "Lo siento, no tienes permisos para editar páginas con este nombre de usuario."
+msgstr "Lo siento, no tienes permisos para editar páginas con este usuario."
 
 #: wp-admin/includes/plugin.php:1097
 msgid "The plugin does not have a valid header."
@@ -13094,7 +13094,7 @@ msgstr "De %1$s en %2$s%3$s"
 #: wp-admin/includes/dashboard.php:734
 msgctxt "verb"
 msgid "Trash"
-msgstr "Enviar a la Papelera"
+msgstr "Enviar a la papelera"
 
 #: wp-admin/includes/class-wp-comments-list-table.php:706
 #: wp-admin/includes/dashboard.php:733
@@ -13504,7 +13504,7 @@ msgstr[1] "%s entradas actualizadas."
 #: wp-admin/edit-tags.php:117 wp-admin/post.php:309 wp-admin/themes.php:63
 #: wp-admin/upload.php:191 wp-admin/edit.php:156
 msgid "Sorry, you are not allowed to delete this item."
-msgstr "Lo siento, no tienes permisos para borrar este elemento."
+msgstr "Lo siento, no tienes permiso para borrar este elemento."
 
 #: wp-admin/includes/edit-tag-messages.php:19
 msgid "Items deleted."
@@ -13820,7 +13820,7 @@ msgstr "Este comentario está en la papelera. Por favor, sácalo de la papelera 
 #: wp-admin/includes/comment.php:52 wp-admin/comment.php:271
 #: wp-admin/edit-comments.php:253
 msgid "Sorry, you are not allowed to edit comments on this post."
-msgstr "Lo siento, no tienes permisos para editar comentarios en esta entrada."
+msgstr "Lo siento, no tienes permiso para editar comentarios en esta entrada."
 
 #: wp-admin/includes/template.php:451 wp-admin/comment.php:42
 #: wp-admin/edit-form-comment.php:17
