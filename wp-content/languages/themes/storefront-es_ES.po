@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the Themes - Storefront package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-04-13 13:34:51+0000\n"
+"PO-Revision-Date: 2020-04-22 08:36:05+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -116,7 +116,7 @@ msgstr "Siguiente:"
 
 #: inc/woocommerce/class-storefront-woocommerce-customizer.php:94
 msgid "Displays next and previous links on product pages. A product thumbnail is displayed with the title revealed on hover."
-msgstr "Muestra enlaces anterior y siguiente en las páginas de producto. Se muestra una miniatura del producto cuando se muestra el título al pasar el cursor."
+msgstr "Muestra los enlaces «Anterior» y «Siguiente» en las páginas del producto. Se muestra una miniatura del producto con el título al pasar el cursor."
 
 #: inc/woocommerce/class-storefront-woocommerce-customizer.php:93
 msgid "Product Pagination"
@@ -323,7 +323,7 @@ msgstr "Elige tu color de énfasis"
 
 #: inc/nux/class-storefront-nux-guided-tour.php:119
 msgid "Open the Site Identity Panel, then click the 'Select Logo' button to upload your logo."
-msgstr "Abre el panel de identidad del sitio, luego haz clic en el botón «Seleccionar logo»  para subir tu logotipo."
+msgstr "Abre el panel de identidad del sitio y, a continuación, haz clic en el botón «Seleccionar el logotipo» para subir tu logotipo."
 
 #. translators: %s: 'End Of Line' symbol
 #: inc/nux/class-storefront-nux-guided-tour.php:111
