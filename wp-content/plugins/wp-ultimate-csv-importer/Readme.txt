@@ -2,8 +2,8 @@
 Contributors: smackcoders, smacksupport
 Requires at least: 5.0 
 Tested up to: 5.3.2
-Stable tag: 6.1.3
-Version: 6.1.3
+Stable tag: 6.1.4
+Version: 6.1.4
 Requires PHP: 5.2.4
 Author: smackcoders
 Author URI: http://profiles.wordpress.org/smackcoders/
@@ -178,6 +178,11 @@ Import to WordPress done in different methods based on content source type, plat
 
 
 == Changelog ==
+= 6.1.4 =
+* Added: Support for widgets import(Posts,Pages,Comments,Categories and Archives).
+* Added: Seperate Media Handling Section.
+* Fixed: CSV Headers with whitespace issue.
+
 = 6.1.3 = 
 * Fixed: BBPress Import issues.
 * Added: Support for navigation menus.
@@ -618,6 +623,8 @@ Import to WordPress done in different methods based on content source type, plat
 * Initial release version. Tested and found works well without any issues.
 
 == Upgrade Notice ==
+= 6.1.4 =
+* Added: Upgrade now for latest updates.
 = 6.1.3 =
 * Added: Upgrade now for latest updates.
 = 6.1.2 =

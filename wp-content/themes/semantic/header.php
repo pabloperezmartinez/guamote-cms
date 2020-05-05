@@ -77,20 +77,20 @@
 
 <body>
 	<header>
-		<div class="ui inverted segment" style="border-radius: 0px; margin:0px;">
+		<div class="ui orange inverted segment" style="border-radius: 0px; margin:0px;">
 			<br>
 			<div class="ui container">
 
-						<img src="<?php bloginfo('stylesheet_directory'); ?>/img/logo_analogo_header.png" class="ui medium centered image"><br>
+						<img src="<?php bloginfo('stylesheet_directory'); ?>/img/lava-vect.svg" class="ui large centered image"><br>
 
 			</div>
 		</div>
-		<div class="ui inverted segment" style="border-radius: 0px; padding: 4px; margin-bottom:0vh; margin-top:0px;">
+		<div class="ui orange inverted segment" style="border-radius: 0px; padding: 4px; margin-bottom:0vh; margin-top:0px;">
 			<nav class="ui container">
 				<?php
 				$items = wp_get_nav_menu_items ('Main Menu');
 				$item_number_array = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']; ?>
-				<div class="ui top attached <?php echo $item_number_array[count($items)]; ?> inverted menu">
+				<div class="ui top attached <?php echo $item_number_array[count($items)]; ?> orange inverted menu">
 					<!-- ITEMS -->
 
 					<?php
@@ -112,7 +112,7 @@
 							<div class="item">
 								<div class="ui action input">
 									<input id="search_input" name="s" type="text" placeholder="Buscar..." data-content="Ingresa lo que quieres encontrar en nuestra tienda">
-									<button id="search_button" class="ui blue icon button" type="submit">
+									<button id="search_button" class="ui orange icon button" type="submit">
 										<i class="search icon"></i>
 									</button>
 								</div>
@@ -166,13 +166,14 @@
 			}
 		endforeach ?>
 	</header>
+	<!-- **********		Slider	************-->
 	<?php if (is_front_page()):?>
 	<div id="slider" style = "overflow: hidden;">
 		<?php foreach ($slider as $post):?>
 			<div class = "ui fluid image carousel" style = "display: none;">
-				<div class="ui inverted bottom fixed segment" style = "position: absolute;
+				<div class="ui orange bottom fixed segment" style = "position: absolute;
 					bottom: 10px; right: 10px; opacity: 0.8; border-radius: 0px;">
-					<h3 class="ui red dividing header"><?php echo $post->post_title;?></h3>
+					<h3 class="ui orange dividing header"><?php echo $post->post_title;?></h3>
 					<div ><?php echo $post->post_content?></div>
 				</div>
 				<img src="<?php echo wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'single-post-thumbnail' )[0];?>"/>

@@ -115,7 +115,7 @@ class Tables {
 			`line_number` int(6) NOT NULL) "
 				);
 
-		$import_records_table = "smackuci_events";
+		$import_records_table = $wpdb->prefix ."smackuci_events";
 		$wpdb->query("CREATE TABLE IF NOT EXISTS $import_records_table (
 			`id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 			`revision` bigint(20) NOT NULL default 0,

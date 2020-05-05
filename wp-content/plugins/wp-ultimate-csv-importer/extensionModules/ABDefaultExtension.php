@@ -32,7 +32,7 @@ class DefaultExtension extends ExtensionHandler{
 		$import_type = $this->import_name_as($import_types);
 		$response = [];
 		$check_custpost = array('Posts' => 'post', 'Pages' => 'page', 'Users' => 'users', 'Comments' => 'comments', 'CustomerReviews' =>'wpcr3_review', 'Categories' => 'categories', 'Tags' => 'tags', 'eShop' => 'post', 'WooCommerce' => 'product', 'WPeCommerce' => 'wpsc-product','WPeCommerceCoupons' => 'wpsc-product', 'WooCommerceVariations' => 'product', 'WooCommerceOrders' => 'product', 'WooCommerceCoupons' => 'product', 'WooCommerceRefunds' => 'product', 'CustomPosts' => 'CustomPosts');	
-		if ($import_type != 'Users' && $import_type != 'Taxonomies' && $import_type != 'CustomerReviews' && $import_type != 'Comments' && $import_type != 'WooCommerceVariations' && $import_type != 'WooCommerceOrders' && $import_type != 'WooCommerceCoupons' && $import_type != 'WooCommerceRefunds' && $import_type != 'Images' && $import_type != 'ngg_pictures' && $import_types != 'lp_order' && $import_types != 'nav_menu_item') {
+		if ($import_type != 'Users' && $import_type != 'Taxonomies' && $import_type != 'CustomerReviews' && $import_type != 'Comments' && $import_type != 'WooCommerceVariations' && $import_type != 'WooCommerceOrders' && $import_type != 'WooCommerceCoupons' && $import_type != 'WooCommerceRefunds' && $import_type != 'Images' && $import_type != 'ngg_pictures' && $import_types != 'lp_order' && $import_types != 'nav_menu_item' && $import_types != 'widgets') {
 			$wordpressfields = array(
                 	'Title' => 'post_title',
                     'ID' => 'ID',
@@ -107,6 +107,16 @@ class DefaultExtension extends ExtensionHandler{
 			foreach($get_navigation_locations as $nav_key => $nav_values){
 				$wordpressfields[$nav_key] = $nav_key;
 			}
+		}
+
+		if($import_types == 'widgets') {
+			$wordpressfields = array(
+				'Recent Posts'   => 'widget_recent-posts',
+				'Pages'          => 'widget_pages',
+				'Recent Comments'=> 'widget_recent-comments',
+				'Archieves' => 'widget_archives',
+				'Categories'     => 'widget_categories'
+			);
 		}
 		
 		if($import_type === 'Categories') {

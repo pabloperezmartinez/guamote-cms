@@ -65,7 +65,8 @@ class DragandDropExtension {
 		while (($data = fgetcsv($h, 0, $delimiters[$array_index])) !== FALSE) 
 		{		
 			// Read the data from a single line
-			array_push($info , $data);
+			$trimmed_info = array_map('trim', $data);
+			array_push($info , $trimmed_info);
 			if($line_number == 0){
                 $Headers = $info[$line_number];
             }else{
@@ -162,7 +163,8 @@ class DragandDropExtension {
                     }
                     while (($data = fgetcsv($h, 0, $delimiters[$array_index])) !== FALSE) 
                     {		
-                        array_push($info , $data);
+                        $trimmed_info = array_map('trim', $data);
+                        array_push($info , $trimmed_info);
                         if($line_number == 0){
                             $Headers = $info[$line_number];
                         }else{

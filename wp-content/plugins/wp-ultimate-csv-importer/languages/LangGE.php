@@ -113,6 +113,8 @@ class LangGE {
                 'Width' => 'Breite',
                 'Height' => 'Höhe',
                 'Addcustomsizes' => 'Fügen Sie benutzerdefinierte Größen hinzu',
+                'PostContentImageOption' => 'Bildoptionen für Inhalte veröffentlichen',
+                'DownloadPostContentExternalImagestoMedia' => 'Laden Sie PostContentExternalImagestoMedia herunter',
                 'MediaSEOAdvancedOptions' => 'Media SEO & erweiterte Optionen',
                 'SetimageTitle' => 'Bildtitel einstellen',
                 'SetimageCaption' => 'Legen Sie die Bildunterschrift fest',

@@ -121,6 +121,8 @@ class LangES
                         'Width' => 'Anchura',
                         'Height' => 'Altura',
                         'Addcustomsizes' => 'Agregar tamaños personalizados',
+                        'PostContentImageOption' => 'Opciones de imagen de contenido de publicación',
+                        'DownloadPostContentExternalImagestoMedia' => 'Descargar PostContentExternalImagestoMedia',
                         'MediaSEOAdvancedOptions' => 'SEO de medios y opciones avanzadas',
                         'SetimageTitle' => 'Establecer título de imagen',
                         'SetimageCaption' => 'Establecer título de imagen',

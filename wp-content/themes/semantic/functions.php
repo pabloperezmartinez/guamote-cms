@@ -99,4 +99,10 @@ function save_label_name( $post_id ) {
 	}
 
 add_action( 'woocommerce_process_product_meta', 'save_label_name' );
+
+function semantic_add_woocommerce_support() {
+    add_theme_support( 'woocommerce' );
+}
+
+add_action( 'after_setup_theme', 'semantic_add_woocommerce_support' );
 ?>

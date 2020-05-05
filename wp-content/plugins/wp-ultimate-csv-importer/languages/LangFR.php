@@ -113,6 +113,8 @@ class LangFR {
                         'Width' => 'Largeur',
                         'Height' => 'la taille',
                         'Addcustomsizes' => 'Ajouter des tailles personnalisées',
+                        'PostContentImageOption' => 'Options image de contenu de publication',
+                        'DownloadPostContentExternalImagestoMedia' => 'Télécharger le contenu externe ImagestoMedia',
                         'MediaSEOAdvancedOptions' => 'Media SEO & Options avancées',
                         'SetimageTitle' => "Définir le titre de l'image",
                         'SetimageCaption' => "Définir la légende de l'image",

@@ -220,4 +220,88 @@ class CommentsImport {
 			}
 		}
 
+
+		public function widget_import_function($post_values , $mode ,$hash_key , $line_number){
+			
+				foreach($post_values as $post_widget_key => $post_widget_value){
+					if(!empty($post_widget_value)){
+						$get_widget_id = explode('widget_', $post_widget_key);
+						$get_total_posts = explode('|', $post_widget_value);
+						foreach($get_total_posts as $per_post){
+
+							$get_post_footer = explode('->', $per_post);
+							$post_footer_number = $get_post_footer[1];
+							$sidebar = 'sidebar-'.$post_footer_number;
+
+							$get_post_details = explode(',', $get_post_footer[0]);
+							
+							$widget_data = [];
+
+							if($post_widget_key == 'widget_recent-posts'){
+								$widget_data['title'] = $get_post_details[0];
+								$widget_data['number'] = $get_post_details[1];
+								$widget_data['show_date'] = $get_post_details[2];
+							}
+							elseif($post_widget_key == 'widget_pages'){
+								$widget_data['title'] = $get_post_details[0];
+								$widget_data['sortby'] = $get_post_details[1];
+
+								$exclude_ids = str_replace('/', ',', $get_post_details[2]);
+								$widget_data['exclude'] = $exclude_ids;
+							}
+							elseif($post_widget_key == 'widget_recent-comments'){
+								$widget_data['title'] = $get_post_details[0];
+								$widget_data['number'] = $get_post_details[1];
+							}
+							elseif($post_widget_key == 'widget_archives'){
+								$widget_data['title'] = $get_post_details[0];
+								$widget_data['count'] = $get_post_details[1];
+								$widget_data['dropdown'] = $get_post_details[2];
+							}
+							elseif($post_widget_key == 'widget_categories'){
+								$widget_data['title'] = $get_post_details[0];
+								$widget_data['count'] = $get_post_details[1];
+								$widget_data['hierarchical'] = $get_post_details[2];
+								$widget_data['dropdown'] = $get_post_details[3];
+							}
+
+							$this->insert_widget_in_sidebar( $get_widget_id[1], $widget_data, $sidebar );
+						}	
+					}
+				}
+		}
+
+		public function insert_widget_in_sidebar( $widget_id, $widget_data, $sidebar ) {
+			// Retrieve sidebars, widgets and their instances
+			$sidebars_widgets = get_option( 'sidebars_widgets', array() );
+			$widget_instances = get_option( 'widget_' . $widget_id, array() );
+		
+			// Retrieve the key of the next widget instance
+			$numeric_keys = array_filter( array_keys( $widget_instances ), 'is_int' );
+			//$next_key = $numeric_keys ? max( $numeric_keys ) + 1 : 2;
+		
+			if((count($numeric_keys) == 1) && (empty($widget_instances[$numeric_keys[0]]['title']))){
+				$next_key = $numeric_keys[0];
+			}else{
+				$next_key = max( $numeric_keys ) + 1;
+			}
+			
+		
+			// Add this widget to the sidebar
+			if ( ! isset( $sidebars_widgets[ $sidebar ] ) ) {
+				$sidebars_widgets[ $sidebar ] = array();
+			}
+
+			$sidebar_key_id = $widget_id . '-' . $next_key;
+			if(!in_array($sidebar_key_id, $sidebars_widgets[ $sidebar ])){
+				$sidebars_widgets[ $sidebar ][] = $sidebar_key_id;
+			}
+		
+			// Add the new widget instance
+			$widget_instances[ $next_key ] = $widget_data;
+		
+			// Store updated sidebars, widgets and their instances
+			update_option( 'sidebars_widgets', $sidebars_widgets );
+			update_option( 'widget_' . $widget_id, $widget_instances );
+		}
 }

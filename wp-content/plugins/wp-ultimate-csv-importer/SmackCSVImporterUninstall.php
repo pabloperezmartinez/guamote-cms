@@ -51,7 +51,7 @@ class SmackUCIUnInstall {
 			$tables[] = "drop table {$prefix}ultimate_csv_importer_media";
 			$tables[] = "drop table {$prefix}ultimate_csv_importer_shortcode_manager";
 			$tables[] = "drop table {$prefix}import_postID";
-			$tables[] = "drop table smackuci_events";
+			$tables[] = "drop table {$prefix}smackuci_events";
 			$tables[] = "drop table smack_field_types";
 			$tables[] = "drop table {$prefix}ultimate_csv_importer_acf_fields";
 

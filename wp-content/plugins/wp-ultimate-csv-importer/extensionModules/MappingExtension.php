@@ -8,7 +8,7 @@
 namespace Smackcoders\FCSV;
 
 if ( ! defined( 'ABSPATH' ) )
-exit; // Exit if accessed directly
+	exit; // Exit if accessed directly
 
 class MappingExtension{
 	private static $instance = null;
@@ -18,7 +18,7 @@ class MappingExtension{
 	private function __construct(){
 		$plugin_pages = ['com.smackcoders.csvimporternew.menu'];
 		global $plugin_ajax_hooks;
-		
+
 		$request_page = isset($_REQUEST['page']) ? $_REQUEST['page'] : '';
 		$request_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 		if (in_array($request_page, $plugin_pages) || in_array($request_action, $plugin_ajax_hooks)) {
@@ -42,10 +42,10 @@ class MappingExtension{
 	}
 
 	/**
-	* Ajax Call 
-	* Provides all Widget Fields for Mapping Section
-	* @return array - mapping fields
-	*/
+	 * Ajax Call 
+	 * Provides all Widget Fields for Mapping Section
+	 * @return array - mapping fields
+	 */
 	public function mapping_field_function(){
 
 		$import_type = $_POST['Types'];
@@ -63,18 +63,20 @@ class MappingExtension{
 		$get_result = $wpdb->get_results("SELECT file_name FROM $table_name WHERE hash_key = '$hash_key' ");
 		$filename = $get_result[0]->file_name;
 		$file_extension = pathinfo($filename, PATHINFO_EXTENSION);
-
+		if(empty($file_extension)){
+			$file_extension = 'xml';
+		}
 		$template_table_name = $wpdb->prefix."ultimate_csv_importer_mappingtemplate";
-			$smackcsv_instance = SmackCSV::getInstance();
-			$upload_dir = $smackcsv_instance->create_upload_dir();
-			$response = [];
-			if($file_extension == 'csv' || $file_extension == 'txt'){
+		$smackcsv_instance = SmackCSV::getInstance();
+		$upload_dir = $smackcsv_instance->create_upload_dir();
+		$response = [];
+		if($file_extension == 'csv' || $file_extension == 'txt'){
 			ini_set("auto_detect_line_endings", true);
 			$info = [];
 			if (($h = fopen($upload_dir.$hash_key.'/'.$hash_key, "r")) !== FALSE) 
 			{
-			// Convert each line into the local $data variable
-			
+				// Convert each line into the local $data variable
+
 				$delimiters = array( ',','\t',';','|',':','&nbsp');
 				$file_path = $upload_dir . $hash_key . '/' . $hash_key;
 				$delimiter = MappingExtension::$validatefile->getFileDelimiter($file_path, 5);
@@ -84,9 +86,10 @@ class MappingExtension{
 				}
 				while (($data = fgetcsv($h, 0, $delimiters[$array_index])) !== FALSE) 
 				{		
-				// Read the data from a single line
-				array_push($info , $data);
-				$exp_line = $info[0];
+					// Read the data from a single line
+					$trimmed_info = array_map('trim', $data);
+					array_push($info , $trimmed_info);
+					$exp_line = $info[0];
 
 					$response['success'] = true;
 					$response['show_template'] = false;
@@ -96,9 +99,9 @@ class MappingExtension{
 					$response['fields'] = $value;
 					echo wp_json_encode($response);
 					wp_die();  			
-			}	
-			// Close the file
-			fclose($h);
+				}	
+				// Close the file
+				fclose($h);
 			}
 		}
 		if($file_extension == 'xml'){
@@ -112,7 +115,7 @@ class MappingExtension{
 
 			$xml = simplexml_load_file($path);
 			$xml_arr = json_decode( json_encode($xml) , 1);
-			
+
 			foreach($xml->children() as $child){   
 				$child_name = $child->getName();    
 			}
@@ -139,19 +142,19 @@ class MappingExtension{
 	}
 
 	/**
-	* Provides active plugins
-	* @return array - active plugins
-	*/
+	 * Provides active plugins
+	 * @return array - active plugins
+	 */
 	public function get_active_plugins() {
 		$active_plugins = get_option('active_plugins');
 		return $active_plugins;
 	}
 
 	/**
-	* Ajax Call 
-	* Provides all Widget Fields for Export Section
-	* @return array - mapping fields
-	*/
+	 * Ajax Call 
+	 * Provides all Widget Fields for Export Section
+	 * @return array - mapping fields
+	 */
 	public function get_export_fields(){
 		$import_type = $_POST['Types'];
 		$response = [];
@@ -159,15 +162,15 @@ class MappingExtension{
 		$value = $this->mapping_fields($import_type);
 		$response['success'] = true;
 		$response['fields'] = $value;
-	
+
 		echo wp_json_encode($response);
 		wp_die();  
 	}
 
 	/**
-	* Provides all Widget Fields for Export Section
-	* @return array - mapping fields
-	*/
+	 * Provides all Widget Fields for Export Section
+	 * @return array - mapping fields
+	 */
 	public function get_fields($module){ 
 		$import_type = $module;
 		$response = [];

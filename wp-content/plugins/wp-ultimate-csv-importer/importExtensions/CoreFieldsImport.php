@@ -44,7 +44,7 @@ class CoreFieldsImport {
 endif;
 		}
 
-		if(($type == 'WooCommerce Product') || ($type == 'Categories') || ($type == 'Tags') || ($type == 'Taxonomies') || ($type == 'Comments') || ($type == 'Users') || ($type == 'Customer Reviews') || ($type == 'lp_order') || ($type == 'nav_menu_item')){
+		if(($type == 'WooCommerce Product') || ($type == 'Categories') || ($type == 'Tags') || ($type == 'Taxonomies') || ($type == 'Comments') || ($type == 'Users') || ($type == 'Customer Reviews') || ($type == 'lp_order') || ($type == 'nav_menu_item') || ($type == 'widgets')){
 
 			$comments_instance = CommentsImport::getInstance();
 			$customer_reviews_instance = CustomerReviewsImport::getInstance();
@@ -71,6 +71,9 @@ endif;
 			}
 			if($type == 'nav_menu_item'){
 				$comments_instance->menu_import_function($post_values , $mode ,$hash_key , $line_number);
+			}
+			if($type == 'widgets'){
+				$comments_instance->widget_import_function($post_values , $mode ,$hash_key , $line_number);
 			}
 
 			$last_import_id = isset($result['ID']) ? $result['ID'] : '';
@@ -214,7 +217,7 @@ endif;
 				}else{
 
 					$media_handle = get_option('smack_image_options');
-					if($media_handle['media_settings']['media_handle_option'] == 'true' && $media_handle['media_settings']['use_ExistingImage'] != 'true'){
+					if($media_handle['media_settings']['media_handle_option'] == 'true' && $media_handle['media_settings']['enable_postcontent_image'] == 'true'){
 						if(preg_match("/<img/", $post_values['post_content'])) {
 
 							$content = "<p>".$post_values['post_content']."</p>";
@@ -236,6 +239,13 @@ endif;
 									$temp_img = plugins_url("../assets/images/loading-image.jpg", __FILE__);
 									$searchNode->setAttribute( 'src', $temp_img);
 									//	$searchNode->setAttribute( 'alt', $shortcode_img );
+
+									$orig_img_alt = $searchNode->getAttribute( 'alt' );
+									if(!empty($orig_img_alt)){
+										$media_handle['postcontent_image_alt'] = $orig_img_alt;
+										update_option('smack_image_options', $media_handle);
+									}
+
 								}
 								$post_content              = $doc->saveHTML();
 								$post_values['post_content'] = $post_content;
@@ -262,7 +272,7 @@ endif;
 					
 					$fields = $wpdb->get_results("UPDATE $log_table_name SET created = $created_count WHERE hash_key = '$hash_key'");
 					if(preg_match("/<img/", $post_values['post_content'])) {
-
+				
 						$shortcode_table = $wpdb->prefix . "ultimate_csv_importer_shortcode_manager";
 						foreach ($orig_img_src as $img => $img_val){
 							$shortcode  = $shortcode_img[$img][$img];
@@ -385,6 +395,7 @@ endif;
 		foreach($orig_img_src as $src){
 			$attach_id[] = CoreFieldsImport::$media_instance->media_handling($src , $id ,$post_values,'',$image_type,'');	
 		}
+		
 		if(is_array($attach_id)){
 			foreach($attach_id as $att_key => $att_val){
 				$get_guid[] = $wpdb->get_results("SELECT `guid` FROM {$wpdb->prefix}posts WHERE post_type = 'attachment' and ID =  $att_val ",ARRAY_A);

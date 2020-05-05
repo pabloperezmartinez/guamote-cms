@@ -56,13 +56,13 @@ class Dashboard {
 			$year[$j]  = date("Y", strtotime( $today." -$i months"));
 			$j++;
 		}
-		$get_list_of_imported_types = $wpdb->get_col($wpdb->prepare("select distinct( import_type ) from smackuci_events", array()));
+		$get_list_of_imported_types = $wpdb->get_col($wpdb->prepare("SELECT distinct( import_type ) from {$wpdb->prefix}smackuci_events", array()));
 		foreach($get_list_of_imported_types as $import_type) {
 			
 			$data = array();
 			for($i = 0; $i <= 11; $i++) {
 				$count = 0;
-				$get_chart_data = $wpdb->get_results($wpdb->prepare( "select sum(created) as %s from smackuci_events where import_type = %s and month = %s and year = %d", $import_type, $import_type, $month[$i], $year[$i] ) );
+				$get_chart_data = $wpdb->get_results($wpdb->prepare( "SELECT sum(created) as %s from {$wpdb->prefix}smackuci_events where import_type = %s and month = %s and year = %d", $import_type, $import_type, $month[$i], $year[$i] ) );
 				
 				if($get_chart_data[0]->$import_type) {
 					$data[] = $get_chart_data[0]->$import_type;
@@ -102,10 +102,10 @@ class Dashboard {
 			$year[$j]  = date("Y", strtotime( $today." -$i months"));
 			$j++;
 		}
-		$get_list_of_imported_types = $wpdb->get_col($wpdb->prepare("select distinct( import_type ) from smackuci_events", array()));
+		$get_list_of_imported_types = $wpdb->get_col($wpdb->prepare("SELECT distinct( import_type ) from {$wpdb->prefix}smackuci_events", array()));
 		$count = 1;
 		foreach($get_list_of_imported_types as $import_type) {
-			$get_chart_data = $wpdb->get_results( $wpdb->prepare( "select sum(created) as %s from smackuci_events where import_type = %s", $import_type, $import_type ) );
+			$get_chart_data = $wpdb->get_results( $wpdb->prepare( "SELECT sum(created) as %s from {$wpdb->prefix}smackuci_events where import_type = %s", $import_type, $import_type ) );
 			if(array_key_exists($import_type,$available_types)){
 				$import_type_data = $available_types[$import_type];
 			} else {
@@ -143,12 +143,12 @@ class Dashboard {
 			$year[$j]  = date("Y", strtotime( $today." -$i months"));
 			$j++;
 		}
-		$get_list_of_imported_types = $wpdb->get_col($wpdb->prepare("select distinct( import_type ) from smackuci_events", array()));
+		$get_list_of_imported_types = $wpdb->get_col($wpdb->prepare("select distinct( import_type ) from {$wpdb->prefix}smackuci_events", array()));
         
         $count = 1;
 		foreach($get_list_of_imported_types as $import_type) {
             
-			$get_chart_data = $wpdb->get_results( $wpdb->prepare( "select sum(created) as created, sum(updated) as updated, sum(skipped) as skipped from smackuci_events where import_type = %s", $import_type, $import_type ) );
+			$get_chart_data = $wpdb->get_results( $wpdb->prepare( "SELECT sum(created) as created, sum(updated) as updated, sum(skipped) as skipped from {$wpdb->prefix}smackuci_events where import_type = %s", $import_type, $import_type ) );
             
             if(array_key_exists($import_type,$available_types)){
 				$import_type_data = $available_types[$import_type];

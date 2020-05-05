@@ -87,6 +87,9 @@ class ZipHandler {
             $c = count($get_file_name);
             $temp_file_name = $get_file_name[$c - 1];
             $file_extension = pathinfo($temp_file_name, PATHINFO_EXTENSION);
+            if(empty($file_extension)){
+                $file_extension = 'xml';
+            }
             $getFileRealPath = explode($get_upload_dirpath,$singleFile);
             $getFileRealPath = $get_upload_dirurl.$getFileRealPath[1];
             if($file_extension == 'csv' || $file_extension == 'xml' || $file_extension == 'txt')  {

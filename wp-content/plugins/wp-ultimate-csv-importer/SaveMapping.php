@@ -281,6 +281,9 @@ class SaveMapping{
 		$total_rows = $get_id[0]->total_rows;
 		$file_name = $get_id[0]->file_name;
 		$file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
+		if(empty($file_extension)){
+			$file_extension = 'xml';
+		}
 		$upload_dir = SaveMapping::$smackcsv_instance->create_upload_dir();
 		$file_size = filesize($upload_dir.$hash_key.'/'.$hash_key);
 		$filesize = $helpers_instance->formatSizeUnits($file_size);
@@ -316,7 +319,8 @@ class SaveMapping{
 					$delimiters[$array_index] = ' ';
 				}
 				while(($data = fgetcsv($h, 0, $delimiters[$array_index]))!== FALSE) {
-					array_push($info, $data);
+					$trimmed_info = array_map('trim', $data);
+					array_push($info , $trimmed_info);
 					if ($i == 0) {
 						$header_array = $info[$i];
 						$i++;
@@ -614,6 +618,9 @@ class SaveMapping{
 		$total_rows = $get_id[0]->total_rows;
 		$file_name = $get_id[0]->file_name;
 		$file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
+		if(empty($file_extension)){
+			$file_extension = 'xml';
+		}
 		$file_size = filesize($upload_dir.$hash_key.'/'.$hash_key);
 		$filesize = $helpers_instance->formatSizeUnits($file_size);
 

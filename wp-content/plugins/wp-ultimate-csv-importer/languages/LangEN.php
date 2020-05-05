@@ -116,6 +116,8 @@ class LangEN {
                         'Width' => 'Width',
                         'Height' => 'Height',
                         'Addcustomsizes' => 'Add custom sizes',
+                        'PostContentImageOption' => 'Post Content Image Option',
+                        'DownloadPostContentExternalImagestoMedia' => 'Download Post Content External Images to Media',
                         'MediaSEOAdvancedOptions' => 'Media SEO & Advanced Options',
                         'SetimageTitle' => 'Set image Title',
                         'SetimageCaption' => 'Set image Caption',

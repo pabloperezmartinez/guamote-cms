@@ -130,7 +130,7 @@ class LogManager {
 		$logInfo = [];
 		$value = [];
 
-		$logInformation = $wpdb->get_results("select *from smackuci_events order by id desc");
+		$logInformation = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}smackuci_events ORDER BY id DESC");
 		if(empty($logInformation)){
 			$response['success'] = false;
 			$response['message'] = "No logs Found";
@@ -176,7 +176,7 @@ class LogManager {
         $upload_url = $upload_dir . '/smack_uci_uploads/imports/';
         
         $upload_path = LogManager::$smack_csv_instance->create_upload_dir();
-		$get_event_key = $wpdb->get_results($wpdb->prepare("select eventKey from smackuci_events where revision = %d and original_file_name = %s", $revision , $filename));
+		$get_event_key = $wpdb->get_results($wpdb->prepare("SELECT eventKey FROM {$wpdb->prefix}smackuci_events WHERE revision = %d AND original_file_name = %s", $revision , $filename));
 		if(empty($get_event_key)) {
 			$response['success'] = false;
             $response['message'] = 'Log not exists';
@@ -220,14 +220,14 @@ class LogManager {
         $year = date("Y", strtotime($imported_on));
         $file_path = '/smack_uci_uploads/imports/' . $hash_key . '/' . $hash_key;
         
-        $get_name = $wpdb->get_results( "SELECT original_file_name FROM smackuci_events " );
+        $get_name = $wpdb->get_results( "SELECT original_file_name FROM {$wpdb->prefix}smackuci_events " );
 
         if(!empty($get_name)){
 			foreach($get_name as $name_values){
 				$inserted_name_values[] = $name_values->original_file_name;
             }
             if(in_array($file_name , $inserted_name_values)){
-                $get_revision = $wpdb->get_results( "SELECT revision FROM smackuci_events WHERE original_file_name = '$file_name' " );
+                $get_revision = $wpdb->get_results( "SELECT revision FROM {$wpdb->prefix}smackuci_events WHERE original_file_name = '$file_name' " );
 				foreach($get_revision as $value){
                     $last_version_id = $value->revision;
                 }
@@ -249,7 +249,8 @@ class LogManager {
 			$created_count = $get_data[0]->created;
 			$updated_count = $get_data[0]->updated;
 
-        $wpdb->insert('smackuci_events', array(
+		$smack_uci_table = $wpdb->prefix."smackuci_events";
+        $wpdb->insert($smack_uci_table, array(
             'revision' => $revision,
             'name' => "{$name}",
             'original_file_name' => "{$file_name}",

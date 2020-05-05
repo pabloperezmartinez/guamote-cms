@@ -32,6 +32,9 @@ class ValidateFile {
         $supported_file = array('csv' , 'xml', 'zip' , 'txt');
         $extension = explode(".", $filename);
         $file_extension = end($extension);
+        if(empty($file_extension)){
+            $file_extension = 'xml';
+        }
         if(!in_array($file_extension , $supported_file)){       
             $message = "Unsupported File Format";    
         }else{
