@@ -10,7 +10,7 @@ services:
       MYSQL_USER: analogo
       MYSQL_PASSWORD: analogo
       MYSQL_ROOT_PASSWORD: root
-
+#Web PHP
   web:
     build: .
     command: php -S 0.0.0.0:8000 -t /code
