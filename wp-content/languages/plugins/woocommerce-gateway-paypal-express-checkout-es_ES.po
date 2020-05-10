@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the Plugins - WooCommerce PayPal Checkout Payment Gateway - Stable (latest release) package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-04-14 07:39:16+0000\n"
+"PO-Revision-Date: 2020-04-25 13:14:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -83,7 +83,7 @@ msgstr "WooCommerce PayPal Checkout Gateway"
 
 #: includes/settings/settings-ppec.php:269
 msgid "Enable PayPal Checkout"
-msgstr "Activar PayPal Exprés"
+msgstr "Activar PayPal Checkout"
 
 #: includes/settings/settings-ppec.php:63
 msgid "This enables PayPal Credit, which displays a PayPal Credit button next to the primary PayPal Checkout button. PayPal Checkout lets you give customers access to financing through PayPal Credit® - at no additional cost to you. You get paid up front, even though customers have more time to pay. A pre-integrated payment button shows up next to the PayPal Button, and lets customers pay quickly with PayPal Credit®. (Should be unchecked for stores involved in Real Money Gaming.)"
@@ -324,7 +324,7 @@ msgstr "PayPal solo devuelve una dirección de envío al sitio. Para asegurar qu
 
 #: includes/settings/settings-ppec.php:657
 msgid "Enable PayPal Checkout on Single Product view."
-msgstr "Permite PayPal Exprés en la visualización de producto."
+msgstr "Activar PayPal Checkout en la página de producto individual."
 
 #: includes/settings/settings-ppec.php:651
 #: includes/settings/settings-ppec.php:654
@@ -337,7 +337,7 @@ msgstr "Esto muestra u oculta el botón de pago por PayPal Exprés en la página
 
 #: includes/settings/settings-ppec.php:614
 msgid "Enable PayPal Checkout on the cart page"
-msgstr "Permitir pago con PayPal Exprés en la página del carrito."
+msgstr "Activar PayPal Checkout en la página del carrito."
 
 #: includes/settings/settings-ppec.php:611
 msgid "Checkout on cart page"
@@ -414,7 +414,7 @@ msgstr "Pago a través de PayPal; puedes pagar con tu tarjeta incluso si no tien
 #: includes/settings/settings-ppec.php:58
 #: includes/settings/settings-ppec.php:592
 msgid "Enable PayPal Credit"
-msgstr "Habilitar crédito de PayPal"
+msgstr "Activar el crédito de PayPal"
 
 #. Translators: Placeholders are opening and closing link HTML tags.
 #: includes/settings/settings-ppec.php:51
@@ -674,7 +674,7 @@ msgstr "Esto permite la marca de PayPal, que puede mostrarse en la página de pa
 
 #: includes/settings/settings-ppec.php:686
 msgid "Enable the PayPal Mark on regular checkout"
-msgstr "Permite la marca de PayPal en la página de pago normal"
+msgstr "Activar la marca de PayPal en la página de pago normal"
 
 #: includes/settings/settings-ppec.php:683
 msgid "PayPal Mark"

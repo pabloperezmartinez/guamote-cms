@@ -2,13 +2,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-
 	<link rel="icon"
       type="image/png"
       href="<?php bloginfo('stylesheet_directory'); ?>/img/favicon.png">
-
-
 	<link rel="stylesheet" href="<?php bloginfo('stylesheet_directory'); ?>/css/semantic.css" type="text/css" media="screen" />
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
@@ -90,7 +86,7 @@
 				<?php
 				$items = wp_get_nav_menu_items ('Main Menu');
 				$item_number_array = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']; ?>
-				<div class="ui top attached <?php echo $item_number_array[count($items)]; ?> orange inverted menu">
+				<div class="ui top attached stackable <?php echo $item_number_array[count($items)]; ?> orange inverted menu">
 					<!-- ITEMS -->
 
 					<?php
