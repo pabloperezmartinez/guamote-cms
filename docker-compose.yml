@@ -24,6 +24,7 @@ services:
     volumes:
       - .:/code
       - ./php-settings:/usr/local/etc/php/conf.d
+      - ./apache-conf/vhost.conf:/etc/apache2/sites-enabled/000-default.conf
     environment:
       PHP_MEMORY_LIMIT: 2048M
     depends_on:
