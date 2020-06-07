@@ -1,0 +1,115 @@
+# Translation of Plugins - Import and Export WordPress Data as CSV or XML - Stable (latest release) in Spanish (Spain)
+# This file is distributed under the same license as the Plugins - Import and Export WordPress Data as CSV or XML - Stable (latest release) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2020-02-18 20:26:38+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: GlotPress/2.4.0-alpha\n"
+"Language: es\n"
+"Project-Id-Version: Plugins - Import and Export WordPress Data as CSV or XML - Stable (latest release)\n"
+
+#: wp-ultimate-csv-importer.php:361
+msgid "Maintenance Mode"
+msgstr "Modo de mantenimiento"
+
+#: SmackCSVImporterInstall.php:232
+msgid "Please install CURL & enable it in your server. "
+msgstr "Por favor, instala CURL y actívalo en tu servidor."
+
+#: SmackCSVImporterInstall.php:245
+msgid "If you love WP Ultimate CSV Importer show us you care with a 5-star review on"
+msgstr "Si te gusta WP Ultimate CSV Importer, muéstranoslo con una valoración de 5 estrellas en"
+
+#: SmackCSVImporterInstall.php:226
+msgid "To populate Featured images, Please make sure that CRON is enabled in your server. "
+msgstr "Para rellenar las imágenes destacadas, asegúrate de que el programador de tareas (cron) está activado en tu servidor."
+
+#: SmackCSVImporterInstall.php:226 SmackCSVImporterInstall.php:232
+msgid "Notice:"
+msgstr "Aviso:"
+
+#: SmackCSVImporterInstall.php:214
+msgid "for 10x faster import performance with easy user interface."
+msgstr "para un rendimiento de importación 10 veces más rápido con una sencilla interfaz de usuario."
+
+#: SmackCSVImporterInstall.php:214
+msgid "Download and replace the latest version of"
+msgstr "Descargar y reemplazar la última versión de"
+
+#: SmackCSVImporterInstall.php:214
+msgid "Upgrade Notice:"
+msgstr "Aviso de actualización:"
+
+#: SmackCSVImporterInstall.php:204
+msgid "Important Upgrade Notice:"
+msgstr "Aviso importante de actualización:"
+
+#: SmackCSVImporterInstall.php:192
+msgid "Upgrade to Pro"
+msgstr "Mejora a Pro"
+
+#: SmackCSVImporterInstall.php:245
+msgid "wordpress.org!"
+msgstr "wordpress.org!"
+
+#. Author of the plugin
+msgid "Smackcoders"
+msgstr "Smackcoders"
+
+#. Description of the plugin
+msgid "Seamlessly create posts, custom posts, pages, media, SEO and more from your CSV data with ease."
+msgstr "Cree sin problemas entradas, entradas personalizadas, páginas, medios, SEO y mucho más con facilidad a partir de tus datos CSV."
+
+#: SmackCSVImporterInstall.php:196
+msgid "Free Trial"
+msgstr "Prueba gratuita"
+
+#: SmackCSVImporterInstall.php:196
+msgid "Get your free trial"
+msgstr "Obtén tu prueba gratuita"
+
+#: SmackCSVImporterInstall.php:195
+msgid "Contact Support"
+msgstr "Contactar con el soporte"
+
+#: SmackCSVImporterInstall.php:194
+msgid "View Videos For WP Ultimate CSV Importer Pro"
+msgstr "Ver vídeos de WP Ultimate CSV Importer Pro"
+
+#: SmackCSVImporterInstall.php:193
+msgid "Docs"
+msgstr "Documentación"
+
+#: SmackCSVImporterInstall.php:193
+msgid "View WP Ultimate CSV Importer Pro Documentation"
+msgstr "Ver la documentación de WP Ultimate CSV Importer Pro"
+
+#: SmackCSVImporterInstall.php:87
+msgid "Ultimate CSV Importer PRO data update complete. Thank you for updating to the latest version!"
+msgstr "Actualización completada de los datos de Ultimate CSV Importer PRO. ¡Gracias por actualizar a la última versión!"
+
+#: managerExtensions/LogManager.php:103
+msgid "Total no of records: "
+msgstr "Número total de registros:"
+
+#. Plugin Name of the plugin
+msgid "WP Ultimate CSV Importer"
+msgstr "WP Ultimate CSV Importer"
+
+#: SmackCSVImporterInstall.php:195
+msgid "Support"
+msgstr "Soporte"
+
+#: SmackCSVImporterInstall.php:194
+msgid "Videos"
+msgstr "Videos"
+
+#: importExtensions/CoreFieldsImport.php:93
+#: importExtensions/CoreFieldsImport.php:102
+#: importExtensions/CoreFieldsImport.php:347
+#: importExtensions/CoreFieldsImport.php:350
+msgid "View &#8220;%s&#8221;"
+msgstr "Ver «%s»"

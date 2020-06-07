@@ -1,0 +1,40 @@
+# Translation of Plugins - Import Woocommerce - Stable (latest release) in Spanish (Spain)
+# This file is distributed under the same license as the Plugins - Import Woocommerce - Stable (latest release) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2019-07-04 09:10:13+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: GlotPress/2.4.0-alpha\n"
+"Language: es\n"
+"Project-Id-Version: Plugins - Import Woocommerce - Stable (latest release)\n"
+
+#: includes/class-uci-install.php:156
+msgid "Important Upgrade Notice:"
+msgstr "Aviso importante de actualización:"
+
+#. Author URI of the plugin
+msgid "https://www.smackcoders.com"
+msgstr "https://www.smackcoders.com"
+
+#. Author of the plugin
+msgid "smackcoders"
+msgstr "smackcoders"
+
+#: includes/class-uci-install.php:142
+msgid "Contact Support"
+msgstr "Contacta con soporte"
+
+#: includes/class-uci-install.php:142
+msgid "Support"
+msgstr "Soporte"
+
+#. Description of the plugin
+msgid "Import your WordPress Post, Page and Simple WooCommerce Product with Import Woocommerce."
+msgstr "Importa tus entradas y páginas de WordPress, y los productos simples de WooCommerce con Import Woocommerce."
+
+#. Plugin Name of the plugin
+msgid "Import Woocommerce"
+msgstr "Import Woocommerce"

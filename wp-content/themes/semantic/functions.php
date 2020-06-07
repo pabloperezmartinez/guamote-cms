@@ -99,4 +99,22 @@ function save_label_name( $post_id ) {
 	}
 
 add_action( 'woocommerce_process_product_meta', 'save_label_name' );
+
+function semantic_add_woocommerce_support() {
+    add_theme_support( 'woocommerce' );
+}
+
+add_action( 'after_setup_theme', 'semantic_add_woocommerce_support' );
+
+/**
+ * Change number of products that are displayed per page (shop page)
+ */
+add_filter( 'loop_shop_per_page', 'new_loop_shop_per_page', 9 );
+
+function new_loop_shop_per_page( $cols ) {
+	// $cols contains the current number of products per page based on the value stored on Options -> Reading
+	// Return the number of products you wanna show per page.
+	$cols = 9;
+	return $cols;
+}
 ?>
