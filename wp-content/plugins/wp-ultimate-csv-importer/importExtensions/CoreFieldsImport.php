@@ -139,10 +139,9 @@ endif;
 
 						}
 
-						$math = 'MATH(';
+						$math = 'MATH';
 						if (strpos($csv_element, $math) !== false) {	
-							$equation = str_replace('MATH(', '', $csv_element);
-							$equation = str_replace(')', '', $equation);
+							$equation = str_replace('MATH', '', $csv_element);
 							$csv_element = $helpers_instance->evalmath($equation);
 						}
 
@@ -257,7 +256,16 @@ endif;
 					}
 					
 					if($post_values['post_status']!='delete'){
-						$post_id = wp_insert_post($post_values);
+						if(is_plugin_active('multilanguage/multilanguage.php')) {
+							$post_id = $this->multiLang($post_values);
+						}
+						else{
+							$post_id = wp_insert_post($post_values);
+						}
+
+						if(!empty($post_values['wp_page_template']) && $type == 'Pages'){
+							update_post_meta($post_id, '_wp_page_template', $post_values['wp_page_template']);
+						}
 					}
 
 					if(isset($post_values['post_format'])){
@@ -269,7 +277,11 @@ endif;
 						}
 						set_post_format($post_id ,$format );
 					}
-					
+
+					if(is_plugin_active('post-expirator/post-expirator.php')) {
+						$this->postExpirator($post_id,$post_values);
+					}
+
 					$fields = $wpdb->get_results("UPDATE $log_table_name SET created = $created_count WHERE hash_key = '$hash_key'");
 					if(preg_match("/<img/", $post_values['post_content'])) {
 				
@@ -371,6 +383,47 @@ endif;
 
 			return $post_id;
 		}
+	}
+
+	public function multiLang($post_values){
+		global $wpdb;
+		if (strpos($post_values['post_title'], '|') !== false) {
+			$exploded_title = explode('|', $post_values['post_title']);
+			$post_values['post_title'] = $exploded_title[0];
+			$lang_title = $exploded_title[1];
+
+		}
+		if (strpos($post_values['post_content'], '|') !== false) {
+			$exploded_content = explode('|', $post_values['post_content']);
+			$post_values['post_content'] = $exploded_content[0];
+			$lang_content = $exploded_content[1];
+		}
+		if (strpos($post_values['post_excerpt'], '|') !== false) {
+			$exploded_excerpt = explode('|', $post_values['post_excerpt']);
+			$post_values['post_excerpt'] = $exploded_excerpt[0];
+			$lang_excerpt = $exploded_excerpt[1];
+		}
+		$lang_code = $post_values['lang_code'];
+		$post_id = wp_insert_post($post_values);
+		$wpdb->get_results("INSERT INTO {$wpdb->prefix}mltlngg_translate (post_ID , post_content , post_excerpt, post_title,`language`) VALUES ( $post_id, '{$lang_content}', '{$lang_excerpt}' , '{$lang_title}', '{$lang_code}')");
+		return $post_id;
+	}
+
+	public function postExpirator($post_id,$post_values){
+		if(!empty($post_values['post_expirator_status'])){
+			$post_values['post_expirator_status'] = array('expireType' => $post_values['post_expirator_status'],'id' => $post_id);
+		}
+		else{
+			$post_values['post_expirator_status'] = array('expireType' => 'draft' ,'id' => $post_id);
+		}
+
+		if(!empty($post_values['post_expirator'])){
+			update_post_meta($post_id, '_expiration-date-status', 'saved');
+			$estimate_date = $post_values['post_expirator'];
+			$estimator_date = get_gmt_from_date("$estimate_date",'U');
+			update_post_meta($post_id, '_expiration-date', $estimator_date);
+			update_post_meta($post_id, '_expiration-date-options', $post_values['post_expirator_status']);			
+		}	
 	}
 
 	function image_handling($id){

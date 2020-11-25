@@ -29,13 +29,19 @@ class MediaHandling{
 	public static function imageOptions(){	
 		$media_settings['media_handle_option'] = $_POST['media_handle_option'];
 		$media_settings['use_ExistingImage'] = $_POST['use_ExistingImage'];
-		$media_settings['enable_postcontent_image'] = $_POST['postContent_image_option'];
 		$media_settings['overwriteImage'] = $_POST['overwriteImage'];
 		$media_settings['file_name'] = $_POST['file_name'];
 		$media_settings['caption'] = sanitize_text_field($_POST['caption']);
 		$media_settings['alttext'] = sanitize_text_field($_POST['alttext']);		
 		$media_settings['description'] = sanitize_text_field($_POST['description']);				
-		
+		$media_settings['thumbnail'] = $_POST['thumbnail'];		
+		$media_settings['medium'] = $_POST['medium'];		
+		$media_settings['medium_large'] = $_POST['medium_large'];		
+		$media_settings['large'] = $_POST['large'];		
+		$media_settings['custom'] = $_POST['custom'];
+		$media_settings['custom_slug'] = $_POST['custom_slug'];
+		$media_settings['custom_slug'] = $_POST['custom_width'];
+		$media_settings['custom_height'] = $_POST['custom_height'];
 		$image_info = array(
 			'media_settings'  => $media_settings
 		);
@@ -183,9 +189,6 @@ class MediaHandling{
 		}
 		if(isset($media_handle['media_settings']['alttext'])) {
 			$alttext ['_wp_attachment_image_alt'] = $media_settings[$media_handle['media_settings']['alttext']];
-		} 
-		if(isset($media_handle['postcontent_image_alt'])) {
-			$alttext ['_wp_postcontent_image_alt'] = $media_handle['postcontent_image_alt'];
 		} 
 
 		if(preg_match_all('/\b(?:(?:https?|http|ftp|file):\/\/|www\.|ftp\.)[-A-Z0-9+&@#\/%=~_|$?!:,.]*[A-Z0-9+&@#\/%=~_|$]/i', $f_img , $matchedlist, PREG_PATTERN_ORDER)) {
@@ -339,12 +342,6 @@ class MediaHandling{
 		if($attach_id != null && isset($alttext['_wp_attachment_image_alt'])){  
 			update_post_meta($attach_id, '_wp_attachment_image_alt', $alttext['_wp_attachment_image_alt']);
 		}
-
-		if($attach_id != null && isset($alttext['_wp_postcontent_image_alt'])){  
-			update_post_meta($attach_id, '_wp_attachment_image_alt', $alttext['_wp_postcontent_image_alt']);
-		}
-
-		
 		if(!empty($data_array['featured_image'])) {
 			set_post_thumbnail( $post_id, $attach_id );
 		}

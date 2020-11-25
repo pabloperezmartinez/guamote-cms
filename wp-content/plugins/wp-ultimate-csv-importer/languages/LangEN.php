@@ -1,9 +1,8 @@
 <?php
-/**
- * WP Ultimate CSV Importer plugin file.
- *
- * Copyright (C) 2010-2020, Smackcoders Inc - info@smackcoders.com
- */
+/******************************************************************************************
+ * Copyright (C) Smackcoders. - All Rights Reserved under Smackcoders Proprietary License
+ * You can contact Smackcoders at email address info@smackcoders.com.
+ *******************************************************************************************/
 
 namespace Smackcoders\FCSV;
 
@@ -42,6 +41,8 @@ class LangEN {
                         'FromDate' => 'From Date',
                         'ToDate' => 'To Date',
                         'SEARCH' => 'SEARCH',
+                        'Media' =>'Media',
+                        'AccessKey' => 'AccessKey',
                         'SavedTemplate' => 'Saved Template',
                         'TEMPLATES' => 'TEMPLATES',
                         'MATCHEDCOLUMNSCOUNT' => 'MATCHED COLUMNS COUNT',
@@ -115,9 +116,9 @@ class LangEN {
                         'Slug' => 'Slug',
                         'Width' => 'Width',
                         'Height' => 'Height',
-                        'Addcustomsizes' => 'Add custom sizes',
                         'PostContentImageOption' => 'Post Content Image Option',
                         'DownloadPostContentExternalImagestoMedia' => 'Download Post Content External Images to Media',
+                        'Addcustomsizes' => 'Add custom sizes',
                         'MediaSEOAdvancedOptions' => 'Media SEO & Advanced Options',
                         'SetimageTitle' => 'Set image Title',
                         'SetimageCaption' => 'Set image Caption',

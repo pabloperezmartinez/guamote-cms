@@ -1,9 +1,9 @@
 === Import and Export WordPress Data as CSV or XML ===
 Contributors: smackcoders, smacksupport
 Requires at least: 5.0 
-Tested up to: 5.3.2
-Stable tag: 6.1.4
-Version: 6.1.4
+Tested up to: 5.5.1
+Stable tag: 6.1.8
+Version: 6.1.8
 Requires PHP: 5.2.4
 Author: smackcoders
 Author URI: http://profiles.wordpress.org/smackcoders/
@@ -75,10 +75,19 @@ In mapping section, CSV or XML Importer plugin allows you to relate the uploaded
 = What can you import in WordPress =
 Core Modules – Post, Page, Custom Post, Comments.
 Users – Import Users add-on to import your WordPress Users
-Custom Post – CPT UI, Custom Press and default WordPress Custom Post.
+Custom Post – CPT UI, Pods, Toolset, Custom Press and default WordPress Custom Post.
 Custom Field – WordPress default Text and Text area fields.
-SEO field – Free version of All in One SEO.
-Reviews – WP Customer Reviews
+
+= Supported thirdparty plugins = 
+BBPress Plugin - Topic, Reply, and Forum Import.
+LearnPress Plugin - Courses, Lessons, Quizzes, Orders and Questions Import.
+WooCommerce - Products with categories, attributes, tags, and Images Import.
+All in One SEO Plugin - .SEO Fields Import.
+WP Customer Reviews – Reviews Import.
+MultiLanguage by Websoft.
+Post Expirator Plugin.
+WooCommerce Product Bundles Plugin.
+
 
 = Highlights =
 * High performance, much comparable & much faster than all the other available plugins.
@@ -122,7 +131,7 @@ Reviews – WP Customer Reviews
 = HELPFUL LINKS =
 [Documentation](https://www.smackcoders.com/documentation/ultimate-csv-importer-pro/how-to-import-csv?utm_source=web&utm_campaign=readme&utm_medium=wp_org)
 
-[Try our live demo here](https://demo.smackcoders.com/wordpress/wp-admin/admin.php?page=sm-uci-dashboard)
+[Try our live demo here](https://demo.smackcoders.com/wordpress/wp-admin/admin.php?page=com.smackcoders.csvimporternewpro.menu)
 
 [Request a free trial by visiting here](https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html?utm_source=web&utm_campaign=readme&utm_medium=wp_org) and Click Try Now option to generate your own WordPress test environment.
 
@@ -178,8 +187,25 @@ Import to WordPress done in different methods based on content source type, plat
 
 
 == Changelog ==
+= 6.1.8 =
+* Added: Compatibility for WordPress 5.5.1
+* Added: Import Support for Variation Swatcher for WooCommerce Plugin.
+
+= 6.1.7 =
+* Added: Import Support for WC Product Bundle Meta Fields.
+
+= 6.1.6 =
+* Added: Mandatory import fields for posts,pages,custom posts and categories.
+* Added: Recommended addon setup page.
+* Fixed: single row xml import.
+* Fixed: Page template import.
+
+= 6.1.5 =
+* Added: Import Support for Multi Language plugin (Posts,Pages and Custom Posts).
+* Added: Post Expirator Support for Posts,Pages and Custom Posts. 
+
 = 6.1.4 =
-* Added: Support for widgets import(Posts,Pages,Comments,Categories and Archives).
+* Added: Support for Widgets import.(Posts,Pages,Comments,Categories and Archives).
 * Added: Seperate Media Handling Section.
 * Fixed: CSV Headers with whitespace issue.
 
@@ -623,6 +649,14 @@ Import to WordPress done in different methods based on content source type, plat
 * Initial release version. Tested and found works well without any issues.
 
 == Upgrade Notice ==
+= 6.1.8 =
+* Added: Upgrade now for latest updates.
+= 6.1.7 =
+* Added: Upgrade now for latest updates.
+= 6.1.6 =
+* Added: Upgrade now for latest updates.
+= 6.1.5 = 
+* Added: Upgrade now for latest updates.
 = 6.1.4 =
 * Added: Upgrade now for latest updates.
 = 6.1.3 =

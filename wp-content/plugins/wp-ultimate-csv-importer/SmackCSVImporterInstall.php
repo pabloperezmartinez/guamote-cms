@@ -94,6 +94,10 @@ class SmackCSVInstall {
 	 */
 	public  function install() {
 		$current_uci_version    = get_option( 'ULTIMATE_CSV_IMP_VERSION', null );
+		if(empty($current_uci_version)){
+			add_option("WP_ULTIMATE_CSV_FIRST_ACTIVATE", 'On');
+		}
+		
 		self::$tables_instance->create_tables(); 
 		if ( is_null( $current_uci_version )) {
 			self::create_options();         // Create option data on the initial stage
@@ -116,6 +120,56 @@ class SmackCSVInstall {
 		$version = '5.7';
 		delete_option( 'ULTIMATE_CSV_IMP_VERSION' );
 		add_option( 'ULTIMATE_CSV_IMP_VERSION', $version );
+	}
+
+
+	public static function content_media_url_modification($content) {
+		$region=self::bucket_region();
+		preg_match_all('#\bhttps?://[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $content, $match);
+		$content_urls = $match[0];
+		$rewrite_url=get_option('media_rewrite_url');
+		$media_bucket=get_option('updated_media_bucket');
+        $media_bucket=trim($media_bucket);
+		$upload_directory = wp_upload_dir();
+		$domain_name=get_option('do_domain_name');
+		$copy_year=get_option('copy_year_path');
+		$media_path =get_option('media_file_path');
+		$media_path = substr_replace($media_path, "", -1);
+		$end_points=get_option('media_bucket_origin');
+		if($copy_year =='true'){
+			$media_base_url = $upload_directory['baseurl'];
+			
+		}else{
+			$media_base_url = $upload_directory['url'];
+		}
+		if($rewrite_url=='true'){
+			foreach ($content_urls as $content_url) {
+				if(!empty($domain_name)){
+					if(!empty($media_path)){
+						$do_storage_location = $domain_name.'/'.$media_path;
+					  }
+					  else{
+						$do_storage_location=$domain_name;
+					  }
+				  }
+				  else{
+					if(!empty($media_path)){
+						$do_storage_location = $end_points.'/'.$media_path;
+					}
+					else{
+						$do_storage_location = $end_points;
+					}
+				  }
+				
+				if (strpos($content_url, $do_storage_location) !== false) {
+					$content = str_replace($media_base_url, $do_storage_location, $content);
+				}
+				else {
+					$content = str_replace($media_base_url, $do_storage_location, $content);
+				}
+			}
+		}
+		return $content;
 	}
 
 	/**

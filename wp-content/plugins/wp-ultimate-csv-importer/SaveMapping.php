@@ -398,7 +398,7 @@ class SaveMapping{
 
 							case 'MODERATOR':
 								$bbpress_instance = BBPressImport::getInstance();
-								$bbpress_instance->set_bbpress_values($header_array, $value_array, $map['MODERATOR'], $post_id, $selected_type);
+								$bbpress_instance->set_bbpress_values($header_array, $value_array, $map['MODERATOR'], $post_id, $selected_type, $get_mode);
 								break;				
 
 							case 'LPLESSON':
@@ -482,7 +482,7 @@ class SaveMapping{
 						$tag = $child->getName();     
 					}
 					$total_xml_count = $this->get_xml_count($path , $tag);
-					if($total_xml_count == 0 || $total_xml_count == 1){
+					if($total_xml_count == 0){
 						$sub_child = $this->get_child($child,$path);
 						$tag = $sub_child['child_name'];
 						$total_xml_count = $sub_child['total_count'];
@@ -845,7 +845,7 @@ class SaveMapping{
 			$sub_child_name = $sub_child->getName();
 		}
 		$total_xml_count = $this->get_xml_count($path , $sub_child_name);
-		if($total_xml_count == 0 || $total_xml_count == 1){
+		if($total_xml_count == 0){
 			$this->get_child($sub_child,$path);
 		}
 		else{
@@ -923,17 +923,17 @@ class SaveMapping{
 
 			case 'FORUM':
 				$bbpress_instance = BBPressImport::getInstance();
-				$bbpress_instance->set_bbpress_values($header_array, $value_array, $map['FORUM'], $post_id, $selected_type);
+				$bbpress_instance->set_bbpress_values($header_array, $value_array, $map['FORUM'], $post_id, $selected_type, $get_mode);
 				break;
 
 			case 'TOPIC':
 				$bbpress_instance = BBPressImport::getInstance();
-				$bbpress_instance->set_bbpress_values($header_array, $value_array, $map['TOPIC'], $post_id, $selected_type);
+				$bbpress_instance->set_bbpress_values($header_array, $value_array, $map['TOPIC'], $post_id, $selected_type, $get_mode);
 				break;
 
 			case 'REPLY':
 				$bbpress_instance = BBPressImport::getInstance();
-				$bbpress_instance->set_bbpress_values($header_array, $value_array, $map['REPLY'], $post_id, $selected_type);
+				$bbpress_instance->set_bbpress_values($header_array, $value_array, $map['REPLY'], $post_id, $selected_type, $get_mode);
 				break;
 
 			case 'LPCOURSE':

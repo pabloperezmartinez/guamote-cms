@@ -216,11 +216,14 @@ class MediaHandling{
 	public function image_function($f_img , $post_id , $data_array = null,$option_name = null, $use_existing_image = false,$header_array = null , $value_array = null){
 		global $wpdb;
 		$media_handle = get_option('smack_image_options');
-		$media_settings = array_combine($header_array,$value_array);
+		if(!empty($header_array) && !empty($value_array) ){
+			$media_settings = array_combine($header_array,$value_array);
+		}
 		if(isset($media_handle['media_settings']['alttext'])) {
 			$alttext ['_wp_attachment_image_alt'] = $media_settings[$media_handle['media_settings']['alttext']];
 		} 
-		if(preg_match_all('/\b(?:(?:https?|?:http?|ftp|file):\/\/|www\.|ftp\.)[-A-Z0-9+&@#\/%=~_|$?!:,.]*[A-Z0-9+&@#\/%=~_|$]/i', $f_img , $matchedlist, PREG_PATTERN_ORDER)) {
+		
+		if(preg_match_all('/\b(?:(?:https?|http|ftp|file):\/\/|www\.|ftp\.)[-A-Z0-9+&@#\/%=~_|$?!:,.]*[A-Z0-9+&@#\/%=~_|$]/i', $f_img , $matchedlist, PREG_PATTERN_ORDER)) {
 			$f_img = $f_img;
 		}   
 		else{

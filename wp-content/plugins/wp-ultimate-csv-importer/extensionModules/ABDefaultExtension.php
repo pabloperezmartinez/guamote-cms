@@ -43,7 +43,14 @@ class DefaultExtension extends ExtensionHandler{
                     'Author' => 'post_author',
                     'Status' => 'post_status',
                     'Featured Image' => 'featured_image'    
-                );
+				);
+			if(is_plugin_active('multilanguage/multilanguage.php')) {
+				$wordpressfields['Language Code'] = 'lang_code';
+			}
+			if(is_plugin_active('post-expirator/post-expirator.php')) {
+				$wordpressfields['Post Expirator'] = 'post_expirator';
+				$wordpressfields['Post Expirator Status'] = 'post_expirator_status';
+			}
 			if ($import_type === 'Posts') { 
 				$wordpressfields['Format'] = 'post_format';
 				$wordpressfields['Comment Status'] = 'comment_status';

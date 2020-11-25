@@ -3,9 +3,9 @@ Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
 Tags: update woocommerce, import variation products, import woocommerce, woocommerce csv, products import, import coupons
 Requires at least: 5.0
-Tested up to: 5.3.2
-Stable tag: 1.5.6
-Version: 1.5.6
+Tested up to: 5.5.1
+Stable tag: 1.5.8
+Version: 1.5.8
 Requires PHP: 5.2.4
 Author: smackcoders
 Author URI: http://profiles.wordpress.org/smackcoders/
@@ -60,6 +60,10 @@ Step-3: Import configurations
 * Click on 'Import now' to proceed import. 
 * Now the log for the current import is generated with both Admin view and Webview.
 
+= Supported thirdparty plugins = 
+WooCommerce - Products with categories, attributes, tags, and Images Import.
+WooCommerce Product Bundles Plugin.
+
 = Reason to go for  Ultimate CSV Importer PRO =
 
 Ultimate CSV Importer PRO is a package that allows you to import, update, schedule and export WooCommerce Products. The plugin supports few WooCommerce add-on’s such as WooCommerce chained products, WooCommerce pre-orders, WooCommerce retailer, WooCommerce products and WooCommerce returns and warranty. It also supports a number of third party plugin which makes it a all in one package. 
@@ -112,6 +116,12 @@ The import button will be enabled only after uploading the CSV file to be import
 4. Log section with Admin and Web view.
 
 == Changelog ==
+= 1.5.8 =
+* Added: Support for Variation Swatcher for WooCommerce Plugin.
+* Checked: Compatibility for WordPress 5.5.1
+
+= 1.5.7 =
+* Added: Support for WC Product Bundle Meta Fields Import.
 
 = 1.5.6 =
 * Added: Product_gallery_image import supports with existing media image-url,image name and ID.
@@ -175,6 +185,11 @@ Added: Latest woocommerce version 3.6.5 support
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+= 1.5.8 = 
+* Upgrade now for latest changes
+
+= 1.5.7 = 
+* Upgrade now for latest changes
 
 = 1.5.6 = 
 * Upgrade now for latest changes
