@@ -24,9 +24,8 @@
                     <?php endif; ?>
                 </div>
                 <div class="content">
-                    <pre><?php print_r($product) ?></pre>
                     <div class="ui blue right floated tag label">
-                        <?php echo Y$product->get_price_html(); ?>
+                        <?php echo $product->get_price_html(); ?>
                     </div>
                     <div class="header">
                         <?php the_title() ?></div>
