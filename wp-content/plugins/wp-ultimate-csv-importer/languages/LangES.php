@@ -75,6 +75,8 @@ class LangES
                         'CustomFieldSuite' => 'Suite de campo personalizada',
                         'AllInOneSeoFields' => 'Todo en uno Seo Fields',
                         'YoastSeoFields' => 'Yoast Seo Fields',
+                        'RankMathFields'=>'Rank Math Fields',
+                        'RankMathProFields'=>'Rank Math Pro Fields',
                         'BillingAndShippingInformation' => 'Información de facturación y envío',
                         'CustomFieldsWPMemberFields' => 'Campos personalizados Campos de miembros de WP',
                         'CustomFieldsMemberFields' => 'Campos personalizados Campos de miembros',
@@ -86,6 +88,14 @@ class LangES
                         'EventsManagerFields' => 'Campos del administrador de eventos',
                         'WPMLFields' => 'Campos WPML',
                         'CMB2CustomFields' => 'Campos personalizados CMB2',
+                        'JetEngineFields' => 'Campos de motores a reacción',
+                        'JetEngineRFFields' => 'Campos de repetidores de motores a reacción',
+                        'JetEngineCPTFields' => 'Campos CPT de motores a reacción',
+                        'JetEngineCPTRFFields' => 'Campos de repetidor CPT de motor a reacción',
+                        'JetEngineTaxonomyFields' => 'Campos de taxonomía de motores a reacción',
+                        'JetEngineTaxonomyRFFields' => 'Campos de repetidor de taxonomía de motores a reacción',
+                        'JetEngineRelationsFields' => 'Campos de relaciones con motores a reacción',
+
                         'CourseSettingsFields' => 'CursoAjustesCampos',
                         'CurriculumSettingsFields' => 'Campos de configuración curricular',
                         'QuizSettingsFields' => 'Campos de configuración del cuestionario',
@@ -124,6 +134,7 @@ class LangES
                         'PostContentImageOption' => 'Opciones de imagen de contenido de publicación',
                         'DownloadPostContentExternalImagestoMedia' => 'Descargar PostContentExternalImagestoMedia',
                         'MediaSEOAdvancedOptions' => 'SEO de medios y opciones avanzadas',
+                        'polylangfields'=>'Campos de configuración de Polylang',
                         'SetimageTitle' => 'Establecer título de imagen',
                         'SetimageCaption' => 'Establecer título de imagen',
                         'SetimageAltText' => 'Establecer imagen texto alternativo',
@@ -306,7 +317,7 @@ class LangES
                         'SelectTimeZone' => 'Selecciona la zona horaria',
                         'ScheduleExport' => 'Exportación programada',
                         'DataExported' => 'Datos exportados',
-
+                        'FilePath' => 'Ruta de archivo',
 
                 );
                 return $response;

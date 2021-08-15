@@ -27,21 +27,9 @@ class MediaHandling{
 	}
 
 	public static function imageOptions(){	
-		$media_settings['media_handle_option'] = $_POST['media_handle_option'];
-		$media_settings['use_ExistingImage'] = $_POST['use_ExistingImage'];
-		$media_settings['overwriteImage'] = $_POST['overwriteImage'];
-		$media_settings['file_name'] = $_POST['file_name'];
-		$media_settings['caption'] = sanitize_text_field($_POST['caption']);
-		$media_settings['alttext'] = sanitize_text_field($_POST['alttext']);		
-		$media_settings['description'] = sanitize_text_field($_POST['description']);				
-		$media_settings['thumbnail'] = $_POST['thumbnail'];		
-		$media_settings['medium'] = $_POST['medium'];		
-		$media_settings['medium_large'] = $_POST['medium_large'];		
-		$media_settings['large'] = $_POST['large'];		
-		$media_settings['custom'] = $_POST['custom'];
-		$media_settings['custom_slug'] = $_POST['custom_slug'];
-		$media_settings['custom_slug'] = $_POST['custom_width'];
-		$media_settings['custom_height'] = $_POST['custom_height'];
+		$media_settings['media_handle_option'] = sanitize_text_field($_POST['media_handle_option']);
+		$media_settings['use_ExistingImage'] = sanitize_text_field($_POST['use_ExistingImage']);
+		$media_settings['enable_postcontent_image'] = sanitize_text_field($_POST['postContent_image_option']);
 		$image_info = array(
 			'media_settings'  => $media_settings
 		);
@@ -53,17 +41,19 @@ class MediaHandling{
 	public static function getInstance() {
 		if (MediaHandling::$instance == null) {
 			MediaHandling::$instance = new MediaHandling;
-			MediaHandling::$smack_instance = SmackCSV::getInstance();
 			return MediaHandling::$instance;
 		}
 		return MediaHandling::$instance;
 	}
 
 	public function zipImageUpload(){
+
+		$smack_csv_instance = SmackCSV::getInstance();
+
 		$zip_file_name = $_FILES['zipFile']['name'];
-		$hash_key = MediaHandling::$smack_instance->convert_string2hash_key($zip_file_name);
+		$hash_key = $smack_csv_instance->convert_string2hash_key($zip_file_name);
 		$media_dir = wp_get_upload_dir();
-		$upload_dir = MediaHandling::$smack_instance->create_upload_dir();
+		$upload_dir = $smack_csv_instance->create_upload_dir();
 		$path = $upload_dir . $hash_key . '.zip';	
 		$extract_path = $media_dir['path'] . '/';
 		chmod($path, 0777);
@@ -87,7 +77,7 @@ class MediaHandling{
 	}
 
 	public function deleteImage(){
-		$image = $_POST['image'];
+		$image = sanitize_text_field($_POST['image']);
 		$media_dir = wp_get_upload_dir();
 		$names = glob($media_dir['path'].'/'.'*.*');
 		foreach($names as $values){
@@ -188,7 +178,7 @@ class MediaHandling{
 			$media_settings = array_combine($header_array,$value_array);
 		}
 		if(isset($media_handle['media_settings']['alttext'])) {
-			$alttext ['_wp_attachment_image_alt'] = $media_settings[$media_handle['media_settings']['alttext']];
+			$alttext ['_wp_attachment_image_alt'] = isset($media_settings[$media_handle['media_settings']['alttext']]) ? $media_settings[$media_handle['media_settings']['alttext']] :'';
 		} 
 
 		if(preg_match_all('/\b(?:(?:https?|http|ftp|file):\/\/|www\.|ftp\.)[-A-Z0-9+&@#\/%=~_|$?!:,.]*[A-Z0-9+&@#\/%=~_|$]/i', $f_img , $matchedlist, PREG_PATTERN_ORDER)) {
@@ -236,8 +226,15 @@ class MediaHandling{
 		$file_type = wp_check_filetype( $fimg_name, null ); 
 		$dir = wp_upload_dir();
 		$dirname = date('Y') . '/' . date('m');
-		$uploaddir_paths = $dir ['basedir'] . '/' . $dirname ;
-		$uploaddir_url = $dir ['baseurl'] . '/' . $dirname;
+		$uploads_use_yearmonth = get_option('uploads_use_yearmonth_folders');
+        if($uploads_use_yearmonth == 1){
+            $uploaddir_paths = $dir ['basedir'] . '/' . $dirname ;
+            $uploaddir_url = $dir ['baseurl'] . '/' . $dirname;
+        }
+        else{
+            $uploaddir_paths = $dir ['basedir'];
+            $uploaddir_url = $dir ['baseurl'];
+        }
 		$f_img = str_replace(" ","%20",$f_img);
 		if(empty($file_type['ext'])){
 			$fimg_name = @basename($f_img);
@@ -257,11 +254,10 @@ class MediaHandling{
 					$meta_val = $meta->getAttribute('content');
 				}
 			}
-			$ch = curl_init($meta_val);
-			curl_setopt($ch, CURLOPT_HEADER, 0);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
-			$rawdata=curl_exec ($ch);	
+	
+			$response = wp_remote_get($meta_val);
+			$rawdata =  wp_remote_retrieve_body($response);	
+
 		}
 		else{
 			if($file_type['ext'] == 'jpeg'){
@@ -318,13 +314,13 @@ class MediaHandling{
 		$attach_data = wp_generate_attachment_metadata( $attach_id, $uploaddir_path );
 		wp_update_attachment_metadata( $attach_id,  $attach_data );
 		if(isset($media_handle['media_settings']['description'])){
-			$media_handle['media_settings']['description'] = $media_settings[$media_handle['media_settings']['description']];
+			$media_handle['media_settings']['description'] = isset($media_settings[$media_handle['media_settings']['description']]) ?  $media_settings[$media_handle['media_settings']['description']] :'';
 		}
 		if(isset($media_handle['media_settings']['caption'])){
-			$media_handle['media_settings']['caption'] = $media_settings[$media_handle['media_settings']['caption']];
+			$media_handle['media_settings']['caption'] = isset($media_settings[$media_handle['media_settings']['caption']]) ? $media_settings[$media_handle['media_settings']['caption']] :'';
 		}
 		if(isset($media_handle['media_settings']['title'])){
-			$media_handle['media_settings']['title'] = $media_settings[$media_handle['media_settings']['title']];
+			$media_handle['media_settings']['title'] = isset($media_settings[$media_handle['media_settings']['title']]) ? $media_settings[$media_handle['media_settings']['title']] :'';
 		}
 		if(isset($media_handle['media_settings']['caption']) || isset($media_handle['media_settings']['description'])){
 			wp_update_post(array(
@@ -333,7 +329,7 @@ class MediaHandling{
 				'post_excerpt' =>$media_handle['media_settings']['caption']
 			));
 		}
-		if(isset($media_handle['media_settings']['title'])){
+		if(!empty($media_handle['media_settings']['title'])){
 			wp_update_post(array(
 				'ID'           =>$attach_id,
 				'post_title'   =>$media_handle['media_settings']['title']

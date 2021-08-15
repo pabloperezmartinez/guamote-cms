@@ -32,6 +32,7 @@ class WooCommerceMetaImport extends ImportHelpers{
 		$metaData = array();
 		$order_item = array();
 		foreach ($data_array as $ekey => $eval) {
+			
 			switch ($ekey) {
 			case 'stock_qty' :
 				$metaData['_stock'] = $data_array[$ekey];
@@ -41,19 +42,19 @@ class WooCommerceMetaImport extends ImportHelpers{
 				$plugininfo = get_plugin_data( WP_PLUGIN_DIR .'/'.'woocommerce/woocommerce.php');
 				$versionOfWoocom = $plugininfo['Version'];
 				$visibility = '';
-				if ($data_array[$ekey] == 1) {
+				if ($data_array[$ekey] == 1 || $data_array[$ekey] == 'visible') {
 					$visibility = 'visible';
 				}
-				if ($data_array[$ekey] == 2) {
+				if ($data_array[$ekey] == 2 || $data_array[$ekey] == 'catalog' ) {
 					$visibility = 'catalog';
 				}
-				if ($data_array[$ekey] == 3) {
+				if ($data_array[$ekey] == 3 || $data_array[$ekey] == 'search') {
 					$visibility = 'search';
 				}
-				if ($data_array[$ekey] == 4) {
+				if ($data_array[$ekey] == 4 || $data_array[$ekey] == 'hidden' ) {
 					$visibility = 'hidden';
 				}
-				if(empty($data_array[$ekey])){
+				else{
 					$visibility = 'visible';
 				}
 				if($versionOfWoocom >= 3){
@@ -96,7 +97,9 @@ class WooCommerceMetaImport extends ImportHelpers{
 				break;
 			case 'regular_price' :
 				$metaData['_regular_price'] = $data_array[$ekey];
-				$metaData['_price']=$data_array[$ekey];
+				if(empty($metaData['_sale_price'])){
+					$metaData['_price']=$metaData['_regular_price'];
+				}
 				break;
 			case 'sale_price' :
 				$metaData['_sale_price'] = $data_array[$ekey];
@@ -107,6 +110,14 @@ class WooCommerceMetaImport extends ImportHelpers{
 					$metaData['_price'] = $data_array[$ekey];
 				}
 				break;
+			case 'pb_regular_price' :
+				$metaData['_wc_pb_base_regular_price'] = $data_array[$ekey];
+				break;
+
+			case 'pb_sale_price' :
+				$metaData['_wc_pb_base_sale_price'] = $data_array[$ekey];
+				break;
+
 			case 'tax_status' :
 				$tax_status = '';
 				if ($data_array[$ekey] == 1) {
@@ -142,6 +153,157 @@ class WooCommerceMetaImport extends ImportHelpers{
 					$product->save();
 				}
 				break;
+
+			case 'product_bundle_items':
+				if ($data_array[$ekey]) {
+					$bundle_product_ids = explode('|', $data_array[$ekey]);
+					$bundle_product_table = $wpdb->prefix . 'woocommerce_bundled_items'; 
+					foreach($bundle_product_ids as $product_id){
+						if(is_numeric($product_id)){
+							$product_id = $product_id;
+						}
+						else{
+							$product_id = $wpdb->get_var("SELECT ID FROM {$wpdb->prefix}posts WHERE post_type = 'product' AND post_title = '$product_id' ");
+						}
+						$wpdb->insert($bundle_product_table, array('product_id' => $product_id, 'bundle_id' => $pID));
+					}
+					break;
+				}	
+			break;
+			case 'layout' :
+				$layout_status = '';
+				if ($data_array[$ekey] == 'Standard') {
+					$layout_status = 'default';
+				}
+				if ($data_array[$ekey] == 'Tabular') {
+					$layout_status = 'tabular';
+				}
+				if ($data_array[$ekey] == 'Grid') {
+					$layout_status = 'grid';
+				}
+				$metaData['_wc_pb_layout_style'] = $layout_status;
+				break;
+
+			case 'form_location' :
+				$form_location_status = '';
+				if ($data_array[$ekey] == 'Default') {
+					$form_location_status = 'default';
+				}
+				if ($data_array[$ekey] == 'Before Tabs') {
+					$form_location_status = 'after_summary';
+				}
+				
+				$metaData['_wc_pb_add_to_cart_form_location'] = $form_location_status;
+				break;
+			
+			case 'item_grouping' :
+				$item_grouping_status = '';
+				if ($data_array[$ekey] == 'Grouped') {
+					$item_grouping_status = 'parent';
+				}
+				if ($data_array[$ekey] == 'Flat') {
+					$item_grouping_status = 'noindent';
+				}
+				if ($data_array[$ekey] == 'None') {
+					$item_grouping_status = 'none';
+				}
+				$metaData['_wc_pb_group_mode'] = $item_grouping_status;
+				break;
+				
+			case 'edit_in_cart' :
+				$edit_cart_status = '';
+				if ($data_array[$ekey] == 'Yes') {
+					$edit_cart_status = 'yes';
+				}
+				if ($data_array[$ekey] == 'No') {
+					$edit_cart_status = 'no';
+				}
+				
+				$metaData['_wc_pb_edit_in_cart'] = $edit_cart_status;
+				break;
+
+			case 'optional':
+			case 'priced_individually' :
+			case 'override_title' :
+			case 'override_description' :
+			case 'hide_thumbnail' :
+				if ($data_array[$ekey]) {
+					$bundle_product_ids = explode('|', $data_array[$ekey]);
+					$bundle_product_table = $wpdb->prefix . 'woocommerce_bundled_itemmeta'; 
+					
+					$bundle_meta = $wpdb->prepare("SELECT bundled_item_id FROM {$wpdb->prefix}woocommerce_bundled_items where bundle_id = %d", $pID);
+					$bundle_meta_result = $wpdb->get_results($bundle_meta);
+					
+					for($i = 0; $i < count($bundle_meta_result); $i++){
+						$bundle_meta_id = $bundle_meta_result[$i]->bundled_item_id;
+						$bundle_meta_value = $bundle_product_ids[$i];
+						if ($bundle_meta_value == 'Yes') {
+							$bundle_meta_values = 'yes';
+						}
+						if ($bundle_meta_value == 'No') {
+							$bundle_meta_values = 'no';
+						}
+						$wpdb->insert($bundle_product_table, array('bundled_item_id' => $bundle_meta_id ,'meta_key' => $ekey,'meta_value' => $bundle_meta_values));
+					}
+					break;
+				}	
+			break;
+
+			case 'product_details' :
+			case 'cart_checkout' :
+			case 'order_details' :
+
+				if ($data_array[$ekey]) {
+					$bundle_product_ids = explode('|', $data_array[$ekey]);
+					$bundle_product_table = $wpdb->prefix . 'woocommerce_bundled_itemmeta'; 
+					
+					$bundle_meta = $wpdb->prepare("SELECT bundled_item_id FROM {$wpdb->prefix}woocommerce_bundled_items where bundle_id = %d", $pID);
+					$bundle_meta_result = $wpdb->get_results($bundle_meta);
+					
+					for($i = 0; $i < count($bundle_meta_result); $i++){
+						$bundle_meta_id = $bundle_meta_result[$i]->bundled_item_id;
+						$bundle_meta_value = $bundle_product_ids[$i];
+						if ($bundle_meta_value == 'Yes') {
+							$bundle_meta_values = 'visible';
+						}
+						if ($bundle_meta_value == 'No') {
+							$bundle_meta_values = 'hidden';
+						}
+						$wpdb->insert($bundle_product_table, array('bundled_item_id' => $bundle_meta_id ,'meta_key' => $ekey,'meta_value' => $bundle_meta_values));
+					}
+					break;
+				}	
+			break;
+
+			case 'quantity_min' :
+			case 'quantity_max' :
+			case 'discount' :
+			case 'override_title_value' :
+			case 'override_description_value' :
+	
+				if ($data_array[$ekey]) {
+					$bundle_product_ids = explode('|', $data_array[$ekey]);
+					$bundle_product_table = $wpdb->prefix . 'woocommerce_bundled_itemmeta'; 
+					
+					$bundle_meta = $wpdb->prepare("SELECT bundled_item_id FROM {$wpdb->prefix}woocommerce_bundled_items where bundle_id = %d", $pID);
+					$bundle_meta_result = $wpdb->get_results($bundle_meta);
+					
+					for($i = 0; $i < count($bundle_meta_result); $i++){
+						$bundle_meta_id = $bundle_meta_result[$i]->bundled_item_id;
+						$bundle_meta_value = $bundle_product_ids[$i];
+					
+						if($ekey == 'override_title_value'){
+							$ekey = 'title';
+						}
+						elseif($ekey == 'override_description_value'){
+							$ekey = 'description';
+						}
+						
+						$wpdb->insert($bundle_product_table, array('bundled_item_id' => $bundle_meta_id ,'meta_key' => $ekey,'meta_value' => $bundle_meta_value));
+					}
+					break;
+				}	
+			break;
 
 			case 'variation_description':
 				$metaData['_variation_description'] = $data_array[$ekey];
@@ -267,6 +429,9 @@ class WooCommerceMetaImport extends ImportHelpers{
 				}
 				if ($data_array[$ekey] == 6) {
 					$product_type = 'variable-subscription';
+				}
+				if ($data_array[$ekey] == 7) {
+					$product_type = 'bundle';
 				}
 				$core_instance->detailed_log[$line_number]['Type of Product'] = $product_type;
 				wp_set_object_terms($pID, $product_type, 'product_type');
@@ -717,7 +882,7 @@ class WooCommerceMetaImport extends ImportHelpers{
 			}
 		}
 
-		if(is_array($orderItem)){	
+		if(!empty($orderItem)){	
 			foreach ($orderItem['order_item_name'] as $key => $value) {
 				$value_order_item[$key]['order_item_name'] = $orderItem['order_item_name'][$key];
 				$value_order_item[$key]['order_item_type'] = $orderItem['order_item_type'][$key];
@@ -735,7 +900,7 @@ class WooCommerceMetaImport extends ImportHelpers{
 			}
 		}
 
-		if(is_array($orderFee)){
+		if(!empty($orderFee)){
 			foreach ($orderFee['order_item_name'] as $key => $value) {
 
 				$value_order_fee[$key]['order_item_name'] = $orderFee['order_item_name'][$key];
@@ -754,7 +919,7 @@ class WooCommerceMetaImport extends ImportHelpers{
 			}
 		}
 
-		if(is_array($Shipment_name)){
+		if(!empty($Shipment_name)){
 			foreach ($Shipment_name['order_item_name'] as $key => $value) {
 				$value_shipment[$key]['order_item_name'] = $Shipment_name['order_item_name'][$key];
 				$value_shipment[$key]['order_item_type'] = 'shipping';
@@ -1169,7 +1334,7 @@ class WooCommerceMetaImport extends ImportHelpers{
 				$attrslug = preg_replace("/[^a-zA-Z0-9._\s]/", "", $attrslug);
 				$attrslug = preg_replace('/\s/', '-', $attrslug);
 				$custom_attribute_name = "pa_" . $attrslug;
-				$attrtypeval = $attrVal['type'];
+				$attrtypeval = isset($attrVal['type']) ? $attrVal['type'] :'';
 				if(!empty($attrtypeval)){
 					$attrtype = $attrtypeval;
 				}

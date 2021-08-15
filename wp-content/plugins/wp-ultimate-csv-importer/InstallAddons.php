@@ -40,14 +40,24 @@ class InstallAddons {
     
     public function install(){
 			delete_option("WP_ULTIMATE_ADDONS_FAILED");
+		
+			$fields = $_POST;
+			foreach($fields as $fieldKey => $fieldVal ){
+				if( is_array($fieldVal)){
+					$postvalue[$fieldKey] = array_map( 'sanitize_text_field', $fieldVal );
+				}
+				else{
+					$postvalue[$fieldKey] = sanitize_text_field($fieldVal);
+				}
+			}
 			
-			$all_addons = $_POST['all_addons'];
-			$selected_addons = $_POST['addons'];
-			$last_iteration = $_POST['last_iteration'];
+			$all_addons = $postvalue['all_addons'];
+			$selected_addons = $postvalue['addons'];
+			$last_iteration = $postvalue['last_iteration'];
+	
 			self::plugin_install($selected_addons, $last_iteration);
 			self::activate_all($all_addons);
 			print "Plugin Installed";
-			//die('Plugin Installed');  
 		}
 
 		public function activate_all($get_all_selected_addons){
@@ -65,7 +75,7 @@ class InstallAddons {
 			delete_option("WP_ULTIMATE_RECENT_SELECTED_ADDONS");
 		}
 	/**
-	  Code for download and install plugin from org
+	 * Code for download and install plugin from org
 	 **/
 
 	public function plugin_install($crmtype, $last_iteration){
@@ -143,7 +153,6 @@ class InstallAddons {
 		if ( $installed ) {
 			$activate = activate_plugin( $plugin_slug );
 			if ( is_null($activate) ) {
-			 	//
 			}
 		} else {
 			$failed_addons = get_option("WP_ULTIMATE_ADDONS_FAILED");
@@ -155,11 +164,10 @@ class InstallAddons {
 				update_option("WP_ULTIMATE_ADDONS_FAILED", $failed_addon);
 			}
 		}
-		//wp_die();	
 	}
 
 	/**
-	  Check whether the plugin is already installed
+	 * Check whether the plugin is already installed
 	 **/
 	public function is_plugin_installed( $slug ) {
 		if ( ! function_exists( 'get_plugins' ) ) {
@@ -175,7 +183,7 @@ class InstallAddons {
 	}
 
 	/**
-	  Code for Install plugin 
+	 * Code for Install plugin  
 	 **/
 	public function install_plugin( $plugin_zip ) {
 		include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';

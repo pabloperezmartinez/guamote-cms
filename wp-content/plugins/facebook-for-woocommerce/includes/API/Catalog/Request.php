@@ -19,7 +19,20 @@ use SkyVerge\WooCommerce\Facebook\API;
  *
  * @since 2.0.0
  */
-class Request extends API\Request  {
+class Request extends API\Request {
+
+
+	/**
+	 * Gets the rate limit ID.
+	 *
+	 * @since 2.1.0
+	 *
+	 * @return string
+	 */
+	public static function get_rate_limit_id() {
+
+		return 'ads_management';
+	}
 
 
 	/**
@@ -44,7 +57,7 @@ class Request extends API\Request  {
 	 */
 	public function get_params() {
 
-		return [ 'fields' => 'name' ];
+		return array( 'fields' => 'name' );
 	}
 
 

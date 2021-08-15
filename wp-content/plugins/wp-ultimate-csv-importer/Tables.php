@@ -28,10 +28,7 @@ class Tables {
 	public function create_tables(){
 		global $wpdb;
 		$file_table_name = $wpdb->prefix ."smackcsv_file_events";
-		$result = $wpdb->query("SHOW COLUMNS FROM `{$wpdb->prefix}import_detail_log` LIKE 'running'");
-		if($result == 0){
-			$wpdb->query("ALTER TABLE `{$wpdb->prefix}import_detail_log` ADD COLUMN running boolean not null default 1");
-		}
+		
 		$wpdb->query("CREATE TABLE IF NOT EXISTS $file_table_name (
 			`id` int(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 			`file_name` VARCHAR(255) NOT NULL,
@@ -54,6 +51,17 @@ class Tables {
 			`image_type` VARCHAR(255) DEFAULT NULL
 				) ENGINE=InnoDB"
 				);
+
+		$post_entries_table = $wpdb->prefix ."ultimate_post_entries";
+		$wpdb->query("CREATE TABLE IF NOT EXISTS $post_entries_table (
+					`ID` INT(6),
+					`file_name` varchar(255) DEFAULT NULL,
+					`type` varchar(255) DEFAULT NULL,
+					`revision` INT(6),
+					`status` varchar(255) DEFAULT NULL
+					) ENGINE=InnoDB"
+					);
+
 
 		$shortcode_table_name =  $wpdb->prefix ."ultimate_csv_importer_shortcode_manager";
 		$wpdb->query("CREATE TABLE IF NOT EXISTS $shortcode_table_name (
@@ -159,5 +167,10 @@ class Tables {
 			PRIMARY KEY (`id`)
 				) ENGINE=InnoDB"
 				);
+
+		$result = $wpdb->query("SHOW COLUMNS FROM `{$wpdb->prefix}import_detail_log` LIKE 'running'");
+		if($result == 0){
+			$wpdb->query("ALTER TABLE `{$wpdb->prefix}import_detail_log` ADD COLUMN running boolean not null default 1");
+		}
 	}
 }

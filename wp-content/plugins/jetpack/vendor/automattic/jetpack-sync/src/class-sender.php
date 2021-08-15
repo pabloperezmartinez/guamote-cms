@@ -9,6 +9,7 @@ namespace Automattic\Jetpack\Sync;
 
 use Automattic\Jetpack\Connection\Manager;
 use Automattic\Jetpack\Constants;
+use WP_Error;
 
 /**
  * This class grabs pending actions from the queue and sends them
@@ -187,7 +188,7 @@ class Sender {
 	private function init() {
 		add_action( 'jetpack_sync_before_send_queue_sync', array( $this, 'maybe_set_user_from_token' ), 1 );
 		add_action( 'jetpack_sync_before_send_queue_sync', array( $this, 'maybe_clear_user_from_token' ), 20 );
-		add_filter( 'jetpack_xmlrpc_methods', array( $this, 'register_jetpack_xmlrpc_methods' ) );
+		add_filter( 'jetpack_xmlrpc_unauthenticated_methods', array( $this, 'register_jetpack_xmlrpc_methods' ) );
 		foreach ( Modules::get_modules() as $module ) {
 			$module->init_before_send();
 		}
@@ -253,16 +254,29 @@ class Sender {
 	 *
 	 * @access public
 	 *
-	 * @return boolean|\WP_Error True if this sync sending was successful, error object otherwise.
+	 * @return boolean|WP_Error True if this sync sending was successful, error object otherwise.
 	 */
 	public function do_full_sync() {
 		$sync_module = Modules::get_module( 'full-sync' );
 		if ( ! $sync_module ) {
 			return;
 		}
+		// Full Sync Disabled.
 		if ( ! Settings::get_setting( 'full_sync_sender_enabled' ) ) {
 			return;
 		}
+
+		// Don't sync if request is marked as read only.
+		if ( Constants::is_true( 'JETPACK_SYNC_READ_ONLY' ) ) {
+			return new WP_Error( 'jetpack_sync_read_only' );
+		}
+
+		// Sync not started or Sync finished.
+		$status = $sync_module->get_status();
+		if ( false === $status['started'] || ( ! empty( $status['started'] ) && ! empty( $status['finished'] ) ) ) {
+			return false;
+		}
+
 		$this->continue_full_sync_enqueue();
 		// immediate full sync sends data in continue_full_sync_enqueue.
 		if ( false === strpos( get_class( $sync_module ), 'Full_Sync_Immediately' ) ) {
@@ -304,7 +318,7 @@ class Sender {
 	 *
 	 * @access public
 	 *
-	 * @return boolean|\WP_Error True if this sync sending was successful, error object otherwise.
+	 * @return boolean|WP_Error True if this sync sending was successful, error object otherwise.
 	 */
 	public function do_sync() {
 		return $this->do_sync_and_set_delays( $this->sync_queue );
@@ -319,21 +333,37 @@ class Sender {
 	 * @access public
 	 *
 	 * @param Automattic\Jetpack\Sync\Queue $queue Queue object.
-	 * @return boolean|\WP_Error True if this sync sending was successful, error object otherwise.
+	 *
+	 * @return boolean|WP_Error True if this sync sending was successful, error object otherwise.
 	 */
 	public function do_sync_and_set_delays( $queue ) {
 		// Don't sync if importing.
 		if ( defined( 'WP_IMPORTING' ) && WP_IMPORTING ) {
-			return new \WP_Error( 'is_importing' );
+			return new WP_Error( 'is_importing' );
+		}
+
+		// Don't sync if request is marked as read only.
+		if ( Constants::is_true( 'JETPACK_SYNC_READ_ONLY' ) ) {
+			return new WP_Error( 'jetpack_sync_read_only' );
 		}
 
 		if ( ! Settings::is_sender_enabled( $queue->id ) ) {
-			return new \WP_Error( 'sender_disabled_for_queue_' . $queue->id );
+			return new WP_Error( 'sender_disabled_for_queue_' . $queue->id );
+		}
+
+		// Return early if we've gotten a retry-after header response.
+		$retry_time = get_option( Actions::RETRY_AFTER_PREFIX . $queue->id );
+		if ( $retry_time ) {
+			// If expired update to false but don't send. Send will occurr in new request to avoid race conditions.
+			if ( microtime( true ) > $retry_time ) {
+				update_option( Actions::RETRY_AFTER_PREFIX . $queue->id, false, false );
+			}
+			return new WP_Error( 'retry_after' );
 		}
 
 		// Don't sync if we are throttled.
 		if ( $this->get_next_sync_time( $queue->id ) > microtime( true ) ) {
-			return new \WP_Error( 'sync_throttled' );
+			return new WP_Error( 'sync_throttled' );
 		}
 
 		$start_time = microtime( true );
@@ -376,6 +406,10 @@ class Sender {
 		$upload_size   = 0;
 		$items_to_send = array();
 		$items         = is_array( $buffer_or_items ) ? $buffer_or_items : $buffer_or_items->get_items();
+		if ( ! is_array( $items ) ) {
+			$items = array();
+		}
+
 		// Set up current screen to avoid errors rendering content.
 		require_once ABSPATH . 'wp-admin/includes/class-wp-screen.php';
 		require_once ABSPATH . 'wp-admin/includes/screen.php';
@@ -404,12 +438,12 @@ class Sender {
 				$skipped_items_ids[] = $key;
 				continue;
 			}
-			$encoded_item = $encode ? $this->codec->encode( $item ) : $item;
+			$encoded_item = $this->codec->encode( $item );
 			$upload_size += strlen( $encoded_item );
 			if ( $upload_size > $this->upload_max_bytes && count( $items_to_send ) > 0 ) {
 				break;
 			}
-			$items_to_send[ $key ] = $encoded_item;
+			$items_to_send[ $key ] = $encode ? $encoded_item : $item;
 			if ( microtime( true ) - $start_time > $this->max_dequeue_time ) {
 				break;
 			}
@@ -436,12 +470,13 @@ class Sender {
 	 * @access public
 	 *
 	 * @param Automattic\Jetpack\Sync\Queue $queue Queue object.
-	 * @return boolean|\WP_Error True if this sync sending was successful, error object otherwise.
+	 *
+	 * @return boolean|WP_Error True if this sync sending was successful, error object otherwise.
 	 */
 	public function do_sync_for_queue( $queue ) {
 		do_action( 'jetpack_sync_before_send_queue_' . $queue->id );
 		if ( $queue->size() === 0 ) {
-			return new \WP_Error( 'empty_queue_' . $queue->id );
+			return new WP_Error( 'empty_queue_' . $queue->id );
 		}
 
 		/**
@@ -463,7 +498,7 @@ class Sender {
 
 		if ( ! $buffer ) {
 			// Buffer has no items.
-			return new \WP_Error( 'empty_buffer' );
+			return new WP_Error( 'empty_buffer' );
 		}
 
 		if ( is_wp_error( $buffer ) ) {
@@ -506,11 +541,11 @@ class Sender {
 					$queue->force_checkin();
 				}
 				if ( is_wp_error( $processed_item_ids ) ) {
-					return new \WP_Error( 'wpcom_error', $processed_item_ids->get_error_code() );
+					return new WP_Error( 'wpcom_error', $processed_item_ids->get_error_code() );
 				}
 
 				// Returning a wpcom_error is a sign to the caller that we should wait a while before syncing again.
-				return new \WP_Error( 'wpcom_error', 'jetpack_sync_send_data_false' );
+				return new WP_Error( 'wpcom_error', 'jetpack_sync_send_data_false' );
 			} else {
 				// Detect if the last item ID was an error.
 				$had_wp_error = is_wp_error( end( $processed_item_ids ) );
@@ -534,7 +569,7 @@ class Sender {
 				$queue->close( $buffer, $processed_item_ids );
 				// Returning a WP_Error is a sign to the caller that we should wait a while before syncing again.
 				if ( $had_wp_error ) {
-					return new \WP_Error( 'wpcom_error', $wp_error->get_error_code() );
+					return new WP_Error( 'wpcom_error', $wp_error->get_error_code() );
 				}
 			}
 		}

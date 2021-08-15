@@ -29,8 +29,8 @@ class XmlHandler {
 
 	public function parse_xml(){
 
-		$row_count = $_POST['row'];
-		$hash_key = $_POST['HashKey'];
+		$row_count = intval($_POST['row']);
+		$hash_key = sanitize_key($_POST['HashKey']);
 
 		$smack_csv_instance = SmackCSV::getInstance();
 		$upload_dir = $smack_csv_instance->create_upload_dir();
@@ -120,8 +120,8 @@ class XmlHandler {
 	 */
 	public function parsing_xmls(){
 
-		$hash_key = $_POST['HashKey'];
-		$treetype = $_POST['treetype'];	
+		$hash_key = sanitize_key($_POST['HashKey']);
+		$treetype = sanitize_text_field($_POST['treetype']);	
 
 		$smack_csv_instance = SmackCSV::getInstance();
 		$upload_dir = $smack_csv_instance->create_upload_dir();
@@ -148,11 +148,11 @@ class XmlHandler {
 
 		$nodes=$doc->getElementsByTagName($n);
 
-		if($nodes->length < $_POST['pag'])
+		if($nodes->length < intval($_POST['pag']))
 			$response['message'] = "Maximum Limit Exceed!";
 
 		if(isset($_POST['pag']))
-			$i = $_POST['pag'] - 1;
+			$i = intval($_POST['pag']) - 1;
 		else
 			$i = 0;
 		if($i < 0)

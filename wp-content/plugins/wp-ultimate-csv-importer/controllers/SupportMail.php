@@ -50,10 +50,10 @@ class SupportMail {
 			$headers.= 'MIME-Version: 1.0' . "\r\n";
 			$headers= array( "Content-type: text/html; charset=UTF-8");
 			$to = 'support@smackcoders.com';
-			$subject = $_POST['query'];
+			$subject = sanitize_text_field($_POST['query']);
 			$message = "Site URL: " . $url . "\r\n<br>";
 			$message .= "Plugin Name: WP Ultimate CSV Importer PRO " . "\r\n<br>";
-			$message .= "Message: "."\r\n" . $_POST['message'] . "\r\n<br>";
+			$message .= "Message: "."\r\n" . sanitize_text_field($_POST['message']) . "\r\n<br>";
 			if(wp_mail($to, $subject, $message, $headers)) {
 				$success_message = 'Mail Sent!';
 				echo wp_json_encode($success_message);

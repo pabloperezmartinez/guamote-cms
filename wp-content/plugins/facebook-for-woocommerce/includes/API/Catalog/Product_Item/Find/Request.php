@@ -23,7 +23,7 @@ class Request extends API\Request {
 
 
 	/**
-	 * Gets the ID of this request for rate limiting purposes.
+	 * Gets the rate limit ID.
 	 *
 	 * @since 2.0.0
 	 *
@@ -31,7 +31,7 @@ class Request extends API\Request {
 	 */
 	public static function get_rate_limit_id() {
 
-		return 'wc_facebook_ads_management_api_request';
+		return 'ads_management';
 	}
 
 
@@ -58,7 +58,7 @@ class Request extends API\Request {
 	 */
 	public function get_params() {
 
-		return [ 'fields' => 'id,product_group{id}' ];
+		return array( 'fields' => 'id,product_group{id}' );
 	}
 
 

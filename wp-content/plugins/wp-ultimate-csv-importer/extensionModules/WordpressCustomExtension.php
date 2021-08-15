@@ -92,7 +92,7 @@ class WordpressCustomExtension extends ExtensionHandler{
                                     ON p.ID = pm.post_id
                                     WHERE p.post_type = '{$module}' AND NOT p.post_status = 'trash'
                                     GROUP BY meta_key
-                                    HAVING meta_key NOT LIKE '\_%' and meta_key NOT LIKE 'field_%' and meta_key NOT LIKE 'wpcf-%' and meta_key NOT LIKE 'wpcr3_%' and meta_key NOT LIKE '%pods%' and meta_key NOT LIKE '%group_%' and meta_key NOT LIKE '%repeat_%' and meta_key NOT LIKE 'mp_%'
+                                    HAVING meta_key NOT LIKE '\_%' and meta_key NOT LIKE 'rank_%'and meta_key NOT LIKE 'field_%' and meta_key NOT LIKE 'wpcf-%' and meta_key NOT LIKE 'wpcr3_%' and meta_key NOT LIKE '%pods%' and meta_key NOT LIKE '%group_%' and meta_key NOT LIKE '%repeat_%' and meta_key NOT LIKE 'mp_%'
                                     ORDER BY meta_key" );
                                     
         } else {

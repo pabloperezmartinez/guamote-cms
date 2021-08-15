@@ -128,10 +128,29 @@ class WC_Gateway_PPEC_Plugin {
 			delete_option( 'pp_woo_enabled' );
 		}
 
+		$previous_version = get_option( 'wc_ppec_version' );
+
 		// Check the the WC version on plugin update to determine if we need to display a warning.
 		// The option was added in 1.6.19 so we only need to check stores updating from before that version. Updating from 1.6.19 or greater would already have it set.
-		if ( version_compare( get_option( 'wc_ppec_version' ), '1.6.19', '<' ) && version_compare( WC_VERSION, '3.0', '<' ) ) {
+		if ( version_compare( $previous_version, '1.6.19', '<' ) && version_compare( WC_VERSION, '3.0', '<' ) ) {
 			update_option( 'wc_ppec_display_wc_3_0_warning', 'true' );
+		}
+
+		// Credit messaging is disabled by default for merchants upgrading from < 2.1.
+		if ( $previous_version && version_compare( $previous_version, '2.1.0', '<' ) ) {
+			$settings = get_option( 'woocommerce_ppec_paypal_settings', array() );
+
+			if ( is_array( $settings ) ) {
+				$settings['credit_message_enabled']                = 'no';
+				$settings['single_product_credit_message_enabled'] = 'no';
+				$settings['mark_credit_message_enabled']           = 'no';
+
+				update_option( 'woocommerce_ppec_paypal_settings', $settings );
+			}
+		}
+
+		if ( function_exists( 'add_woocommerce_inbox_variant' ) ) {
+			add_woocommerce_inbox_variant();
 		}
 
 		update_option( 'wc_ppec_version', $new_version );
@@ -150,6 +169,8 @@ class WC_Gateway_PPEC_Plugin {
 		add_filter( 'plugin_action_links_' . plugin_basename( $this->file ), array( $this, 'plugin_action_links' ) );
 		add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
 		add_action( 'wp_ajax_ppec_dismiss_notice_message', array( $this, 'ajax_dismiss_notice' ) );
+
+		add_action( 'after_plugin_row_' . plugin_basename( $this->file ), array( $this, 'ppec_upgrade_notice' ), 10, 3 );
 	}
 
 	public function bootstrap() {
@@ -260,8 +281,8 @@ class WC_Gateway_PPEC_Plugin {
 			throw new Exception( __( 'WooCommerce Gateway PayPal Checkout requires WooCommerce to be activated', 'woocommerce-gateway-paypal-express-checkout' ), self::DEPENDENCIES_UNSATISFIED );
 		}
 
-		if ( version_compare( WC()->version, '2.5', '<' ) ) {
-			throw new Exception( __( 'WooCommerce Gateway PayPal Checkout requires WooCommerce version 2.5 or greater', 'woocommerce-gateway-paypal-express-checkout' ), self::DEPENDENCIES_UNSATISFIED );
+		if ( version_compare( WC()->version, '3.2.0', '<' ) ) {
+			throw new Exception( __( 'WooCommerce Gateway PayPal Checkout requires WooCommerce version 3.2.0 or greater', 'woocommerce-gateway-paypal-express-checkout' ), self::DEPENDENCIES_UNSATISFIED );
 		}
 
 		if ( ! function_exists( 'curl_init' ) ) {
@@ -475,6 +496,22 @@ class WC_Gateway_PPEC_Plugin {
 		}
 
 		return apply_filters( 'woocommerce_cart_needs_shipping', $needs_shipping );
+	}
+
+	/**
+	 * Displays notice to upgrade to PayPal Payments.
+	 *
+	 * @param string $plugin_file Path to the plugin file relative to the plugins directory.
+	 * @param array $plugin_data An array of plugin data.
+	 * @param string $status Status filter currently applied to the plugin list.
+	 */
+	public function ppec_upgrade_notice( $plugin_file, $plugin_data, $status ) {
+		// Load styles & scripts required for the notice.
+		wp_enqueue_style( 'ppec-upgrade-notice', plugin_dir_url( __DIR__ ) . '/assets/css/admin/ppec-upgrade-notice.css', array(), WC_GATEWAY_PPEC_VERSION );
+		wp_enqueue_script( 'ppec-upgrade-notice-js', plugin_dir_url( __DIR__ ) . '/assets/js/admin/ppec-upgrade-notice.js', array(), WC_GATEWAY_PPEC_VERSION, false );
+
+		// Load notice template.
+		include_once $this->plugin_path . 'templates/paypal-payments-upgrade-notice.php';
 	}
 
 	/* Deprecated Functions */

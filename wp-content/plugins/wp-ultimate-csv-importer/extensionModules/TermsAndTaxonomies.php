@@ -35,7 +35,7 @@ class TermsAndTaxonomies extends ExtensionHandler{
 		$importas = $this->import_post_types($import_type);	
 		$taxonomies = get_object_taxonomies( $importas, 'names' );
 		
-		$search_array = array('post_format','product_type','product_visibility','product_shipping_class');
+		$search_array = array('post_format','product_type','product_visibility','product_shipping_class','language','post_translations');
 		foreach($search_array as $search_values){
 			if(in_array($search_values , $taxonomies)){
 				$search_format = array_search($search_values , $taxonomies);

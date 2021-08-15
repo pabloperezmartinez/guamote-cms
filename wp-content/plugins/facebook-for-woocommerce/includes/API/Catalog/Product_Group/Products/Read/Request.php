@@ -28,16 +28,31 @@ class Request extends API\Request {
 	 * @since 2.0.0
 	 *
 	 * @param string $product_group_id product group ID
-	 * @param int $limit max number of results returned
+	 * @param int    $limit max number of results returned
 	 */
 	public function __construct( $product_group_id, $limit ) {
 
 		parent::__construct( "/{$product_group_id}/products", 'GET' );
 
-		$this->set_params( [
-			'fields' => 'id,retailer_id',
-			'limit'  => $limit,
-		] );
+		$this->set_params(
+			array(
+				'fields' => 'id,retailer_id',
+				'limit'  => $limit,
+			)
+		);
+	}
+
+
+	/**
+	 * Gets the rate limit ID.
+	 *
+	 * @since 2.1.0
+	 *
+	 * @return string
+	 */
+	public static function get_rate_limit_id() {
+
+		return 'ads_management';
 	}
 
 

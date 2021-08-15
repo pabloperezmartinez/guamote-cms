@@ -27,7 +27,7 @@ class DefaultExtension extends ExtensionHandler{
 	* @return array - mapping fields
 	*/
 	public function processExtension($data){
-		$mode = $_POST['Mode'];
+		$mode = isset($_POST['Mode']) ? sanitize_text_field($_POST['Mode']) :'';
 		$import_types = $data;
 		$import_type = $this->import_name_as($import_types);
 		$response = [];

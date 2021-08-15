@@ -19,20 +19,6 @@ class Redirect {
 	private function __construct() {}
 
 	/**
-	 * Strip http:// or https:// from a url, replaces forward slash with ::,
-	 * so we can bring them directly to their site in calypso.
-	 *
-	 * @param string $url the full URL.
-	 * @return string $url without the guff
-	 */
-	private static function build_raw_urls( $url ) {
-		$strip_http = '/.*?:\/\//i';
-		$url        = preg_replace( $strip_http, '', $url );
-		$url        = str_replace( '/', '::', $url );
-		return $url;
-	}
-
-	/**
 	 * Builds and returns an URL using the jetpack.com/redirect/ service
 	 *
 	 * If $source is a simple slug, it will be sent using the source query parameter. e.g. jetpack.com/redirect/?source=slug
@@ -43,28 +29,27 @@ class Redirect {
 	 *
 	 * @param string       $source The URL handler registered in the server or the full destination URL (starting with https://).
 	 * @param array|string $args {
-	 *    Optional. Additional arguments to build the url.
+	 *    Optional. Additional arguments to build the url. This is not a complete list as any argument passed here will be sent to as a query parameter to the Redirect server. These parameters will not necessarily be passed over to the final destination URL. If you want to add a parameter to the final destination URL, use the `query` argument.
 	 *
-	 *    @type string $site URL of the site; Default is current site.
-	 *    @type string $path Additional path to be appended to the URL.
-	 *    @type string $query Query parameters to be added to the URL.
-	 *    @type string $anchor Anchor to be added to the URL.
+	 *    @type string  $site URL of the site; Default is current site.
+	 *    @type string  $path Additional path to be appended to the URL.
+	 *    @type string  $query Query parameters to be added to the final destination URL. should be in query string format (e.g. 'key=value&foo=bar').
+	 *    @type string  $anchor Anchor to be added to the URL.
+	 *    @type integer $u The user ID.
 	 * }
 	 *
 	 * @return string The built URL
 	 */
 	public static function get_url( $source, $args = array() ) {
 
-		$url           = 'https://jetpack.com/redirect/';
-		$args          = wp_parse_args( $args, array( 'site' => self::build_raw_urls( get_home_url() ) ) );
-		$accepted_args = array( 'site', 'path', 'query', 'anchor' );
+		$url         = 'https://jetpack.com/redirect/';
+		$site_suffix = ( new Status() )->get_site_suffix();
+		$args        = wp_parse_args( $args, array( 'site' => $site_suffix ) );
 
 		$source_key = 'source';
-		$is_url     = false;
 
 		if ( 0 === strpos( $source, 'https://' ) ) {
 			$source_key = 'url';
-			$is_url     = true;
 			$source_url = \wp_parse_url( $source );
 
 			// discard any query and fragments.
@@ -77,7 +62,7 @@ class Redirect {
 
 		foreach ( $args as $arg_name => $arg_value ) {
 
-			if ( ! in_array( $arg_name, $accepted_args, true ) || empty( $arg_value ) ) {
+			if ( empty( $arg_value ) ) {
 				continue;
 			}
 
@@ -89,16 +74,6 @@ class Redirect {
 			$url = add_query_arg( $to_be_added, $url );
 		}
 
-		/**
-		 * Filters the return of the Redirect URL.
-		 *
-		 * @since 8.6.0
-		 *
-		 * @param string  $url    The redirect URL.
-		 * @param string  $source The $source informed to Redirect::get_url.
-		 * @param array   $args   The arguments informed to Redirect::get_url.
-		 * @param boolean $is_url Whether $source is a URL or not.
-		 */
-		return \apply_filters( 'jetpack_redirects_get_url', $url, $source, $args, $is_url );
+		return $url;
 	}
 }
