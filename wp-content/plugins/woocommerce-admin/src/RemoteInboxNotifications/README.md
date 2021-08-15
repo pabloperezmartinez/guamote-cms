@@ -128,6 +128,34 @@ The `status` is what the status of the created note will be set to after interac
 ## Rule
 Rules in an array are executed as an AND operation. If there are no rules in the array the result is false and the specified notification is not shown.
 
+### Operations
+Some rule types support an `operation` value, which is used to compare two
+values. The following operations are implemented:
+
+- `=`
+- `<`
+- `<=`
+- `>`
+- `>=`
+- `!=`
+- `contains`
+- `!contains`
+
+`contains` and `!contains` allow checking if the provided value is present (or
+not present) in the haystack value. An example of this is using the
+`onboarding_profile` rule to match on a value in the `product_types` array -
+this rule matches if `physical` was selected as a product type in the
+onboarding profile:
+
+```json
+{
+	'type': 'onboarding_profile',
+	'index': 'product_types',
+	'operation': 'contains',
+	'value': 'physical'
+}
+```
+
 ### Plugins activated
 This passes if all of the listed plugins are installed and activated.
 
@@ -265,6 +293,7 @@ The currently available indices are:
 ```
 there_were_no_products
 there_are_now_products
+new_product_count
 ```
 
 `index`, `operation`, and `value` are required.
@@ -342,4 +371,129 @@ This passes when the store is on a WordPress.com site with the eCommerce plan.
 
 `value` is required.
 
+### Base location - country
+This passes when the store is located in the specified country.
 
+```
+{
+	"type": "base_location_country",
+	"value": "US",
+	"operation": "="
+}
+```
+
+`value` and `operation` are both required.
+
+### Base location - state
+This passes when the store is located in the specified state.
+
+```
+{
+	"type": "base_location_state",
+	"value": "TX",
+	"operation": "="
+}
+```
+
+`value` and `operation` are both required.
+
+### Note status
+This passes when the status of the specified note matches the specified status.
+The below example passes when the `wc-admin-mobile-app` note has not been
+actioned.
+
+```
+{
+	"type": "note_status",
+	"note_name": "wc-admin-mobile-app",
+	"status": "actioned",
+	"operation": "!="
+}
+```
+
+### Option
+This passes when the option value matches the value using the operation.
+
+```
+{
+	"type": "option",
+	"option_name": "woocommerce_currency",
+	"value": "USD",
+	"default": "USD",
+	"operation": "="
+}
+```
+
+`option_name`, `value`, and `operation` are all required. `default` is not required and allows a default value to be used if the option does not exist.
+
+#### Option Transformer
+
+This transforms the given option value into a different value by a series of transformers.
+
+Example option value:
+
+```
+Array
+(
+    [setup_client] => 
+    [industry] => Array
+        (
+            [0] => Array
+                (
+                    [slug] => food-drink
+                )
+
+            [1] => Array
+                (
+                    [slug] => fashion-apparel-accessories
+                )
+        )
+)
+```
+If you want to ensure that the industry array contains `fashion-apparel-accessories`, you can use the following Option definition with transformers.
+
+```
+{
+	"type": "option",
+	"transformers": [
+	    {
+	        "use": "dot_notation",
+	        "arguments": {
+	            "path": "industry"
+	        }
+	    },
+	    {
+	        "use": "array_column",
+	        "arguments": {
+	            "key": "slug"
+	        }
+	    },
+	    {
+	        "use": "array_search",
+	        "arguments": {
+	            "value": "fashion-apparel-accessories"
+	        }
+	    }
+	],
+	"option_name": "woocommerce_onboarding_profile",
+	"value": "fashion-apparel-accessories",
+	"default": "USD",
+	"operation": "="
+}
+```
+
+You can find a list of transformers and examples in the transformer [README](./Transformers/README.md).
+
+### WCA updated
+This passes when WooCommerce Admin has just been updated. The specs will be run
+on update. Note that this doesn't provide a way to check the version number as
+the `plugin_version` rule can be used to check for a specific version of the
+WooCommerce Admin plugin.
+
+```
+{
+	type: "wca_updated"
+}
+```
+
+No other values are needed.

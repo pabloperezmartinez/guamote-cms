@@ -82,7 +82,7 @@ this["wc"] = this["wc"] || {}; this["wc"]["data"] =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 707);
+/******/ 	return __webpack_require__(__webpack_require__.s = 460);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -90,1103 +90,419 @@ this["wc"] = this["wc"] || {}; this["wc"]["data"] =
 /***/ 0:
 /***/ (function(module, exports) {
 
-(function() { module.exports = this["wp"]["element"]; }());
+(function() { module.exports = window["wp"]["element"]; }());
 
 /***/ }),
 
-/***/ 105:
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-var runtime = (function (exports) {
-  "use strict";
-
-  var Op = Object.prototype;
-  var hasOwn = Op.hasOwnProperty;
-  var undefined; // More compressible than void 0.
-  var $Symbol = typeof Symbol === "function" ? Symbol : {};
-  var iteratorSymbol = $Symbol.iterator || "@@iterator";
-  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
-  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
-
-  function define(obj, key, value) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-    return obj[key];
-  }
-  try {
-    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
-    define({}, "");
-  } catch (err) {
-    define = function(obj, key, value) {
-      return obj[key] = value;
-    };
-  }
-
-  function wrap(innerFn, outerFn, self, tryLocsList) {
-    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
-    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
-    var generator = Object.create(protoGenerator.prototype);
-    var context = new Context(tryLocsList || []);
-
-    // The ._invoke method unifies the implementations of the .next,
-    // .throw, and .return methods.
-    generator._invoke = makeInvokeMethod(innerFn, self, context);
-
-    return generator;
-  }
-  exports.wrap = wrap;
-
-  // Try/catch helper to minimize deoptimizations. Returns a completion
-  // record like context.tryEntries[i].completion. This interface could
-  // have been (and was previously) designed to take a closure to be
-  // invoked without arguments, but in all the cases we care about we
-  // already have an existing method we want to call, so there's no need
-  // to create a new function object. We can even get away with assuming
-  // the method takes exactly one argument, since that happens to be true
-  // in every case, so we don't have to touch the arguments object. The
-  // only additional allocation required is the completion record, which
-  // has a stable shape and so hopefully should be cheap to allocate.
-  function tryCatch(fn, obj, arg) {
-    try {
-      return { type: "normal", arg: fn.call(obj, arg) };
-    } catch (err) {
-      return { type: "throw", arg: err };
-    }
-  }
-
-  var GenStateSuspendedStart = "suspendedStart";
-  var GenStateSuspendedYield = "suspendedYield";
-  var GenStateExecuting = "executing";
-  var GenStateCompleted = "completed";
-
-  // Returning this object from the innerFn has the same effect as
-  // breaking out of the dispatch switch statement.
-  var ContinueSentinel = {};
-
-  // Dummy constructor functions that we use as the .constructor and
-  // .constructor.prototype properties for functions that return Generator
-  // objects. For full spec compliance, you may wish to configure your
-  // minifier not to mangle the names of these two functions.
-  function Generator() {}
-  function GeneratorFunction() {}
-  function GeneratorFunctionPrototype() {}
-
-  // This is a polyfill for %IteratorPrototype% for environments that
-  // don't natively support it.
-  var IteratorPrototype = {};
-  IteratorPrototype[iteratorSymbol] = function () {
-    return this;
-  };
-
-  var getProto = Object.getPrototypeOf;
-  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
-  if (NativeIteratorPrototype &&
-      NativeIteratorPrototype !== Op &&
-      hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
-    // This environment has a native %IteratorPrototype%; use it instead
-    // of the polyfill.
-    IteratorPrototype = NativeIteratorPrototype;
-  }
-
-  var Gp = GeneratorFunctionPrototype.prototype =
-    Generator.prototype = Object.create(IteratorPrototype);
-  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
-  GeneratorFunctionPrototype.constructor = GeneratorFunction;
-  GeneratorFunction.displayName = define(
-    GeneratorFunctionPrototype,
-    toStringTagSymbol,
-    "GeneratorFunction"
-  );
-
-  // Helper for defining the .next, .throw, and .return methods of the
-  // Iterator interface in terms of a single ._invoke method.
-  function defineIteratorMethods(prototype) {
-    ["next", "throw", "return"].forEach(function(method) {
-      define(prototype, method, function(arg) {
-        return this._invoke(method, arg);
-      });
-    });
-  }
-
-  exports.isGeneratorFunction = function(genFun) {
-    var ctor = typeof genFun === "function" && genFun.constructor;
-    return ctor
-      ? ctor === GeneratorFunction ||
-        // For the native GeneratorFunction constructor, the best we can
-        // do is to check its .name property.
-        (ctor.displayName || ctor.name) === "GeneratorFunction"
-      : false;
-  };
-
-  exports.mark = function(genFun) {
-    if (Object.setPrototypeOf) {
-      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
-    } else {
-      genFun.__proto__ = GeneratorFunctionPrototype;
-      define(genFun, toStringTagSymbol, "GeneratorFunction");
-    }
-    genFun.prototype = Object.create(Gp);
-    return genFun;
-  };
-
-  // Within the body of any async function, `await x` is transformed to
-  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
-  // `hasOwn.call(value, "__await")` to determine if the yielded value is
-  // meant to be awaited.
-  exports.awrap = function(arg) {
-    return { __await: arg };
-  };
-
-  function AsyncIterator(generator, PromiseImpl) {
-    function invoke(method, arg, resolve, reject) {
-      var record = tryCatch(generator[method], generator, arg);
-      if (record.type === "throw") {
-        reject(record.arg);
-      } else {
-        var result = record.arg;
-        var value = result.value;
-        if (value &&
-            typeof value === "object" &&
-            hasOwn.call(value, "__await")) {
-          return PromiseImpl.resolve(value.__await).then(function(value) {
-            invoke("next", value, resolve, reject);
-          }, function(err) {
-            invoke("throw", err, resolve, reject);
-          });
-        }
-
-        return PromiseImpl.resolve(value).then(function(unwrapped) {
-          // When a yielded Promise is resolved, its final value becomes
-          // the .value of the Promise<{value,done}> result for the
-          // current iteration.
-          result.value = unwrapped;
-          resolve(result);
-        }, function(error) {
-          // If a rejected Promise was yielded, throw the rejection back
-          // into the async generator function so it can be handled there.
-          return invoke("throw", error, resolve, reject);
-        });
-      }
-    }
-
-    var previousPromise;
-
-    function enqueue(method, arg) {
-      function callInvokeWithMethodAndArg() {
-        return new PromiseImpl(function(resolve, reject) {
-          invoke(method, arg, resolve, reject);
-        });
-      }
-
-      return previousPromise =
-        // If enqueue has been called before, then we want to wait until
-        // all previous Promises have been resolved before calling invoke,
-        // so that results are always delivered in the correct order. If
-        // enqueue has not been called before, then it is important to
-        // call invoke immediately, without waiting on a callback to fire,
-        // so that the async generator function has the opportunity to do
-        // any necessary setup in a predictable way. This predictability
-        // is why the Promise constructor synchronously invokes its
-        // executor callback, and why async functions synchronously
-        // execute code before the first await. Since we implement simple
-        // async functions in terms of async generators, it is especially
-        // important to get this right, even though it requires care.
-        previousPromise ? previousPromise.then(
-          callInvokeWithMethodAndArg,
-          // Avoid propagating failures to Promises returned by later
-          // invocations of the iterator.
-          callInvokeWithMethodAndArg
-        ) : callInvokeWithMethodAndArg();
-    }
-
-    // Define the unified helper method that is used to implement .next,
-    // .throw, and .return (see defineIteratorMethods).
-    this._invoke = enqueue;
-  }
-
-  defineIteratorMethods(AsyncIterator.prototype);
-  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
-    return this;
-  };
-  exports.AsyncIterator = AsyncIterator;
-
-  // Note that simple async functions are implemented on top of
-  // AsyncIterator objects; they just return a Promise for the value of
-  // the final result produced by the iterator.
-  exports.async = function(innerFn, outerFn, self, tryLocsList, PromiseImpl) {
-    if (PromiseImpl === void 0) PromiseImpl = Promise;
-
-    var iter = new AsyncIterator(
-      wrap(innerFn, outerFn, self, tryLocsList),
-      PromiseImpl
-    );
-
-    return exports.isGeneratorFunction(outerFn)
-      ? iter // If outerFn is a generator, return the full iterator.
-      : iter.next().then(function(result) {
-          return result.done ? result.value : iter.next();
-        });
-  };
-
-  function makeInvokeMethod(innerFn, self, context) {
-    var state = GenStateSuspendedStart;
-
-    return function invoke(method, arg) {
-      if (state === GenStateExecuting) {
-        throw new Error("Generator is already running");
-      }
-
-      if (state === GenStateCompleted) {
-        if (method === "throw") {
-          throw arg;
-        }
-
-        // Be forgiving, per 25.3.3.3.3 of the spec:
-        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
-        return doneResult();
-      }
-
-      context.method = method;
-      context.arg = arg;
-
-      while (true) {
-        var delegate = context.delegate;
-        if (delegate) {
-          var delegateResult = maybeInvokeDelegate(delegate, context);
-          if (delegateResult) {
-            if (delegateResult === ContinueSentinel) continue;
-            return delegateResult;
-          }
-        }
-
-        if (context.method === "next") {
-          // Setting context._sent for legacy support of Babel's
-          // function.sent implementation.
-          context.sent = context._sent = context.arg;
-
-        } else if (context.method === "throw") {
-          if (state === GenStateSuspendedStart) {
-            state = GenStateCompleted;
-            throw context.arg;
-          }
-
-          context.dispatchException(context.arg);
-
-        } else if (context.method === "return") {
-          context.abrupt("return", context.arg);
-        }
-
-        state = GenStateExecuting;
-
-        var record = tryCatch(innerFn, self, context);
-        if (record.type === "normal") {
-          // If an exception is thrown from innerFn, we leave state ===
-          // GenStateExecuting and loop back for another invocation.
-          state = context.done
-            ? GenStateCompleted
-            : GenStateSuspendedYield;
-
-          if (record.arg === ContinueSentinel) {
-            continue;
-          }
-
-          return {
-            value: record.arg,
-            done: context.done
-          };
-
-        } else if (record.type === "throw") {
-          state = GenStateCompleted;
-          // Dispatch the exception by looping back around to the
-          // context.dispatchException(context.arg) call above.
-          context.method = "throw";
-          context.arg = record.arg;
-        }
-      }
-    };
-  }
-
-  // Call delegate.iterator[context.method](context.arg) and handle the
-  // result, either by returning a { value, done } result from the
-  // delegate iterator, or by modifying context.method and context.arg,
-  // setting context.delegate to null, and returning the ContinueSentinel.
-  function maybeInvokeDelegate(delegate, context) {
-    var method = delegate.iterator[context.method];
-    if (method === undefined) {
-      // A .throw or .return when the delegate iterator has no .throw
-      // method always terminates the yield* loop.
-      context.delegate = null;
-
-      if (context.method === "throw") {
-        // Note: ["return"] must be used for ES3 parsing compatibility.
-        if (delegate.iterator["return"]) {
-          // If the delegate iterator has a return method, give it a
-          // chance to clean up.
-          context.method = "return";
-          context.arg = undefined;
-          maybeInvokeDelegate(delegate, context);
-
-          if (context.method === "throw") {
-            // If maybeInvokeDelegate(context) changed context.method from
-            // "return" to "throw", let that override the TypeError below.
-            return ContinueSentinel;
-          }
-        }
-
-        context.method = "throw";
-        context.arg = new TypeError(
-          "The iterator does not provide a 'throw' method");
-      }
-
-      return ContinueSentinel;
-    }
-
-    var record = tryCatch(method, delegate.iterator, context.arg);
-
-    if (record.type === "throw") {
-      context.method = "throw";
-      context.arg = record.arg;
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    var info = record.arg;
-
-    if (! info) {
-      context.method = "throw";
-      context.arg = new TypeError("iterator result is not an object");
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    if (info.done) {
-      // Assign the result of the finished delegate to the temporary
-      // variable specified by delegate.resultName (see delegateYield).
-      context[delegate.resultName] = info.value;
-
-      // Resume execution at the desired location (see delegateYield).
-      context.next = delegate.nextLoc;
-
-      // If context.method was "throw" but the delegate handled the
-      // exception, let the outer generator proceed normally. If
-      // context.method was "next", forget context.arg since it has been
-      // "consumed" by the delegate iterator. If context.method was
-      // "return", allow the original .return call to continue in the
-      // outer generator.
-      if (context.method !== "return") {
-        context.method = "next";
-        context.arg = undefined;
-      }
-
-    } else {
-      // Re-yield the result returned by the delegate method.
-      return info;
-    }
-
-    // The delegate iterator is finished, so forget it and continue with
-    // the outer generator.
-    context.delegate = null;
-    return ContinueSentinel;
-  }
-
-  // Define Generator.prototype.{next,throw,return} in terms of the
-  // unified ._invoke helper method.
-  defineIteratorMethods(Gp);
-
-  define(Gp, toStringTagSymbol, "Generator");
-
-  // A Generator should always return itself as the iterator object when the
-  // @@iterator function is called on it. Some browsers' implementations of the
-  // iterator prototype chain incorrectly implement this, causing the Generator
-  // object to not be returned from this call. This ensures that doesn't happen.
-  // See https://github.com/facebook/regenerator/issues/274 for more details.
-  Gp[iteratorSymbol] = function() {
-    return this;
-  };
-
-  Gp.toString = function() {
-    return "[object Generator]";
-  };
-
-  function pushTryEntry(locs) {
-    var entry = { tryLoc: locs[0] };
-
-    if (1 in locs) {
-      entry.catchLoc = locs[1];
-    }
-
-    if (2 in locs) {
-      entry.finallyLoc = locs[2];
-      entry.afterLoc = locs[3];
-    }
-
-    this.tryEntries.push(entry);
-  }
-
-  function resetTryEntry(entry) {
-    var record = entry.completion || {};
-    record.type = "normal";
-    delete record.arg;
-    entry.completion = record;
-  }
-
-  function Context(tryLocsList) {
-    // The root entry object (effectively a try statement without a catch
-    // or a finally block) gives us a place to store values thrown from
-    // locations where there is no enclosing try statement.
-    this.tryEntries = [{ tryLoc: "root" }];
-    tryLocsList.forEach(pushTryEntry, this);
-    this.reset(true);
-  }
-
-  exports.keys = function(object) {
-    var keys = [];
-    for (var key in object) {
-      keys.push(key);
-    }
-    keys.reverse();
-
-    // Rather than returning an object with a next method, we keep
-    // things simple and return the next function itself.
-    return function next() {
-      while (keys.length) {
-        var key = keys.pop();
-        if (key in object) {
-          next.value = key;
-          next.done = false;
-          return next;
-        }
-      }
-
-      // To avoid creating an additional object, we just hang the .value
-      // and .done properties off the next function object itself. This
-      // also ensures that the minifier will not anonymize the function.
-      next.done = true;
-      return next;
-    };
-  };
-
-  function values(iterable) {
-    if (iterable) {
-      var iteratorMethod = iterable[iteratorSymbol];
-      if (iteratorMethod) {
-        return iteratorMethod.call(iterable);
-      }
-
-      if (typeof iterable.next === "function") {
-        return iterable;
-      }
-
-      if (!isNaN(iterable.length)) {
-        var i = -1, next = function next() {
-          while (++i < iterable.length) {
-            if (hasOwn.call(iterable, i)) {
-              next.value = iterable[i];
-              next.done = false;
-              return next;
-            }
-          }
-
-          next.value = undefined;
-          next.done = true;
-
-          return next;
-        };
-
-        return next.next = next;
-      }
-    }
-
-    // Return an iterator with no values.
-    return { next: doneResult };
-  }
-  exports.values = values;
-
-  function doneResult() {
-    return { value: undefined, done: true };
-  }
-
-  Context.prototype = {
-    constructor: Context,
-
-    reset: function(skipTempReset) {
-      this.prev = 0;
-      this.next = 0;
-      // Resetting context._sent for legacy support of Babel's
-      // function.sent implementation.
-      this.sent = this._sent = undefined;
-      this.done = false;
-      this.delegate = null;
-
-      this.method = "next";
-      this.arg = undefined;
-
-      this.tryEntries.forEach(resetTryEntry);
-
-      if (!skipTempReset) {
-        for (var name in this) {
-          // Not sure about the optimal order of these conditions:
-          if (name.charAt(0) === "t" &&
-              hasOwn.call(this, name) &&
-              !isNaN(+name.slice(1))) {
-            this[name] = undefined;
-          }
-        }
-      }
-    },
-
-    stop: function() {
-      this.done = true;
-
-      var rootEntry = this.tryEntries[0];
-      var rootRecord = rootEntry.completion;
-      if (rootRecord.type === "throw") {
-        throw rootRecord.arg;
-      }
-
-      return this.rval;
-    },
-
-    dispatchException: function(exception) {
-      if (this.done) {
-        throw exception;
-      }
-
-      var context = this;
-      function handle(loc, caught) {
-        record.type = "throw";
-        record.arg = exception;
-        context.next = loc;
-
-        if (caught) {
-          // If the dispatched exception was caught by a catch block,
-          // then let that catch block handle the exception normally.
-          context.method = "next";
-          context.arg = undefined;
-        }
-
-        return !! caught;
-      }
-
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        var record = entry.completion;
-
-        if (entry.tryLoc === "root") {
-          // Exception thrown outside of any try block that could handle
-          // it, so set the completion value of the entire function to
-          // throw the exception.
-          return handle("end");
-        }
-
-        if (entry.tryLoc <= this.prev) {
-          var hasCatch = hasOwn.call(entry, "catchLoc");
-          var hasFinally = hasOwn.call(entry, "finallyLoc");
-
-          if (hasCatch && hasFinally) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            } else if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-
-          } else if (hasCatch) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            }
-
-          } else if (hasFinally) {
-            if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-
-          } else {
-            throw new Error("try statement without catch or finally");
-          }
-        }
-      }
-    },
-
-    abrupt: function(type, arg) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        if (entry.tryLoc <= this.prev &&
-            hasOwn.call(entry, "finallyLoc") &&
-            this.prev < entry.finallyLoc) {
-          var finallyEntry = entry;
-          break;
-        }
-      }
-
-      if (finallyEntry &&
-          (type === "break" ||
-           type === "continue") &&
-          finallyEntry.tryLoc <= arg &&
-          arg <= finallyEntry.finallyLoc) {
-        // Ignore the finally entry if control is not jumping to a
-        // location outside the try/catch block.
-        finallyEntry = null;
-      }
-
-      var record = finallyEntry ? finallyEntry.completion : {};
-      record.type = type;
-      record.arg = arg;
-
-      if (finallyEntry) {
-        this.method = "next";
-        this.next = finallyEntry.finallyLoc;
-        return ContinueSentinel;
-      }
-
-      return this.complete(record);
-    },
-
-    complete: function(record, afterLoc) {
-      if (record.type === "throw") {
-        throw record.arg;
-      }
-
-      if (record.type === "break" ||
-          record.type === "continue") {
-        this.next = record.arg;
-      } else if (record.type === "return") {
-        this.rval = this.arg = record.arg;
-        this.method = "return";
-        this.next = "end";
-      } else if (record.type === "normal" && afterLoc) {
-        this.next = afterLoc;
-      }
-
-      return ContinueSentinel;
-    },
-
-    finish: function(finallyLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        if (entry.finallyLoc === finallyLoc) {
-          this.complete(entry.completion, entry.afterLoc);
-          resetTryEntry(entry);
-          return ContinueSentinel;
-        }
-      }
-    },
-
-    "catch": function(tryLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        if (entry.tryLoc === tryLoc) {
-          var record = entry.completion;
-          if (record.type === "throw") {
-            var thrown = record.arg;
-            resetTryEntry(entry);
-          }
-          return thrown;
-        }
-      }
-
-      // The context.catch method must only be called with a location
-      // argument that corresponds to a known catch block.
-      throw new Error("illegal catch attempt");
-    },
-
-    delegateYield: function(iterable, resultName, nextLoc) {
-      this.delegate = {
-        iterator: values(iterable),
-        resultName: resultName,
-        nextLoc: nextLoc
-      };
-
-      if (this.method === "next") {
-        // Deliberately forget the last sent value so that we don't
-        // accidentally pass it on to the delegate.
-        this.arg = undefined;
-      }
-
-      return ContinueSentinel;
-    }
-  };
-
-  // Regardless of whether this script is executing as a CommonJS module
-  // or not, return the runtime object so that we can declare the variable
-  // regeneratorRuntime in the outer scope, which allows this module to be
-  // injected easily by `bin/regenerator --include-runtime script.js`.
-  return exports;
-
-}(
-  // If this script is executing as a CommonJS module, use module.exports
-  // as the regeneratorRuntime namespace. Otherwise create a new empty
-  // object. Either way, the resulting object will be used to initialize
-  // the regeneratorRuntime variable at the top of this file.
-   true ? module.exports : undefined
-));
-
-try {
-  regeneratorRuntime = runtime;
-} catch (accidentalStrictMode) {
-  // This module should not be running in strict mode, so the above
-  // assignment should always work unless something is misconfigured. Just
-  // in case runtime.js accidentally runs in strict mode, we can escape
-  // strict mode using a global Function call. This could conceivably fail
-  // if a Content Security Policy forbids using Function, but in that case
-  // the proper solution is to fix the accidental strict mode problem. If
-  // you've misconfigured your bundler to force strict mode and applied a
-  // CSP to forbid Function, and you're not willing to fix either of those
-  // problems, please detail your unique predicament in a GitHub issue.
-  Function("r", "regeneratorRuntime = r")(runtime);
-}
-
-
-/***/ }),
-
-/***/ 106:
-/***/ (function(module, exports, __webpack_require__) {
-
-var arrayLikeToArray = __webpack_require__(73);
-
-function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) return arrayLikeToArray(arr);
-}
-
-module.exports = _arrayWithoutHoles;
-
-/***/ }),
-
-/***/ 107:
+/***/ 10:
 /***/ (function(module, exports) {
 
-function _iterableToArray(iter) {
-  if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
-}
-
-module.exports = _iterableToArray;
+(function() { module.exports = window["wp"]["dataControls"]; }());
 
 /***/ }),
 
-/***/ 108:
+/***/ 12:
 /***/ (function(module, exports) {
 
-function _nonIterableSpread() {
-  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-}
-
-module.exports = _nonIterableSpread;
+(function() { module.exports = window["wc"]["navigation"]; }());
 
 /***/ }),
 
-/***/ 16:
-/***/ (function(module, exports, __webpack_require__) {
+/***/ 13:
+/***/ (function(module, exports) {
 
-module.exports = __webpack_require__(105);
+(function() { module.exports = window["wp"]["compose"]; }());
 
+/***/ }),
+
+/***/ 14:
+/***/ (function(module, exports) {
+
+(function() { module.exports = window["wp"]["url"]; }());
+
+/***/ }),
+
+/***/ 17:
+/***/ (function(module, exports) {
+
+(function() { module.exports = window["wp"]["apiFetch"]; }());
+
+/***/ }),
+
+/***/ 19:
+/***/ (function(module, exports) {
+
+(function() { module.exports = window["wc"]["date"]; }());
 
 /***/ }),
 
 /***/ 2:
 /***/ (function(module, exports) {
 
-(function() { module.exports = this["lodash"]; }());
+(function() { module.exports = window["wp"]["i18n"]; }());
 
 /***/ }),
 
-/***/ 24:
+/***/ 249:
 /***/ (function(module, exports) {
 
-(function() { module.exports = this["wp"]["data"]; }());
+var charenc = {
+  // UTF-8 encoding
+  utf8: {
+    // Convert a string to a byte array
+    stringToBytes: function(str) {
+      return charenc.bin.stringToBytes(unescape(encodeURIComponent(str)));
+    },
+
+    // Convert a byte array to a string
+    bytesToString: function(bytes) {
+      return decodeURIComponent(escape(charenc.bin.bytesToString(bytes)));
+    }
+  },
+
+  // Binary encoding
+  bin: {
+    // Convert a string to a byte array
+    stringToBytes: function(str) {
+      for (var bytes = [], i = 0; i < str.length; i++)
+        bytes.push(str.charCodeAt(i) & 0xFF);
+      return bytes;
+    },
+
+    // Convert a byte array to a string
+    bytesToString: function(bytes) {
+      for (var str = [], i = 0; i < bytes.length; i++)
+        str.push(String.fromCharCode(bytes[i]));
+      return str.join('');
+    }
+  }
+};
+
+module.exports = charenc;
+
 
 /***/ }),
 
-/***/ 25:
+/***/ 266:
 /***/ (function(module, exports, __webpack_require__) {
 
-var arrayWithoutHoles = __webpack_require__(106);
+(function(){
+  var crypt = __webpack_require__(447),
+      utf8 = __webpack_require__(249).utf8,
+      isBuffer = __webpack_require__(448),
+      bin = __webpack_require__(249).bin,
 
-var iterableToArray = __webpack_require__(107);
+  // The core
+  md5 = function (message, options) {
+    // Convert to byte array
+    if (message.constructor == String)
+      if (options && options.encoding === 'binary')
+        message = bin.stringToBytes(message);
+      else
+        message = utf8.stringToBytes(message);
+    else if (isBuffer(message))
+      message = Array.prototype.slice.call(message, 0);
+    else if (!Array.isArray(message) && message.constructor !== Uint8Array)
+      message = message.toString();
+    // else, assume byte array already
 
-var unsupportedIterableToArray = __webpack_require__(77);
+    var m = crypt.bytesToWords(message),
+        l = message.length * 8,
+        a =  1732584193,
+        b = -271733879,
+        c = -1732584194,
+        d =  271733878;
 
-var nonIterableSpread = __webpack_require__(108);
+    // Swap endian
+    for (var i = 0; i < m.length; i++) {
+      m[i] = ((m[i] <<  8) | (m[i] >>> 24)) & 0x00FF00FF |
+             ((m[i] << 24) | (m[i] >>>  8)) & 0xFF00FF00;
+    }
 
-function _toConsumableArray(arr) {
-  return arrayWithoutHoles(arr) || iterableToArray(arr) || unsupportedIterableToArray(arr) || nonIterableSpread();
-}
+    // Padding
+    m[l >>> 5] |= 0x80 << (l % 32);
+    m[(((l + 64) >>> 9) << 4) + 14] = l;
 
-module.exports = _toConsumableArray;
+    // Method shortcuts
+    var FF = md5._ff,
+        GG = md5._gg,
+        HH = md5._hh,
+        II = md5._ii;
+
+    for (var i = 0; i < m.length; i += 16) {
+
+      var aa = a,
+          bb = b,
+          cc = c,
+          dd = d;
+
+      a = FF(a, b, c, d, m[i+ 0],  7, -680876936);
+      d = FF(d, a, b, c, m[i+ 1], 12, -389564586);
+      c = FF(c, d, a, b, m[i+ 2], 17,  606105819);
+      b = FF(b, c, d, a, m[i+ 3], 22, -1044525330);
+      a = FF(a, b, c, d, m[i+ 4],  7, -176418897);
+      d = FF(d, a, b, c, m[i+ 5], 12,  1200080426);
+      c = FF(c, d, a, b, m[i+ 6], 17, -1473231341);
+      b = FF(b, c, d, a, m[i+ 7], 22, -45705983);
+      a = FF(a, b, c, d, m[i+ 8],  7,  1770035416);
+      d = FF(d, a, b, c, m[i+ 9], 12, -1958414417);
+      c = FF(c, d, a, b, m[i+10], 17, -42063);
+      b = FF(b, c, d, a, m[i+11], 22, -1990404162);
+      a = FF(a, b, c, d, m[i+12],  7,  1804603682);
+      d = FF(d, a, b, c, m[i+13], 12, -40341101);
+      c = FF(c, d, a, b, m[i+14], 17, -1502002290);
+      b = FF(b, c, d, a, m[i+15], 22,  1236535329);
+
+      a = GG(a, b, c, d, m[i+ 1],  5, -165796510);
+      d = GG(d, a, b, c, m[i+ 6],  9, -1069501632);
+      c = GG(c, d, a, b, m[i+11], 14,  643717713);
+      b = GG(b, c, d, a, m[i+ 0], 20, -373897302);
+      a = GG(a, b, c, d, m[i+ 5],  5, -701558691);
+      d = GG(d, a, b, c, m[i+10],  9,  38016083);
+      c = GG(c, d, a, b, m[i+15], 14, -660478335);
+      b = GG(b, c, d, a, m[i+ 4], 20, -405537848);
+      a = GG(a, b, c, d, m[i+ 9],  5,  568446438);
+      d = GG(d, a, b, c, m[i+14],  9, -1019803690);
+      c = GG(c, d, a, b, m[i+ 3], 14, -187363961);
+      b = GG(b, c, d, a, m[i+ 8], 20,  1163531501);
+      a = GG(a, b, c, d, m[i+13],  5, -1444681467);
+      d = GG(d, a, b, c, m[i+ 2],  9, -51403784);
+      c = GG(c, d, a, b, m[i+ 7], 14,  1735328473);
+      b = GG(b, c, d, a, m[i+12], 20, -1926607734);
+
+      a = HH(a, b, c, d, m[i+ 5],  4, -378558);
+      d = HH(d, a, b, c, m[i+ 8], 11, -2022574463);
+      c = HH(c, d, a, b, m[i+11], 16,  1839030562);
+      b = HH(b, c, d, a, m[i+14], 23, -35309556);
+      a = HH(a, b, c, d, m[i+ 1],  4, -1530992060);
+      d = HH(d, a, b, c, m[i+ 4], 11,  1272893353);
+      c = HH(c, d, a, b, m[i+ 7], 16, -155497632);
+      b = HH(b, c, d, a, m[i+10], 23, -1094730640);
+      a = HH(a, b, c, d, m[i+13],  4,  681279174);
+      d = HH(d, a, b, c, m[i+ 0], 11, -358537222);
+      c = HH(c, d, a, b, m[i+ 3], 16, -722521979);
+      b = HH(b, c, d, a, m[i+ 6], 23,  76029189);
+      a = HH(a, b, c, d, m[i+ 9],  4, -640364487);
+      d = HH(d, a, b, c, m[i+12], 11, -421815835);
+      c = HH(c, d, a, b, m[i+15], 16,  530742520);
+      b = HH(b, c, d, a, m[i+ 2], 23, -995338651);
+
+      a = II(a, b, c, d, m[i+ 0],  6, -198630844);
+      d = II(d, a, b, c, m[i+ 7], 10,  1126891415);
+      c = II(c, d, a, b, m[i+14], 15, -1416354905);
+      b = II(b, c, d, a, m[i+ 5], 21, -57434055);
+      a = II(a, b, c, d, m[i+12],  6,  1700485571);
+      d = II(d, a, b, c, m[i+ 3], 10, -1894986606);
+      c = II(c, d, a, b, m[i+10], 15, -1051523);
+      b = II(b, c, d, a, m[i+ 1], 21, -2054922799);
+      a = II(a, b, c, d, m[i+ 8],  6,  1873313359);
+      d = II(d, a, b, c, m[i+15], 10, -30611744);
+      c = II(c, d, a, b, m[i+ 6], 15, -1560198380);
+      b = II(b, c, d, a, m[i+13], 21,  1309151649);
+      a = II(a, b, c, d, m[i+ 4],  6, -145523070);
+      d = II(d, a, b, c, m[i+11], 10, -1120210379);
+      c = II(c, d, a, b, m[i+ 2], 15,  718787259);
+      b = II(b, c, d, a, m[i+ 9], 21, -343485551);
+
+      a = (a + aa) >>> 0;
+      b = (b + bb) >>> 0;
+      c = (c + cc) >>> 0;
+      d = (d + dd) >>> 0;
+    }
+
+    return crypt.endian([a, b, c, d]);
+  };
+
+  // Auxiliary functions
+  md5._ff  = function (a, b, c, d, x, s, t) {
+    var n = a + (b & c | ~b & d) + (x >>> 0) + t;
+    return ((n << s) | (n >>> (32 - s))) + b;
+  };
+  md5._gg  = function (a, b, c, d, x, s, t) {
+    var n = a + (b & d | c & ~d) + (x >>> 0) + t;
+    return ((n << s) | (n >>> (32 - s))) + b;
+  };
+  md5._hh  = function (a, b, c, d, x, s, t) {
+    var n = a + (b ^ c ^ d) + (x >>> 0) + t;
+    return ((n << s) | (n >>> (32 - s))) + b;
+  };
+  md5._ii  = function (a, b, c, d, x, s, t) {
+    var n = a + (c ^ (b | ~d)) + (x >>> 0) + t;
+    return ((n << s) | (n >>> (32 - s))) + b;
+  };
+
+  // Package private blocksize
+  md5._blocksize = 16;
+  md5._digestsize = 16;
+
+  module.exports = function (message, options) {
+    if (message === undefined || message === null)
+      throw new Error('Illegal argument ' + message);
+
+    var digestbytes = crypt.wordsToBytes(md5(message, options));
+    return options && options.asBytes ? digestbytes :
+        options && options.asString ? bin.bytesToString(digestbytes) :
+        crypt.bytesToHex(digestbytes);
+  };
+
+})();
+
 
 /***/ }),
 
 /***/ 3:
 /***/ (function(module, exports) {
 
-(function() { module.exports = this["wp"]["i18n"]; }());
+(function() { module.exports = window["lodash"]; }());
 
 /***/ }),
 
-/***/ 31:
+/***/ 30:
 /***/ (function(module, exports) {
 
-(function() { module.exports = this["wp"]["apiFetch"]; }());
+(function() { module.exports = window["wp"]["hooks"]; }());
 
 /***/ }),
 
-/***/ 34:
+/***/ 446:
 /***/ (function(module, exports) {
 
-(function() { module.exports = this["wp"]["url"]; }());
+(function() { module.exports = window["wp"]["coreData"]; }());
 
 /***/ }),
 
-/***/ 35:
+/***/ 447:
 /***/ (function(module, exports) {
 
-(function() { module.exports = this["wp"]["dataControls"]; }());
+(function() {
+  var base64map
+      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
 
-/***/ }),
+  crypt = {
+    // Bit-wise rotation left
+    rotl: function(n, b) {
+      return (n << b) | (n >>> (32 - b));
+    },
 
-/***/ 37:
-/***/ (function(module, exports) {
+    // Bit-wise rotation right
+    rotr: function(n, b) {
+      return (n << (32 - b)) | (n >>> b);
+    },
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+    // Swap big-endian to little-endian and vice versa
+    endian: function(n) {
+      // If number given, swap endian
+      if (n.constructor == Number) {
+        return crypt.rotl(n, 8) & 0x00FF00FF | crypt.rotl(n, 24) & 0xFF00FF00;
       }
 
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
+      // Else, assume array and swap all items
+      for (var i = 0; i < n.length; i++)
+        n[i] = crypt.endian(n[i]);
+      return n;
+    },
 
-      _next(undefined);
-    });
+    // Generate an array of any length of random bytes
+    randomBytes: function(n) {
+      for (var bytes = []; n > 0; n--)
+        bytes.push(Math.floor(Math.random() * 256));
+      return bytes;
+    },
+
+    // Convert a byte array to big-endian 32-bit words
+    bytesToWords: function(bytes) {
+      for (var words = [], i = 0, b = 0; i < bytes.length; i++, b += 8)
+        words[b >>> 5] |= bytes[i] << (24 - b % 32);
+      return words;
+    },
+
+    // Convert big-endian 32-bit words to a byte array
+    wordsToBytes: function(words) {
+      for (var bytes = [], b = 0; b < words.length * 32; b += 8)
+        bytes.push((words[b >>> 5] >>> (24 - b % 32)) & 0xFF);
+      return bytes;
+    },
+
+    // Convert a byte array to a hex string
+    bytesToHex: function(bytes) {
+      for (var hex = [], i = 0; i < bytes.length; i++) {
+        hex.push((bytes[i] >>> 4).toString(16));
+        hex.push((bytes[i] & 0xF).toString(16));
+      }
+      return hex.join('');
+    },
+
+    // Convert a hex string to a byte array
+    hexToBytes: function(hex) {
+      for (var bytes = [], c = 0; c < hex.length; c += 2)
+        bytes.push(parseInt(hex.substr(c, 2), 16));
+      return bytes;
+    },
+
+    // Convert a byte array to a base-64 string
+    bytesToBase64: function(bytes) {
+      for (var base64 = [], i = 0; i < bytes.length; i += 3) {
+        var triplet = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+        for (var j = 0; j < 4; j++)
+          if (i * 8 + j * 6 <= bytes.length * 8)
+            base64.push(base64map.charAt((triplet >>> 6 * (3 - j)) & 0x3F));
+          else
+            base64.push('=');
+      }
+      return base64.join('');
+    },
+
+    // Convert a base-64 string to a byte array
+    base64ToBytes: function(base64) {
+      // Remove non-base-64 characters
+      base64 = base64.replace(/[^A-Z0-9+\/]/ig, '');
+
+      for (var bytes = [], i = 0, imod4 = 0; i < base64.length;
+          imod4 = ++i % 4) {
+        if (imod4 == 0) continue;
+        bytes.push(((base64map.indexOf(base64.charAt(i - 1))
+            & (Math.pow(2, -2 * imod4 + 8) - 1)) << (imod4 * 2))
+            | (base64map.indexOf(base64.charAt(i)) >>> (6 - imod4 * 2)));
+      }
+      return bytes;
+    }
   };
-}
 
-module.exports = _asyncToGenerator;
-
-/***/ }),
-
-/***/ 430:
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * Memize options object.
- *
- * @typedef MemizeOptions
- *
- * @property {number} [maxSize] Maximum size of the cache.
- */
-
-/**
- * Internal cache entry.
- *
- * @typedef MemizeCacheNode
- *
- * @property {?MemizeCacheNode|undefined} [prev] Previous node.
- * @property {?MemizeCacheNode|undefined} [next] Next node.
- * @property {Array<*>}                   args   Function arguments for cache
- *                                               entry.
- * @property {*}                          val    Function result.
- */
-
-/**
- * Properties of the enhanced function for controlling cache.
- *
- * @typedef MemizeMemoizedFunction
- *
- * @property {()=>void} clear Clear the cache.
- */
-
-/**
- * Accepts a function to be memoized, and returns a new memoized function, with
- * optional options.
- *
- * @template {Function} F
- *
- * @param {F}             fn        Function to memoize.
- * @param {MemizeOptions} [options] Options object.
- *
- * @return {F & MemizeMemoizedFunction} Memoized function.
- */
-function memize( fn, options ) {
-	var size = 0;
-
-	/** @type {?MemizeCacheNode|undefined} */
-	var head;
-
-	/** @type {?MemizeCacheNode|undefined} */
-	var tail;
-
-	options = options || {};
-
-	function memoized( /* ...args */ ) {
-		var node = head,
-			len = arguments.length,
-			args, i;
-
-		searchCache: while ( node ) {
-			// Perform a shallow equality test to confirm that whether the node
-			// under test is a candidate for the arguments passed. Two arrays
-			// are shallowly equal if their length matches and each entry is
-			// strictly equal between the two sets. Avoid abstracting to a
-			// function which could incur an arguments leaking deoptimization.
-
-			// Check whether node arguments match arguments length
-			if ( node.args.length !== arguments.length ) {
-				node = node.next;
-				continue;
-			}
-
-			// Check whether node arguments match arguments values
-			for ( i = 0; i < len; i++ ) {
-				if ( node.args[ i ] !== arguments[ i ] ) {
-					node = node.next;
-					continue searchCache;
-				}
-			}
-
-			// At this point we can assume we've found a match
-
-			// Surface matched node to head if not already
-			if ( node !== head ) {
-				// As tail, shift to previous. Must only shift if not also
-				// head, since if both head and tail, there is no previous.
-				if ( node === tail ) {
-					tail = node.prev;
-				}
-
-				// Adjust siblings to point to each other. If node was tail,
-				// this also handles new tail's empty `next` assignment.
-				/** @type {MemizeCacheNode} */ ( node.prev ).next = node.next;
-				if ( node.next ) {
-					node.next.prev = node.prev;
-				}
-
-				node.next = head;
-				node.prev = null;
-				/** @type {MemizeCacheNode} */ ( head ).prev = node;
-				head = node;
-			}
-
-			// Return immediately
-			return node.val;
-		}
-
-		// No cached value found. Continue to insertion phase:
-
-		// Create a copy of arguments (avoid leaking deoptimization)
-		args = new Array( len );
-		for ( i = 0; i < len; i++ ) {
-			args[ i ] = arguments[ i ];
-		}
-
-		node = {
-			args: args,
-
-			// Generate the result from original function
-			val: fn.apply( null, args ),
-		};
-
-		// Don't need to check whether node is already head, since it would
-		// have been returned above already if it was
-
-		// Shift existing head down list
-		if ( head ) {
-			head.prev = node;
-			node.next = head;
-		} else {
-			// If no head, follows that there's no tail (at initial or reset)
-			tail = node;
-		}
-
-		// Trim tail if we're reached max size and are pending cache insertion
-		if ( size === /** @type {MemizeOptions} */ ( options ).maxSize ) {
-			tail = /** @type {MemizeCacheNode} */ ( tail ).prev;
-			/** @type {MemizeCacheNode} */ ( tail ).next = null;
-		} else {
-			size++;
-		}
-
-		head = node;
-
-		return node.val;
-	}
-
-	memoized.clear = function() {
-		head = null;
-		tail = null;
-		size = 0;
-	};
-
-	if ( false ) {}
-
-	// Ignore reason: There's not a clear solution to create an intersection of
-	// the function with additional properties, where the goal is to retain the
-	// function signature of the incoming argument and add control properties
-	// on the return value.
-
-	// @ts-ignore
-	return memoized;
-}
-
-module.exports = memize;
+  module.exports = crypt;
+})();
 
 
 /***/ }),
 
-/***/ 5:
+/***/ 448:
 /***/ (function(module, exports) {
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
+/*!
+ * Determine if an object is a Buffer
+ *
+ * @author   Feross Aboukhadijeh <https://feross.org>
+ * @license  MIT
+ */
 
-  return obj;
+// The _isBuffer check is for Safari 5-7 support, because it's missing
+// Object.prototype.constructor. Remove this eventually
+module.exports = function (obj) {
+  return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer)
 }
 
-module.exports = _defineProperty;
+function isBuffer (obj) {
+  return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
+}
+
+// For Node v0.10 support. Remove this eventually.
+function isSlowBuffer (obj) {
+  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
+}
+
 
 /***/ }),
 
-/***/ 707:
+/***/ 460:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1195,32 +511,66 @@ __webpack_require__.r(__webpack_exports__);
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, "SETTINGS_STORE_NAME", function() { return /* reexport */ SETTINGS_STORE_NAME; });
-__webpack_require__.d(__webpack_exports__, "withSettingsHydration", function() { return /* reexport */ with_settings_hydration_withSettingsHydration; });
-__webpack_require__.d(__webpack_exports__, "useSettings", function() { return /* reexport */ use_settings_useSettings; });
+__webpack_require__.d(__webpack_exports__, "withSettingsHydration", function() { return /* reexport */ withSettingsHydration; });
+__webpack_require__.d(__webpack_exports__, "useSettings", function() { return /* reexport */ useSettings; });
 __webpack_require__.d(__webpack_exports__, "PLUGINS_STORE_NAME", function() { return /* reexport */ PLUGINS_STORE_NAME; });
 __webpack_require__.d(__webpack_exports__, "pluginNames", function() { return /* reexport */ pluginNames; });
-__webpack_require__.d(__webpack_exports__, "withPluginsHydration", function() { return /* reexport */ with_plugins_hydration_withPluginsHydration; });
+__webpack_require__.d(__webpack_exports__, "withPluginsHydration", function() { return /* reexport */ withPluginsHydration; });
 __webpack_require__.d(__webpack_exports__, "ONBOARDING_STORE_NAME", function() { return /* reexport */ ONBOARDING_STORE_NAME; });
-__webpack_require__.d(__webpack_exports__, "withOnboardingHydration", function() { return /* reexport */ with_onboarding_hydration_withOnboardingHydration; });
+__webpack_require__.d(__webpack_exports__, "withOnboardingHydration", function() { return /* reexport */ withOnboardingHydration; });
 __webpack_require__.d(__webpack_exports__, "USER_STORE_NAME", function() { return /* reexport */ USER_STORE_NAME; });
-__webpack_require__.d(__webpack_exports__, "withCurrentUserHydration", function() { return /* reexport */ with_current_user_hydration_withCurrentUserHydration; });
-__webpack_require__.d(__webpack_exports__, "useUserPreferences", function() { return /* reexport */ use_user_preferences_useUserPreferences; });
+__webpack_require__.d(__webpack_exports__, "withCurrentUserHydration", function() { return /* reexport */ withCurrentUserHydration; });
+__webpack_require__.d(__webpack_exports__, "useUser", function() { return /* reexport */ useUser; });
+__webpack_require__.d(__webpack_exports__, "useUserPreferences", function() { return /* reexport */ useUserPreferences; });
 __webpack_require__.d(__webpack_exports__, "OPTIONS_STORE_NAME", function() { return /* reexport */ OPTIONS_STORE_NAME; });
-__webpack_require__.d(__webpack_exports__, "withOptionsHydration", function() { return /* reexport */ with_options_hydration_withOptionsHydration; });
-__webpack_require__.d(__webpack_exports__, "__experimentalResolveSelect", function() { return /* reexport */ __experimentalResolveSelect; });
+__webpack_require__.d(__webpack_exports__, "withOptionsHydration", function() { return /* reexport */ withOptionsHydration; });
+__webpack_require__.d(__webpack_exports__, "useOptionsHydration", function() { return /* reexport */ useOptionsHydration; });
+__webpack_require__.d(__webpack_exports__, "REVIEWS_STORE_NAME", function() { return /* reexport */ REVIEWS_STORE_NAME; });
+__webpack_require__.d(__webpack_exports__, "NOTES_STORE_NAME", function() { return /* reexport */ NOTES_STORE_NAME; });
+__webpack_require__.d(__webpack_exports__, "REPORTS_STORE_NAME", function() { return /* reexport */ REPORTS_STORE_NAME; });
+__webpack_require__.d(__webpack_exports__, "ITEMS_STORE_NAME", function() { return /* reexport */ ITEMS_STORE_NAME; });
+__webpack_require__.d(__webpack_exports__, "getLeaderboard", function() { return /* reexport */ getLeaderboard; });
+__webpack_require__.d(__webpack_exports__, "searchItemsByString", function() { return /* reexport */ searchItemsByString; });
+__webpack_require__.d(__webpack_exports__, "NAVIGATION_STORE_NAME", function() { return /* reexport */ NAVIGATION_STORE_NAME; });
+__webpack_require__.d(__webpack_exports__, "withNavigationHydration", function() { return /* reexport */ withNavigationHydration; });
+__webpack_require__.d(__webpack_exports__, "PAYMENT_GATEWAYS_STORE_NAME", function() { return /* reexport */ PAYMENT_GATEWAYS_STORE_NAME; });
+__webpack_require__.d(__webpack_exports__, "getFilterQuery", function() { return /* reexport */ getFilterQuery; });
+__webpack_require__.d(__webpack_exports__, "getSummaryNumbers", function() { return /* reexport */ getSummaryNumbers; });
+__webpack_require__.d(__webpack_exports__, "getReportTableData", function() { return /* reexport */ getReportTableData; });
+__webpack_require__.d(__webpack_exports__, "getReportTableQuery", function() { return /* reexport */ getReportTableQuery; });
+__webpack_require__.d(__webpack_exports__, "getReportChartData", function() { return /* reexport */ getReportChartData; });
+__webpack_require__.d(__webpack_exports__, "getTooltipValueFormat", function() { return /* reexport */ getTooltipValueFormat; });
+__webpack_require__.d(__webpack_exports__, "MAX_PER_PAGE", function() { return /* reexport */ MAX_PER_PAGE; });
+__webpack_require__.d(__webpack_exports__, "QUERY_DEFAULTS", function() { return /* reexport */ QUERY_DEFAULTS; });
+__webpack_require__.d(__webpack_exports__, "NAMESPACE", function() { return /* reexport */ NAMESPACE; });
+__webpack_require__.d(__webpack_exports__, "WC_ADMIN_NAMESPACE", function() { return /* reexport */ WC_ADMIN_NAMESPACE; });
+__webpack_require__.d(__webpack_exports__, "WCS_NAMESPACE", function() { return /* reexport */ WCS_NAMESPACE; });
+__webpack_require__.d(__webpack_exports__, "SECOND", function() { return /* reexport */ SECOND; });
+__webpack_require__.d(__webpack_exports__, "MINUTE", function() { return /* reexport */ MINUTE; });
+__webpack_require__.d(__webpack_exports__, "HOUR", function() { return /* reexport */ HOUR; });
+__webpack_require__.d(__webpack_exports__, "DAY", function() { return /* reexport */ DAY; });
+__webpack_require__.d(__webpack_exports__, "WEEK", function() { return /* reexport */ WEEK; });
+__webpack_require__.d(__webpack_exports__, "MONTH", function() { return /* reexport */ MONTH; });
+__webpack_require__.d(__webpack_exports__, "EXPORT_STORE_NAME", function() { return /* reexport */ EXPORT_STORE_NAME; });
+__webpack_require__.d(__webpack_exports__, "IMPORT_STORE_NAME", function() { return /* reexport */ IMPORT_STORE_NAME; });
+__webpack_require__.d(__webpack_exports__, "getProfileItems", function() { return /* reexport */ getProfileItems; });
+__webpack_require__.d(__webpack_exports__, "getTasksStatus", function() { return /* reexport */ getTasksStatus; });
+__webpack_require__.d(__webpack_exports__, "getPaymentGatewaySuggestions", function() { return /* reexport */ getPaymentGatewaySuggestions; });
+__webpack_require__.d(__webpack_exports__, "getOnboardingError", function() { return /* reexport */ getOnboardingError; });
+__webpack_require__.d(__webpack_exports__, "isOnboardingRequesting", function() { return /* reexport */ isOnboardingRequesting; });
 
 // NAMESPACE OBJECT: ./packages/data/build-module/settings/selectors.js
 var selectors_namespaceObject = {};
 __webpack_require__.r(selectors_namespaceObject);
-__webpack_require__.d(selectors_namespaceObject, "getSettingsGroupNames", function() { return selectors_getSettingsGroupNames; });
-__webpack_require__.d(selectors_namespaceObject, "getSettings", function() { return selectors_getSettings; });
+__webpack_require__.d(selectors_namespaceObject, "getSettingsGroupNames", function() { return getSettingsGroupNames; });
+__webpack_require__.d(selectors_namespaceObject, "getSettings", function() { return getSettings; });
 __webpack_require__.d(selectors_namespaceObject, "getDirtyKeys", function() { return getDirtyKeys; });
 __webpack_require__.d(selectors_namespaceObject, "getIsDirty", function() { return selectors_getIsDirty; });
 __webpack_require__.d(selectors_namespaceObject, "getSettingsForGroup", function() { return selectors_getSettingsForGroup; });
 __webpack_require__.d(selectors_namespaceObject, "isUpdateSettingsRequesting", function() { return selectors_isUpdateSettingsRequesting; });
 __webpack_require__.d(selectors_namespaceObject, "getSetting", function() { return getSetting; });
 __webpack_require__.d(selectors_namespaceObject, "getLastSettingsErrorForGroup", function() { return selectors_getLastSettingsErrorForGroup; });
-__webpack_require__.d(selectors_namespaceObject, "getSettingsError", function() { return selectors_getSettingsError; });
+__webpack_require__.d(selectors_namespaceObject, "getSettingsError", function() { return getSettingsError; });
 
 // NAMESPACE OBJECT: ./packages/data/build-module/settings/actions.js
 var actions_namespaceObject = {};
@@ -1248,10 +598,14 @@ __webpack_require__.d(plugins_selectors_namespaceObject, "isPluginsRequesting", 
 __webpack_require__.d(plugins_selectors_namespaceObject, "getPluginsError", function() { return getPluginsError; });
 __webpack_require__.d(plugins_selectors_namespaceObject, "isJetpackConnected", function() { return isJetpackConnected; });
 __webpack_require__.d(plugins_selectors_namespaceObject, "getJetpackConnectUrl", function() { return getJetpackConnectUrl; });
+__webpack_require__.d(plugins_selectors_namespaceObject, "getPluginInstallState", function() { return getPluginInstallState; });
+__webpack_require__.d(plugins_selectors_namespaceObject, "getPaypalOnboardingStatus", function() { return getPaypalOnboardingStatus; });
+__webpack_require__.d(plugins_selectors_namespaceObject, "getRecommendedPlugins", function() { return getRecommendedPlugins; });
 
 // NAMESPACE OBJECT: ./packages/data/build-module/plugins/actions.js
 var plugins_actions_namespaceObject = {};
 __webpack_require__.r(plugins_actions_namespaceObject);
+__webpack_require__.d(plugins_actions_namespaceObject, "formatErrors", function() { return formatErrors; });
 __webpack_require__.d(plugins_actions_namespaceObject, "updateActivePlugins", function() { return actions_updateActivePlugins; });
 __webpack_require__.d(plugins_actions_namespaceObject, "updateInstalledPlugins", function() { return actions_updateInstalledPlugins; });
 __webpack_require__.d(plugins_actions_namespaceObject, "setIsRequesting", function() { return actions_setIsRequesting; });
@@ -1261,35 +615,12 @@ __webpack_require__.d(plugins_actions_namespaceObject, "updateJetpackConnectUrl"
 __webpack_require__.d(plugins_actions_namespaceObject, "installPlugins", function() { return installPlugins; });
 __webpack_require__.d(plugins_actions_namespaceObject, "activatePlugins", function() { return activatePlugins; });
 __webpack_require__.d(plugins_actions_namespaceObject, "installAndActivatePlugins", function() { return installAndActivatePlugins; });
-__webpack_require__.d(plugins_actions_namespaceObject, "formatErrors", function() { return formatErrors; });
-
-// NAMESPACE OBJECT: ./packages/data/build-module/plugins/resolvers.js
-var plugins_resolvers_namespaceObject = {};
-__webpack_require__.r(plugins_resolvers_namespaceObject);
-__webpack_require__.d(plugins_resolvers_namespaceObject, "getActivePlugins", function() { return resolvers_getActivePlugins; });
-__webpack_require__.d(plugins_resolvers_namespaceObject, "getInstalledPlugins", function() { return resolvers_getInstalledPlugins; });
-__webpack_require__.d(plugins_resolvers_namespaceObject, "isJetpackConnected", function() { return resolvers_isJetpackConnected; });
-__webpack_require__.d(plugins_resolvers_namespaceObject, "getJetpackConnectUrl", function() { return resolvers_getJetpackConnectUrl; });
-
-// NAMESPACE OBJECT: ./packages/data/build-module/onboarding/selectors.js
-var onboarding_selectors_namespaceObject = {};
-__webpack_require__.r(onboarding_selectors_namespaceObject);
-__webpack_require__.d(onboarding_selectors_namespaceObject, "getProfileItems", function() { return getProfileItems; });
-__webpack_require__.d(onboarding_selectors_namespaceObject, "getOnboardingError", function() { return getOnboardingError; });
-__webpack_require__.d(onboarding_selectors_namespaceObject, "isOnboardingRequesting", function() { return isOnboardingRequesting; });
-
-// NAMESPACE OBJECT: ./packages/data/build-module/onboarding/actions.js
-var onboarding_actions_namespaceObject = {};
-__webpack_require__.r(onboarding_actions_namespaceObject);
-__webpack_require__.d(onboarding_actions_namespaceObject, "setError", function() { return actions_setError; });
-__webpack_require__.d(onboarding_actions_namespaceObject, "setIsRequesting", function() { return onboarding_actions_setIsRequesting; });
-__webpack_require__.d(onboarding_actions_namespaceObject, "setProfileItems", function() { return actions_setProfileItems; });
-__webpack_require__.d(onboarding_actions_namespaceObject, "updateProfileItems", function() { return updateProfileItems; });
-
-// NAMESPACE OBJECT: ./packages/data/build-module/onboarding/resolvers.js
-var onboarding_resolvers_namespaceObject = {};
-__webpack_require__.r(onboarding_resolvers_namespaceObject);
-__webpack_require__.d(onboarding_resolvers_namespaceObject, "getProfileItems", function() { return resolvers_getProfileItems; });
+__webpack_require__.d(plugins_actions_namespaceObject, "createErrorNotice", function() { return createErrorNotice; });
+__webpack_require__.d(plugins_actions_namespaceObject, "connectToJetpack", function() { return connectToJetpack; });
+__webpack_require__.d(plugins_actions_namespaceObject, "installJetpackAndConnect", function() { return installJetpackAndConnect; });
+__webpack_require__.d(plugins_actions_namespaceObject, "connectToJetpackWithFailureRedirect", function() { return connectToJetpackWithFailureRedirect; });
+__webpack_require__.d(plugins_actions_namespaceObject, "setPaypalOnboardingStatus", function() { return setPaypalOnboardingStatus; });
+__webpack_require__.d(plugins_actions_namespaceObject, "setRecommendedPlugins", function() { return setRecommendedPlugins; });
 
 // NAMESPACE OBJECT: ./packages/data/build-module/options/selectors.js
 var options_selectors_namespaceObject = {};
@@ -1313,67 +644,303 @@ var options_resolvers_namespaceObject = {};
 __webpack_require__.r(options_resolvers_namespaceObject);
 __webpack_require__.d(options_resolvers_namespaceObject, "getOption", function() { return resolvers_getOption; });
 
-// EXTERNAL MODULE: external {"this":["wp","data"]}
-var external_this_wp_data_ = __webpack_require__(24);
+// NAMESPACE OBJECT: ./packages/data/build-module/plugins/resolvers.js
+var plugins_resolvers_namespaceObject = {};
+__webpack_require__.r(plugins_resolvers_namespaceObject);
+__webpack_require__.d(plugins_resolvers_namespaceObject, "getActivePlugins", function() { return resolvers_getActivePlugins; });
+__webpack_require__.d(plugins_resolvers_namespaceObject, "getInstalledPlugins", function() { return resolvers_getInstalledPlugins; });
+__webpack_require__.d(plugins_resolvers_namespaceObject, "isJetpackConnected", function() { return resolvers_isJetpackConnected; });
+__webpack_require__.d(plugins_resolvers_namespaceObject, "getJetpackConnectUrl", function() { return resolvers_getJetpackConnectUrl; });
+__webpack_require__.d(plugins_resolvers_namespaceObject, "getPaypalOnboardingStatus", function() { return resolvers_getPaypalOnboardingStatus; });
+__webpack_require__.d(plugins_resolvers_namespaceObject, "getRecommendedPlugins", function() { return resolvers_getRecommendedPlugins; });
 
-// EXTERNAL MODULE: external {"this":["wp","dataControls"]}
-var external_this_wp_dataControls_ = __webpack_require__(35);
+// NAMESPACE OBJECT: ./packages/data/build-module/onboarding/selectors.js
+var onboarding_selectors_namespaceObject = {};
+__webpack_require__.r(onboarding_selectors_namespaceObject);
+__webpack_require__.d(onboarding_selectors_namespaceObject, "getProfileItems", function() { return getProfileItems; });
+__webpack_require__.d(onboarding_selectors_namespaceObject, "getTasksStatus", function() { return getTasksStatus; });
+__webpack_require__.d(onboarding_selectors_namespaceObject, "getPaymentGatewaySuggestions", function() { return getPaymentGatewaySuggestions; });
+__webpack_require__.d(onboarding_selectors_namespaceObject, "getOnboardingError", function() { return getOnboardingError; });
+__webpack_require__.d(onboarding_selectors_namespaceObject, "isOnboardingRequesting", function() { return isOnboardingRequesting; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/onboarding/actions.js
+var onboarding_actions_namespaceObject = {};
+__webpack_require__.r(onboarding_actions_namespaceObject);
+__webpack_require__.d(onboarding_actions_namespaceObject, "setError", function() { return actions_setError; });
+__webpack_require__.d(onboarding_actions_namespaceObject, "setIsRequesting", function() { return onboarding_actions_setIsRequesting; });
+__webpack_require__.d(onboarding_actions_namespaceObject, "setProfileItems", function() { return actions_setProfileItems; });
+__webpack_require__.d(onboarding_actions_namespaceObject, "setTasksStatus", function() { return actions_setTasksStatus; });
+__webpack_require__.d(onboarding_actions_namespaceObject, "setPaymentMethods", function() { return setPaymentMethods; });
+__webpack_require__.d(onboarding_actions_namespaceObject, "updateProfileItems", function() { return updateProfileItems; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/onboarding/resolvers.js
+var onboarding_resolvers_namespaceObject = {};
+__webpack_require__.r(onboarding_resolvers_namespaceObject);
+__webpack_require__.d(onboarding_resolvers_namespaceObject, "getProfileItems", function() { return resolvers_getProfileItems; });
+__webpack_require__.d(onboarding_resolvers_namespaceObject, "getTasksStatus", function() { return resolvers_getTasksStatus; });
+__webpack_require__.d(onboarding_resolvers_namespaceObject, "getPaymentGatewaySuggestions", function() { return resolvers_getPaymentGatewaySuggestions; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/reviews/selectors.js
+var reviews_selectors_namespaceObject = {};
+__webpack_require__.r(reviews_selectors_namespaceObject);
+__webpack_require__.d(reviews_selectors_namespaceObject, "getReviews", function() { return getReviews; });
+__webpack_require__.d(reviews_selectors_namespaceObject, "getReviewsTotalCount", function() { return getReviewsTotalCount; });
+__webpack_require__.d(reviews_selectors_namespaceObject, "getReviewsError", function() { return getReviewsError; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/reviews/actions.js
+var reviews_actions_namespaceObject = {};
+__webpack_require__.r(reviews_actions_namespaceObject);
+__webpack_require__.d(reviews_actions_namespaceObject, "updateReviews", function() { return updateReviews; });
+__webpack_require__.d(reviews_actions_namespaceObject, "updateReview", function() { return updateReview; });
+__webpack_require__.d(reviews_actions_namespaceObject, "deleteReview", function() { return deleteReview; });
+__webpack_require__.d(reviews_actions_namespaceObject, "setReviewIsUpdating", function() { return setReviewIsUpdating; });
+__webpack_require__.d(reviews_actions_namespaceObject, "setReview", function() { return setReview; });
+__webpack_require__.d(reviews_actions_namespaceObject, "setError", function() { return reviews_actions_setError; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/reviews/resolvers.js
+var reviews_resolvers_namespaceObject = {};
+__webpack_require__.r(reviews_resolvers_namespaceObject);
+__webpack_require__.d(reviews_resolvers_namespaceObject, "getReviews", function() { return resolvers_getReviews; });
+__webpack_require__.d(reviews_resolvers_namespaceObject, "getReviewsTotalCount", function() { return resolvers_getReviewsTotalCount; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/notes/selectors.js
+var notes_selectors_namespaceObject = {};
+__webpack_require__.r(notes_selectors_namespaceObject);
+__webpack_require__.d(notes_selectors_namespaceObject, "getNotes", function() { return getNotes; });
+__webpack_require__.d(notes_selectors_namespaceObject, "getNotesError", function() { return getNotesError; });
+__webpack_require__.d(notes_selectors_namespaceObject, "isNotesRequesting", function() { return isNotesRequesting; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/notes/actions.js
+var notes_actions_namespaceObject = {};
+__webpack_require__.r(notes_actions_namespaceObject);
+__webpack_require__.d(notes_actions_namespaceObject, "triggerNoteAction", function() { return triggerNoteAction; });
+__webpack_require__.d(notes_actions_namespaceObject, "removeNote", function() { return removeNote; });
+__webpack_require__.d(notes_actions_namespaceObject, "removeAllNotes", function() { return removeAllNotes; });
+__webpack_require__.d(notes_actions_namespaceObject, "batchUpdateNotes", function() { return batchUpdateNotes; });
+__webpack_require__.d(notes_actions_namespaceObject, "updateNote", function() { return updateNote; });
+__webpack_require__.d(notes_actions_namespaceObject, "setNote", function() { return setNote; });
+__webpack_require__.d(notes_actions_namespaceObject, "setNoteIsUpdating", function() { return setNoteIsUpdating; });
+__webpack_require__.d(notes_actions_namespaceObject, "setNotes", function() { return setNotes; });
+__webpack_require__.d(notes_actions_namespaceObject, "setNotesQuery", function() { return setNotesQuery; });
+__webpack_require__.d(notes_actions_namespaceObject, "setError", function() { return notes_actions_setError; });
+__webpack_require__.d(notes_actions_namespaceObject, "setIsRequesting", function() { return notes_actions_setIsRequesting; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/notes/resolvers.js
+var notes_resolvers_namespaceObject = {};
+__webpack_require__.r(notes_resolvers_namespaceObject);
+__webpack_require__.d(notes_resolvers_namespaceObject, "getNotes", function() { return resolvers_getNotes; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/reports/selectors.js
+var reports_selectors_namespaceObject = {};
+__webpack_require__.r(reports_selectors_namespaceObject);
+__webpack_require__.d(reports_selectors_namespaceObject, "getReportItemsError", function() { return selectors_getReportItemsError; });
+__webpack_require__.d(reports_selectors_namespaceObject, "getReportItems", function() { return selectors_getReportItems; });
+__webpack_require__.d(reports_selectors_namespaceObject, "getReportStats", function() { return selectors_getReportStats; });
+__webpack_require__.d(reports_selectors_namespaceObject, "getReportStatsError", function() { return selectors_getReportStatsError; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/reports/actions.js
+var reports_actions_namespaceObject = {};
+__webpack_require__.r(reports_actions_namespaceObject);
+__webpack_require__.d(reports_actions_namespaceObject, "setReportItemsError", function() { return setReportItemsError; });
+__webpack_require__.d(reports_actions_namespaceObject, "setReportItems", function() { return setReportItems; });
+__webpack_require__.d(reports_actions_namespaceObject, "setReportStats", function() { return setReportStats; });
+__webpack_require__.d(reports_actions_namespaceObject, "setReportStatsError", function() { return setReportStatsError; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/reports/resolvers.js
+var reports_resolvers_namespaceObject = {};
+__webpack_require__.r(reports_resolvers_namespaceObject);
+__webpack_require__.d(reports_resolvers_namespaceObject, "getReportItems", function() { return resolvers_getReportItems; });
+__webpack_require__.d(reports_resolvers_namespaceObject, "getReportStats", function() { return resolvers_getReportStats; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/items/selectors.js
+var items_selectors_namespaceObject = {};
+__webpack_require__.r(items_selectors_namespaceObject);
+__webpack_require__.d(items_selectors_namespaceObject, "getItems", function() { return selectors_getItems; });
+__webpack_require__.d(items_selectors_namespaceObject, "getItemsTotalCount", function() { return getItemsTotalCount; });
+__webpack_require__.d(items_selectors_namespaceObject, "getItemsError", function() { return selectors_getItemsError; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/items/actions.js
+var items_actions_namespaceObject = {};
+__webpack_require__.r(items_actions_namespaceObject);
+__webpack_require__.d(items_actions_namespaceObject, "setItem", function() { return setItem; });
+__webpack_require__.d(items_actions_namespaceObject, "setItems", function() { return setItems; });
+__webpack_require__.d(items_actions_namespaceObject, "setItemsTotalCount", function() { return setItemsTotalCount; });
+__webpack_require__.d(items_actions_namespaceObject, "setError", function() { return items_actions_setError; });
+__webpack_require__.d(items_actions_namespaceObject, "updateProductStock", function() { return updateProductStock; });
+__webpack_require__.d(items_actions_namespaceObject, "createProductFromTemplate", function() { return createProductFromTemplate; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/items/resolvers.js
+var items_resolvers_namespaceObject = {};
+__webpack_require__.r(items_resolvers_namespaceObject);
+__webpack_require__.d(items_resolvers_namespaceObject, "getItems", function() { return resolvers_getItems; });
+__webpack_require__.d(items_resolvers_namespaceObject, "getReviewsTotalCount", function() { return items_resolvers_getReviewsTotalCount; });
+__webpack_require__.d(items_resolvers_namespaceObject, "getItemsTotalCount", function() { return resolvers_getItemsTotalCount; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/navigation/selectors.js
+var navigation_selectors_namespaceObject = {};
+__webpack_require__.r(navigation_selectors_namespaceObject);
+__webpack_require__.d(navigation_selectors_namespaceObject, "getMenuItems", function() { return getMenuItems; });
+__webpack_require__.d(navigation_selectors_namespaceObject, "getFavorites", function() { return getFavorites; });
+__webpack_require__.d(navigation_selectors_namespaceObject, "isNavigationRequesting", function() { return isNavigationRequesting; });
+__webpack_require__.d(navigation_selectors_namespaceObject, "getPersistedQuery", function() { return getPersistedQuery; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/navigation/actions.js
+var navigation_actions_namespaceObject = {};
+__webpack_require__.r(navigation_actions_namespaceObject);
+__webpack_require__.d(navigation_actions_namespaceObject, "setMenuItems", function() { return actions_setMenuItems; });
+__webpack_require__.d(navigation_actions_namespaceObject, "addMenuItems", function() { return addMenuItems; });
+__webpack_require__.d(navigation_actions_namespaceObject, "getFavoritesFailure", function() { return getFavoritesFailure; });
+__webpack_require__.d(navigation_actions_namespaceObject, "getFavoritesRequest", function() { return getFavoritesRequest; });
+__webpack_require__.d(navigation_actions_namespaceObject, "getFavoritesSuccess", function() { return getFavoritesSuccess; });
+__webpack_require__.d(navigation_actions_namespaceObject, "addFavoriteRequest", function() { return addFavoriteRequest; });
+__webpack_require__.d(navigation_actions_namespaceObject, "addFavoriteFailure", function() { return addFavoriteFailure; });
+__webpack_require__.d(navigation_actions_namespaceObject, "addFavoriteSuccess", function() { return addFavoriteSuccess; });
+__webpack_require__.d(navigation_actions_namespaceObject, "removeFavoriteRequest", function() { return removeFavoriteRequest; });
+__webpack_require__.d(navigation_actions_namespaceObject, "removeFavoriteFailure", function() { return removeFavoriteFailure; });
+__webpack_require__.d(navigation_actions_namespaceObject, "removeFavoriteSuccess", function() { return removeFavoriteSuccess; });
+__webpack_require__.d(navigation_actions_namespaceObject, "onLoad", function() { return actions_onLoad; });
+__webpack_require__.d(navigation_actions_namespaceObject, "onHistoryChange", function() { return actions_onHistoryChange; });
+__webpack_require__.d(navigation_actions_namespaceObject, "addFavorite", function() { return addFavorite; });
+__webpack_require__.d(navigation_actions_namespaceObject, "removeFavorite", function() { return removeFavorite; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/navigation/resolvers.js
+var navigation_resolvers_namespaceObject = {};
+__webpack_require__.r(navigation_resolvers_namespaceObject);
+__webpack_require__.d(navigation_resolvers_namespaceObject, "getFavorites", function() { return resolvers_getFavorites; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/payment-gateways/actions.js
+var payment_gateways_actions_namespaceObject = {};
+__webpack_require__.r(payment_gateways_actions_namespaceObject);
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "getPaymentGatewaysRequest", function() { return getPaymentGatewaysRequest; });
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "getPaymentGatewaysSuccess", function() { return getPaymentGatewaysSuccess; });
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "getPaymentGatewaysError", function() { return getPaymentGatewaysError; });
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "getPaymentGatewayRequest", function() { return getPaymentGatewayRequest; });
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "getPaymentGatewayError", function() { return getPaymentGatewayError; });
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "getPaymentGatewaySuccess", function() { return getPaymentGatewaySuccess; });
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "updatePaymentGatewaySuccess", function() { return updatePaymentGatewaySuccess; });
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "updatePaymentGatewayRequest", function() { return updatePaymentGatewayRequest; });
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "updatePaymentGatewayError", function() { return updatePaymentGatewayError; });
+__webpack_require__.d(payment_gateways_actions_namespaceObject, "updatePaymentGateway", function() { return updatePaymentGateway; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/payment-gateways/resolvers.js
+var payment_gateways_resolvers_namespaceObject = {};
+__webpack_require__.r(payment_gateways_resolvers_namespaceObject);
+__webpack_require__.d(payment_gateways_resolvers_namespaceObject, "getPaymentGateways", function() { return getPaymentGateways; });
+__webpack_require__.d(payment_gateways_resolvers_namespaceObject, "getPaymentGateway", function() { return getPaymentGateway; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/payment-gateways/selectors.js
+var payment_gateways_selectors_namespaceObject = {};
+__webpack_require__.r(payment_gateways_selectors_namespaceObject);
+__webpack_require__.d(payment_gateways_selectors_namespaceObject, "getPaymentGateway", function() { return selectors_getPaymentGateway; });
+__webpack_require__.d(payment_gateways_selectors_namespaceObject, "getPaymentGateways", function() { return selectors_getPaymentGateways; });
+__webpack_require__.d(payment_gateways_selectors_namespaceObject, "getPaymentGatewayError", function() { return selectors_getPaymentGatewayError; });
+__webpack_require__.d(payment_gateways_selectors_namespaceObject, "isPaymentGatewayUpdating", function() { return isPaymentGatewayUpdating; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/export/selectors.js
+var export_selectors_namespaceObject = {};
+__webpack_require__.r(export_selectors_namespaceObject);
+__webpack_require__.d(export_selectors_namespaceObject, "isExportRequesting", function() { return isExportRequesting; });
+__webpack_require__.d(export_selectors_namespaceObject, "getExportId", function() { return getExportId; });
+__webpack_require__.d(export_selectors_namespaceObject, "getError", function() { return getError; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/export/actions.js
+var export_actions_namespaceObject = {};
+__webpack_require__.r(export_actions_namespaceObject);
+__webpack_require__.d(export_actions_namespaceObject, "setExportId", function() { return setExportId; });
+__webpack_require__.d(export_actions_namespaceObject, "setIsRequesting", function() { return export_actions_setIsRequesting; });
+__webpack_require__.d(export_actions_namespaceObject, "setError", function() { return export_actions_setError; });
+__webpack_require__.d(export_actions_namespaceObject, "startExport", function() { return startExport; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/import/selectors.js
+var import_selectors_namespaceObject = {};
+__webpack_require__.r(import_selectors_namespaceObject);
+__webpack_require__.d(import_selectors_namespaceObject, "getImportStarted", function() { return getImportStarted; });
+__webpack_require__.d(import_selectors_namespaceObject, "getFormSettings", function() { return getFormSettings; });
+__webpack_require__.d(import_selectors_namespaceObject, "getImportStatus", function() { return getImportStatus; });
+__webpack_require__.d(import_selectors_namespaceObject, "getImportTotals", function() { return getImportTotals; });
+__webpack_require__.d(import_selectors_namespaceObject, "getImportError", function() { return getImportError; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/import/actions.js
+var import_actions_namespaceObject = {};
+__webpack_require__.r(import_actions_namespaceObject);
+__webpack_require__.d(import_actions_namespaceObject, "setImportStarted", function() { return setImportStarted; });
+__webpack_require__.d(import_actions_namespaceObject, "setImportPeriod", function() { return setImportPeriod; });
+__webpack_require__.d(import_actions_namespaceObject, "setSkipPrevious", function() { return setSkipPrevious; });
+__webpack_require__.d(import_actions_namespaceObject, "setImportStatus", function() { return setImportStatus; });
+__webpack_require__.d(import_actions_namespaceObject, "setImportTotals", function() { return setImportTotals; });
+__webpack_require__.d(import_actions_namespaceObject, "setImportError", function() { return setImportError; });
+__webpack_require__.d(import_actions_namespaceObject, "updateImportation", function() { return updateImportation; });
+
+// NAMESPACE OBJECT: ./packages/data/build-module/import/resolvers.js
+var import_resolvers_namespaceObject = {};
+__webpack_require__.r(import_resolvers_namespaceObject);
+__webpack_require__.d(import_resolvers_namespaceObject, "getImportStatus", function() { return resolvers_getImportStatus; });
+__webpack_require__.d(import_resolvers_namespaceObject, "getImportTotals", function() { return resolvers_getImportTotals; });
+
+// EXTERNAL MODULE: external ["wp","coreData"]
+var external_wp_coreData_ = __webpack_require__(446);
+
+// CONCATENATED MODULE: ./packages/data/build-module/types/wp-data.js
+
+// CONCATENATED MODULE: ./packages/data/build-module/types/rule-processor.js
+
+// CONCATENATED MODULE: ./packages/data/build-module/types/index.js
+
+
+// EXTERNAL MODULE: external ["wp","data"]
+var external_wp_data_ = __webpack_require__(7);
+
+// EXTERNAL MODULE: external ["wp","dataControls"]
+var external_wp_dataControls_ = __webpack_require__(10);
 
 // CONCATENATED MODULE: ./packages/data/build-module/settings/constants.js
-var STORE_NAME = 'wc/admin/settings';
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/toConsumableArray.js
-var toConsumableArray = __webpack_require__(25);
-var toConsumableArray_default = /*#__PURE__*/__webpack_require__.n(toConsumableArray);
-
+const STORE_NAME = 'wc/admin/settings';
 // CONCATENATED MODULE: ./packages/data/build-module/utils.js
 function getResourceName(prefix, identifier) {
-  var identifierString = JSON.stringify(identifier, Object.keys(identifier).sort());
-  return "".concat(prefix, ":").concat(identifierString);
+  const identifierString = JSON.stringify(identifier, Object.keys(identifier).sort());
+  return `${prefix}:${identifierString}`;
 }
 function getResourcePrefix(resourceName) {
-  var hasPrefixIndex = resourceName.indexOf(':');
+  const hasPrefixIndex = resourceName.indexOf(':');
   return hasPrefixIndex < 0 ? resourceName : resourceName.substring(0, hasPrefixIndex);
 }
 function isResourcePrefix(resourceName, prefix) {
-  var resourcePrefix = getResourcePrefix(resourceName);
+  const resourcePrefix = getResourcePrefix(resourceName);
   return resourcePrefix === prefix;
 }
 function getResourceIdentifier(resourceName) {
-  var identifierString = resourceName.substring(resourceName.indexOf(':') + 1);
+  const identifierString = resourceName.substring(resourceName.indexOf(':') + 1);
   return JSON.parse(identifierString);
 }
 // CONCATENATED MODULE: ./packages/data/build-module/settings/selectors.js
-
 /**
  * Internal dependencies
  */
 
-
-var selectors_getSettingsGroupNames = function getSettingsGroupNames(state) {
-  var groupNames = new Set(Object.keys(state).map(function (resourceName) {
+const getSettingsGroupNames = state => {
+  const groupNames = new Set(Object.keys(state).map(resourceName => {
     return getResourcePrefix(resourceName);
   }));
-  return toConsumableArray_default()(groupNames);
+  return [...groupNames];
 };
-var selectors_getSettings = function getSettings(state, group) {
-  var settings = {};
-  var settingIds = state[group] && state[group].data || [];
+const getSettings = (state, group) => {
+  const settings = {};
+  const settingIds = state[group] && state[group].data || [];
 
   if (settingIds.length === 0) {
     return settings;
   }
 
-  settingIds.forEach(function (id) {
+  settingIds.forEach(id => {
     settings[id] = state[getResourceName(group, id)].data;
   });
   return settings;
 };
-var getDirtyKeys = function getDirtyKeys(state, group) {
+const getDirtyKeys = (state, group) => {
   return state[group].dirty || [];
 };
-var selectors_getIsDirty = function getIsDirty(state, group) {
-  var keys = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
-  var dirtyMap = getDirtyKeys(state, group); // if empty array bail
+const selectors_getIsDirty = (state, group, keys = []) => {
+  const dirtyMap = getDirtyKeys(state, group); // if empty array bail
 
   if (dirtyMap.length === 0) {
     return false;
@@ -1381,24 +948,21 @@ var selectors_getIsDirty = function getIsDirty(state, group) {
   // meaning it hasn't been persisted.
 
 
-  return keys.some(function (key) {
-    return dirtyMap.includes(key);
-  });
+  return keys.some(key => dirtyMap.includes(key));
 };
-var selectors_getSettingsForGroup = function getSettingsForGroup(state, group, keys) {
-  var allSettings = selectors_getSettings(state, group);
-  return keys.reduce(function (accumulator, key) {
+const selectors_getSettingsForGroup = (state, group, keys) => {
+  const allSettings = getSettings(state, group);
+  return keys.reduce((accumulator, key) => {
     accumulator[key] = allSettings[key] || {};
     return accumulator;
   }, {});
 };
-var selectors_isUpdateSettingsRequesting = function isUpdateSettingsRequesting(state, group) {
+const selectors_isUpdateSettingsRequesting = (state, group) => {
   return state[group] && Boolean(state[group].isRequesting);
 };
 /**
  * Retrieves a setting value from the setting store.
  *
- * @export
  * @param {Object}   state                        State param added by wp.data.
  * @param {string}   group                        The settings group.
  * @param {string}   name                         The identifier for the setting.
@@ -1415,64 +979,60 @@ var selectors_isUpdateSettingsRequesting = function isUpdateSettingsRequesting(s
  *                   name.
  */
 
-function getSetting(state, group, name) {
-  var fallback = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-  var filter = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : function (val) {
-    return val;
-  };
-  var resourceName = getResourceName(group, name);
-  var value = state[resourceName] && state[resourceName].data || fallback;
+function getSetting(state, group, name, fallback = false, filter = val => val) {
+  const resourceName = getResourceName(group, name);
+  const value = state[resourceName] && state[resourceName].data || fallback;
   return filter(value, fallback);
 }
-var selectors_getLastSettingsErrorForGroup = function getLastSettingsErrorForGroup(state, group) {
-  var settingsIds = state[group].data;
+const selectors_getLastSettingsErrorForGroup = (state, group) => {
+  const settingsIds = state[group].data;
 
   if (settingsIds.length === 0) {
     return state[group].error;
   }
 
-  return toConsumableArray_default()(settingsIds).pop().error;
+  return [...settingsIds].pop().error;
 };
-var selectors_getSettingsError = function getSettingsError(state, group, id) {
+const getSettingsError = (state, group, id) => {
   if (!id) {
     return state[group] && state[group].error || false;
   }
 
   return state[getResourceName(group, id)].error || false;
 };
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
-var regenerator = __webpack_require__(16);
-var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
-
-// EXTERNAL MODULE: external {"this":["wp","i18n"]}
-var external_this_wp_i18n_ = __webpack_require__(3);
+// EXTERNAL MODULE: external ["wp","i18n"]
+var external_wp_i18n_ = __webpack_require__(2);
 
 // EXTERNAL MODULE: external "lodash"
-var external_lodash_ = __webpack_require__(2);
+var external_lodash_ = __webpack_require__(3);
 
 // CONCATENATED MODULE: ./packages/data/build-module/constants.js
-var JETPACK_NAMESPACE = '/jetpack/v4';
-var NAMESPACE = '/wc-analytics';
-var WC_ADMIN_NAMESPACE = '/wc-admin';
-var WCS_NAMESPACE = '/wc/v1'; // WCS endpoints like Stripe are not avaiable on later /wc versions
+const JETPACK_NAMESPACE = '/jetpack/v4';
+const NAMESPACE = '/wc-analytics';
+const WC_ADMIN_NAMESPACE = '/wc-admin';
+const WCS_NAMESPACE = '/wc/v1'; // WCS endpoints like Stripe are not avaiable on later /wc versions
 // WordPress & WooCommerce both set a hard limit of 100 for the per_page parameter
 
-var MAX_PER_PAGE = 100;
-var SECOND = 1000;
-var MINUTE = 60 * SECOND;
-var HOUR = 60 * MINUTE;
-var DEFAULT_REQUIREMENT = {
+const MAX_PER_PAGE = 100;
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+const WEEK = 7 * DAY;
+const MONTH = 365 * DAY / 12;
+const DEFAULT_REQUIREMENT = {
   timeout: 1 * MINUTE,
   freshness: 30 * MINUTE
 };
-var DEFAULT_ACTIONABLE_STATUSES = ['processing', 'on-hold'];
-var QUERY_DEFAULTS = {
+const DEFAULT_ACTIONABLE_STATUSES = ['processing', 'on-hold'];
+const QUERY_DEFAULTS = {
   pageSize: 25,
   period: 'month',
-  compare: 'previous_year'
+  compare: 'previous_year',
+  noteTypes: ['info', 'marketing', 'survey', 'warning']
 };
 // CONCATENATED MODULE: ./packages/data/build-module/settings/action-types.js
-var TYPES = {
+const TYPES = {
   UPDATE_SETTINGS_FOR_GROUP: 'UPDATE_SETTINGS_FOR_GROUP',
   UPDATE_ERROR_FOR_GROUP: 'UPDATE_ERROR_FOR_GROUP',
   CLEAR_SETTINGS: 'CLEAR_SETTINGS',
@@ -1481,14 +1041,9 @@ var TYPES = {
 };
 /* harmony default export */ var action_types = (TYPES);
 // CONCATENATED MODULE: ./packages/data/build-module/settings/actions.js
-
-
-var _marked = /*#__PURE__*/regenerator_default.a.mark(actions_updateAndPersistSettingsForGroup),
-    _marked2 = /*#__PURE__*/regenerator_default.a.mark(actions_persistSettingsForGroup);
 /**
  * External dependencies
  */
-
 
 
 
@@ -1499,172 +1054,100 @@ var _marked = /*#__PURE__*/regenerator_default.a.mark(actions_updateAndPersistSe
 
 
 
+ // Can be removed in WP 5.9, wp.data is supported in >5.7.
 
-function actions_updateSettingsForGroup(group, data) {
-  var time = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new Date();
+const resolveSelect = external_wp_data_["controls"] && external_wp_data_["controls"].resolveSelect ? external_wp_data_["controls"].resolveSelect : external_wp_dataControls_["select"];
+function actions_updateSettingsForGroup(group, data, time = new Date()) {
   return {
     type: action_types.UPDATE_SETTINGS_FOR_GROUP,
-    group: group,
-    data: data,
-    time: time
+    group,
+    data,
+    time
   };
 }
-function updateErrorForGroup(group, data, error) {
-  var time = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : new Date();
+function updateErrorForGroup(group, data, error, time = new Date()) {
   return {
     type: action_types.UPDATE_ERROR_FOR_GROUP,
-    group: group,
-    data: data,
-    error: error,
-    time: time
+    group,
+    data,
+    error,
+    time
   };
 }
 function setIsRequesting(group, isRequesting) {
   return {
     type: action_types.SET_IS_REQUESTING,
-    group: group,
-    isRequesting: isRequesting
+    group,
+    isRequesting
   };
 }
 function actions_clearIsDirty(group) {
   return {
     type: action_types.CLEAR_IS_DIRTY,
-    group: group
+    group
   };
 } // allows updating and persisting immediately in one action.
 
-function actions_updateAndPersistSettingsForGroup(group, data) {
-  return regenerator_default.a.wrap(function updateAndPersistSettingsForGroup$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          _context.next = 2;
-          return actions_updateSettingsForGroup(group, data);
-
-        case 2:
-          return _context.delegateYield(actions_persistSettingsForGroup(group), "t0", 3);
-
-        case 3:
-        case "end":
-          return _context.stop();
-      }
-    }
-  }, _marked);
+function* actions_updateAndPersistSettingsForGroup(group, data) {
+  yield actions_updateSettingsForGroup(group, data);
+  yield* actions_persistSettingsForGroup(group);
 } // this would replace setSettingsForGroup
 
-function actions_persistSettingsForGroup(group) {
-  var dirtyKeys, dirtyData, url, update, results;
-  return regenerator_default.a.wrap(function persistSettingsForGroup$(_context2) {
-    while (1) {
-      switch (_context2.prev = _context2.next) {
-        case 0:
-          _context2.next = 2;
-          return setIsRequesting(group, true);
+function* actions_persistSettingsForGroup(group) {
+  // first dispatch the is persisting action
+  yield setIsRequesting(group, true); // get all dirty keys with select control
 
-        case 2:
-          _context2.next = 4;
-          return Object(external_this_wp_dataControls_["select"])(STORE_NAME, 'getDirtyKeys', group);
+  const dirtyKeys = yield resolveSelect(STORE_NAME, 'getDirtyKeys', group); // if there is nothing dirty, bail
 
-        case 4:
-          dirtyKeys = _context2.sent;
+  if (dirtyKeys.length === 0) {
+    yield setIsRequesting(group, false);
+    return;
+  } // get data slice for keys
 
-          if (!(dirtyKeys.length === 0)) {
-            _context2.next = 9;
-            break;
-          }
 
-          _context2.next = 8;
-          return setIsRequesting(group, false);
+  const dirtyData = yield resolveSelect(STORE_NAME, 'getSettingsForGroup', group, dirtyKeys);
+  const url = `${NAMESPACE}/settings/${group}/batch`;
+  const update = dirtyKeys.reduce((updates, key) => {
+    const u = Object.keys(dirtyData[key]).map(k => {
+      return {
+        id: k,
+        value: dirtyData[key][k]
+      };
+    });
+    return Object(external_lodash_["concat"])(updates, u);
+  }, []);
 
-        case 8:
-          return _context2.abrupt("return");
-
-        case 9:
-          _context2.next = 11;
-          return Object(external_this_wp_dataControls_["select"])(STORE_NAME, 'getSettingsForGroup', group, dirtyKeys);
-
-        case 11:
-          dirtyData = _context2.sent;
-          url = "".concat(NAMESPACE, "/settings/").concat(group, "/batch");
-          update = dirtyKeys.reduce(function (updates, key) {
-            var u = Object.keys(dirtyData[key]).map(function (k) {
-              return {
-                id: k,
-                value: dirtyData[key][k]
-              };
-            });
-            return Object(external_lodash_["concat"])(updates, u);
-          }, []);
-          _context2.prev = 14;
-          _context2.next = 17;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: url,
-            method: 'POST',
-            data: {
-              update: update
-            }
-          });
-
-        case 17:
-          results = _context2.sent;
-          _context2.next = 20;
-          return setIsRequesting(group, false);
-
-        case 20:
-          if (results) {
-            _context2.next = 22;
-            break;
-          }
-
-          throw new Error(Object(external_this_wp_i18n_["__"])('There was a problem updating your settings.', 'woocommerce-admin'));
-
-        case 22:
-          _context2.next = 24;
-          return actions_clearIsDirty(group);
-
-        case 24:
-          _context2.next = 33;
-          break;
-
-        case 26:
-          _context2.prev = 26;
-          _context2.t0 = _context2["catch"](14);
-          _context2.next = 30;
-          return updateErrorForGroup(group, null, _context2.t0);
-
-        case 30:
-          _context2.next = 32;
-          return setIsRequesting(group, false);
-
-        case 32:
-          throw _context2.t0;
-
-        case 33:
-        case "end":
-          return _context2.stop();
+  try {
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'POST',
+      data: {
+        update
       }
-    }
-  }, _marked2, null, [[14, 26]]);
+    });
+    yield setIsRequesting(group, false);
+
+    if (!results) {
+      throw new Error(Object(external_wp_i18n_["__"])('There was a problem updating your settings.', 'woocommerce-admin'));
+    } // remove dirtyKeys from map - note we're only doing this if there is no error.
+
+
+    yield actions_clearIsDirty(group);
+  } catch (e) {
+    yield updateErrorForGroup(group, null, e);
+    yield setIsRequesting(group, false);
+    throw e;
+  }
 }
 function clearSettings() {
   return {
     type: action_types.CLEAR_SETTINGS
   };
 }
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/defineProperty.js
-var defineProperty = __webpack_require__(5);
-var defineProperty_default = /*#__PURE__*/__webpack_require__.n(defineProperty);
-
 // CONCATENATED MODULE: ./packages/data/build-module/settings/resolvers.js
-
-
-
-var resolvers_marked = /*#__PURE__*/regenerator_default.a.mark(resolvers_getSettings),
-    resolvers_marked2 = /*#__PURE__*/regenerator_default.a.mark(resolvers_getSettingsForGroup);
 /**
  * External dependencies
  */
-
 
 
 /**
@@ -1673,106 +1156,41 @@ var resolvers_marked = /*#__PURE__*/regenerator_default.a.mark(resolvers_getSett
 
 
 
+ // Can be removed in WP 5.9.
 
+const resolvers_dispatch = external_wp_data_["controls"] && external_wp_data_["controls"].dispatch ? external_wp_data_["controls"].dispatch : external_wp_dataControls_["dispatch"];
 
 function settingsToSettingsResource(settings) {
-  return settings.reduce(function (resource, setting) {
+  return settings.reduce((resource, setting) => {
     resource[setting.id] = setting.value;
     return resource;
   }, {});
 }
 
-function resolvers_getSettings(group) {
-  var url, results, resource;
-  return regenerator_default.a.wrap(function getSettings$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          _context.next = 2;
-          return Object(external_this_wp_dataControls_["dispatch"])(STORE_NAME, 'setIsRequesting', group, true);
+function* resolvers_getSettings(group) {
+  yield resolvers_dispatch(STORE_NAME, 'setIsRequesting', group, true);
 
-        case 2:
-          _context.prev = 2;
-          url = NAMESPACE + '/settings/' + group;
-          _context.next = 6;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: url,
-            method: 'GET'
-          });
-
-        case 6:
-          results = _context.sent;
-          resource = settingsToSettingsResource(results);
-          return _context.abrupt("return", actions_updateSettingsForGroup(group, defineProperty_default()({}, group, resource)));
-
-        case 11:
-          _context.prev = 11;
-          _context.t0 = _context["catch"](2);
-          return _context.abrupt("return", updateErrorForGroup(group, null, _context.t0.message));
-
-        case 14:
-        case "end":
-          return _context.stop();
-      }
-    }
-  }, resolvers_marked, null, [[2, 11]]);
+  try {
+    const url = NAMESPACE + '/settings/' + group;
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'GET'
+    });
+    const resource = settingsToSettingsResource(results);
+    return actions_updateSettingsForGroup(group, {
+      [group]: resource
+    });
+  } catch (error) {
+    return updateErrorForGroup(group, null, error.message);
+  }
 }
-function resolvers_getSettingsForGroup(group) {
-  return regenerator_default.a.wrap(function getSettingsForGroup$(_context2) {
-    while (1) {
-      switch (_context2.prev = _context2.next) {
-        case 0:
-          return _context2.abrupt("return", resolvers_getSettings(group));
-
-        case 1:
-        case "end":
-          return _context2.stop();
-      }
-    }
-  }, resolvers_marked2);
+function* resolvers_getSettingsForGroup(group) {
+  return resolvers_getSettings(group);
 }
 // CONCATENATED MODULE: ./packages/data/build-module/settings/reducer.js
-
-
-
-function ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function _objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
 /**
  * External dependencies
  */
-
-
 
 /**
  * Internal dependencies
@@ -1781,72 +1199,79 @@ function _objectSpread(target) {
 
 
 
-var reducer_updateGroupDataInNewState = function updateGroupDataInNewState(newState, _ref) {
-  var group = _ref.group,
-      groupIds = _ref.groupIds,
-      data = _ref.data,
-      time = _ref.time,
-      error = _ref.error;
-  groupIds.forEach(function (id) {
+const updateGroupDataInNewState = (newState, {
+  group,
+  groupIds,
+  data,
+  time,
+  error
+}) => {
+  groupIds.forEach(id => {
     newState[getResourceName(group, id)] = {
       data: data[id],
       lastReceived: time,
-      error: error
+      error
     };
   });
   return newState;
 };
 
-var reducer_receiveSettings = function receiveSettings() {
-  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-  var _ref2 = arguments.length > 1 ? arguments[1] : undefined,
-      type = _ref2.type,
-      group = _ref2.group,
-      data = _ref2.data,
-      error = _ref2.error,
-      time = _ref2.time,
-      isRequesting = _ref2.isRequesting;
-
-  var newState = {};
+const receiveSettings = (state = {}, {
+  type,
+  group,
+  data,
+  error,
+  time,
+  isRequesting
+}) => {
+  const newState = {};
 
   switch (type) {
     case action_types.SET_IS_REQUESTING:
-      state = _objectSpread(_objectSpread({}, state), {}, defineProperty_default()({}, group, _objectSpread(_objectSpread({}, state[group]), {}, {
-        isRequesting: isRequesting
-      })));
+      state = { ...state,
+        [group]: { ...state[group],
+          isRequesting
+        }
+      };
       break;
 
     case action_types.CLEAR_IS_DIRTY:
-      state = _objectSpread(_objectSpread({}, state), {}, defineProperty_default()({}, group, _objectSpread(_objectSpread({}, state[group]), {}, {
-        dirty: []
-      })));
+      state = { ...state,
+        [group]: { ...state[group],
+          dirty: []
+        }
+      };
       break;
 
     case action_types.UPDATE_SETTINGS_FOR_GROUP:
     case action_types.UPDATE_ERROR_FOR_GROUP:
-      var groupIds = data ? Object.keys(data) : [];
+      const groupIds = data ? Object.keys(data) : [];
 
       if (data === null) {
-        state = _objectSpread(_objectSpread({}, state), {}, defineProperty_default()({}, group, {
-          data: state[group] ? state[group].data : [],
-          error: error,
-          lastReceived: time
-        }));
+        state = { ...state,
+          [group]: {
+            data: state[group] ? state[group].data : [],
+            error,
+            lastReceived: time
+          }
+        };
       } else {
-        state = _objectSpread(_objectSpread({}, state), {}, defineProperty_default()({}, group, {
-          data: state[group] && state[group].data ? [].concat(toConsumableArray_default()(state[group].data), toConsumableArray_default()(groupIds)) : groupIds,
-          error: error,
-          lastReceived: time,
-          isRequesting: false,
-          dirty: state[group] && state[group].dirty ? Object(external_lodash_["union"])(state[group].dirty, groupIds) : groupIds
-        }), reducer_updateGroupDataInNewState(newState, {
-          group: group,
-          groupIds: groupIds,
-          data: data,
-          time: time,
-          error: error
-        }));
+        state = { ...state,
+          [group]: {
+            data: state[group] && state[group].data ? [...state[group].data, ...groupIds] : groupIds,
+            error,
+            lastReceived: time,
+            isRequesting: false,
+            dirty: state[group] && state[group].dirty ? Object(external_lodash_["union"])(state[group].dirty, groupIds) : groupIds
+          },
+          ...updateGroupDataInNewState(newState, {
+            group,
+            groupIds,
+            data,
+            time,
+            error
+          })
+        };
       }
 
       break;
@@ -1858,7 +1283,7 @@ var reducer_receiveSettings = function receiveSettings() {
   return state;
 };
 
-/* harmony default export */ var reducer = (reducer_receiveSettings);
+/* harmony default export */ var reducer = (receiveSettings);
 // CONCATENATED MODULE: ./packages/data/build-module/settings/index.js
 /**
  * External dependencies
@@ -1874,25 +1299,21 @@ var reducer_receiveSettings = function receiveSettings() {
 
 
 
-var storeSelectors = Object(external_this_wp_data_["select"])(STORE_NAME); // @todo This is used to prevent double registration of the store due to webpack chunks.
-// The `storeSelectors` condition can be removed once this is fixed.
+Object(external_wp_data_["registerStore"])(STORE_NAME, {
+  reducer: reducer,
+  actions: actions_namespaceObject,
+  controls: external_wp_dataControls_["controls"],
+  selectors: selectors_namespaceObject,
+  resolvers: resolvers_namespaceObject
+});
+const SETTINGS_STORE_NAME = STORE_NAME;
+// EXTERNAL MODULE: external ["wp","compose"]
+var external_wp_compose_ = __webpack_require__(13);
 
-if (!storeSelectors) {
-  Object(external_this_wp_data_["registerStore"])(STORE_NAME, {
-    reducer: reducer,
-    actions: actions_namespaceObject,
-    controls: external_this_wp_dataControls_["controls"],
-    selectors: selectors_namespaceObject,
-    resolvers: resolvers_namespaceObject
-  });
-}
-
-var SETTINGS_STORE_NAME = STORE_NAME;
-// EXTERNAL MODULE: external {"this":["wp","element"]}
-var external_this_wp_element_ = __webpack_require__(0);
+// EXTERNAL MODULE: external ["wp","element"]
+var external_wp_element_ = __webpack_require__(0);
 
 // CONCATENATED MODULE: ./packages/data/build-module/settings/with-settings-hydration.js
-
 /**
  * External dependencies
  */
@@ -1904,77 +1325,37 @@ var external_this_wp_element_ = __webpack_require__(0);
  */
 
 
-var with_settings_hydration_withSettingsHydration = function withSettingsHydration(group, settings) {
-  return function (OriginalComponent) {
-    return function (props) {
-      var settingsRef = Object(external_this_wp_element_["useRef"])(settings);
-      Object(external_this_wp_data_["useSelect"])(function (select, registry) {
-        if (!settingsRef.current) {
-          return;
-        }
-
-        var _select = select(STORE_NAME),
-            isResolving = _select.isResolving,
-            hasFinishedResolution = _select.hasFinishedResolution;
-
-        var _registry$dispatch = registry.dispatch(STORE_NAME),
-            startResolution = _registry$dispatch.startResolution,
-            finishResolution = _registry$dispatch.finishResolution,
-            updateSettingsForGroup = _registry$dispatch.updateSettingsForGroup,
-            clearIsDirty = _registry$dispatch.clearIsDirty;
-
-        if (!isResolving('getSettings', [group]) && !hasFinishedResolution('getSettings', [group])) {
-          startResolution('getSettings', [group]);
-          updateSettingsForGroup(group, settingsRef.current);
-          clearIsDirty(group);
-          finishResolution('getSettings', [group]);
-        }
-      }, []);
-      return Object(external_this_wp_element_["createElement"])(OriginalComponent, props);
-    };
-  };
-};
-// CONCATENATED MODULE: ./packages/data/build-module/settings/use-settings.js
-
-
-function use_settings_ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function use_settings_objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      use_settings_ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      use_settings_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
+const withSettingsHydration = (group, settings) => Object(external_wp_compose_["createHigherOrderComponent"])(OriginalComponent => props => {
+  const settingsRef = Object(external_wp_element_["useRef"])(settings);
+  Object(external_wp_data_["useSelect"])((select, registry) => {
+    if (!settingsRef.current) {
+      return;
     }
-  }
 
-  return target;
-}
+    const {
+      isResolving,
+      hasFinishedResolution
+    } = select(STORE_NAME);
+    const {
+      startResolution,
+      finishResolution,
+      updateSettingsForGroup,
+      clearIsDirty
+    } = registry.dispatch(STORE_NAME);
+
+    if (!isResolving('getSettings', [group]) && !hasFinishedResolution('getSettings', [group])) {
+      startResolution('getSettings', [group]);
+      updateSettingsForGroup(group, settingsRef.current);
+      clearIsDirty(group);
+      finishResolution('getSettings', [group]);
+    }
+  }, []);
+  return Object(external_wp_element_["createElement"])(OriginalComponent, Object.assign({}, props));
+}, 'withSettingsHydration');
+// CONCATENATED MODULE: ./packages/data/build-module/settings/use-settings.js
 /**
  * External dependencies
  */
-
-
 
 
 /**
@@ -1982,113 +1363,131 @@ function use_settings_objectSpread(target) {
  */
 
 
-var use_settings_useSettings = function useSettings(group) {
-  var settingsKeys = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-
-  var _useSelect = Object(external_this_wp_data_["useSelect"])(function (select) {
-    var _select = select(STORE_NAME),
-        getLastSettingsErrorForGroup = _select.getLastSettingsErrorForGroup,
-        getSettingsForGroup = _select.getSettingsForGroup,
-        getIsDirty = _select.getIsDirty,
-        isUpdateSettingsRequesting = _select.isUpdateSettingsRequesting;
-
+const useSettings = (group, settingsKeys = []) => {
+  const {
+    requestedSettings,
+    settingsError,
+    isRequesting,
+    isDirty
+  } = Object(external_wp_data_["useSelect"])(select => {
+    const {
+      getLastSettingsErrorForGroup,
+      getSettingsForGroup,
+      getIsDirty,
+      isUpdateSettingsRequesting
+    } = select(STORE_NAME);
     return {
       requestedSettings: getSettingsForGroup(group, settingsKeys),
       settingsError: Boolean(getLastSettingsErrorForGroup(group)),
       isRequesting: isUpdateSettingsRequesting(group),
       isDirty: getIsDirty(group, settingsKeys)
     };
-  }, [group, settingsKeys]),
-      requestedSettings = _useSelect.requestedSettings,
-      settingsError = _useSelect.settingsError,
-      isRequesting = _useSelect.isRequesting,
-      isDirty = _useSelect.isDirty;
-
-  var _useDispatch = Object(external_this_wp_data_["useDispatch"])(STORE_NAME),
-      persistSettingsForGroup = _useDispatch.persistSettingsForGroup,
-      updateAndPersistSettingsForGroup = _useDispatch.updateAndPersistSettingsForGroup,
-      updateSettingsForGroup = _useDispatch.updateSettingsForGroup;
-
-  var updateSettings = Object(external_this_wp_element_["useCallback"])(function (name, data) {
-    updateSettingsForGroup(group, defineProperty_default()({}, name, data));
+  }, [group, ...settingsKeys.sort()]);
+  const {
+    persistSettingsForGroup,
+    updateAndPersistSettingsForGroup,
+    updateSettingsForGroup
+  } = Object(external_wp_data_["useDispatch"])(STORE_NAME);
+  const updateSettings = Object(external_wp_element_["useCallback"])((name, data) => {
+    updateSettingsForGroup(group, {
+      [name]: data
+    });
   }, [group]);
-  var persistSettings = Object(external_this_wp_element_["useCallback"])(function () {
+  const persistSettings = Object(external_wp_element_["useCallback"])(() => {
     // this action would simply persist all settings marked as dirty in the
     // store state and then remove the dirty record in the isDirtyMap
     persistSettingsForGroup(group);
   }, [group]);
-  var updateAndPersistSettings = Object(external_this_wp_element_["useCallback"])(function (name, data) {
-    updateAndPersistSettingsForGroup(group, defineProperty_default()({}, name, data));
+  const updateAndPersistSettings = Object(external_wp_element_["useCallback"])((name, data) => {
+    updateAndPersistSettingsForGroup(group, {
+      [name]: data
+    });
   }, [group]);
-  return use_settings_objectSpread(use_settings_objectSpread({
-    settingsError: settingsError,
-    isRequesting: isRequesting,
-    isDirty: isDirty
-  }, requestedSettings), {}, {
-    persistSettings: persistSettings,
-    updateAndPersistSettings: updateAndPersistSettings,
-    updateSettings: updateSettings
-  });
+  return {
+    settingsError,
+    isRequesting,
+    isDirty,
+    ...requestedSettings,
+    persistSettings,
+    updateAndPersistSettings,
+    updateSettings
+  };
 };
 // CONCATENATED MODULE: ./packages/data/build-module/plugins/constants.js
 /**
  * External dependencies
  */
 
-var constants_STORE_NAME = 'wc/admin/plugins';
+const constants_STORE_NAME = 'wc/admin/plugins';
+const PAYPAL_NAMESPACE = '/wc-paypal/v1';
 /**
  * Plugin slugs and names as key/value pairs.
  */
 
-var pluginNames = {
-  'facebook-for-woocommerce': Object(external_this_wp_i18n_["__"])('Facebook for WooCommerce', 'woocommerce-admin'),
-  jetpack: Object(external_this_wp_i18n_["__"])('Jetpack', 'woocommerce-admin'),
-  'klarna-checkout-for-woocommerce': Object(external_this_wp_i18n_["__"])('Klarna Checkout for WooCommerce', 'woocommerce-admin'),
-  'klarna-payments-for-woocommerce': Object(external_this_wp_i18n_["__"])('Klarna Payments for WooCommerce', 'woocommerce-admin'),
-  'mailchimp-for-woocommerce': Object(external_this_wp_i18n_["__"])('Mailchimp for WooCommerce', 'woocommerce-admin'),
-  'woocommerce-gateway-paypal-express-checkout': Object(external_this_wp_i18n_["__"])('WooCommerce PayPal', 'woocommerce-admin'),
-  'woocommerce-gateway-stripe': Object(external_this_wp_i18n_["__"])('WooCommerce Stripe', 'woocommerce-admin'),
-  'woocommerce-payfast-gateway': Object(external_this_wp_i18n_["__"])('WooCommerce PayFast', 'woocommerce-admin'),
-  'woocommerce-payments': Object(external_this_wp_i18n_["__"])('WooCommerce Payments', 'woocommerce-admin'),
-  'woocommerce-services': Object(external_this_wp_i18n_["__"])('WooCommerce Services', 'woocommerce-admin'),
-  'woocommerce-shipstation-integration': Object(external_this_wp_i18n_["__"])('WooCommerce ShipStation Gateway', 'woocommerce-admin'),
-  'kliken-marketing-for-google': Object(external_this_wp_i18n_["__"])('Google Ads', 'woocommerce-admin')
+const pluginNames = {
+  'facebook-for-woocommerce': Object(external_wp_i18n_["__"])('Facebook for WooCommerce', 'woocommerce-admin'),
+  jetpack: Object(external_wp_i18n_["__"])('Jetpack', 'woocommerce-admin'),
+  'klarna-checkout-for-woocommerce': Object(external_wp_i18n_["__"])('Klarna Checkout for WooCommerce', 'woocommerce-admin'),
+  'klarna-payments-for-woocommerce': Object(external_wp_i18n_["__"])('Klarna Payments for WooCommerce', 'woocommerce-admin'),
+  'mailchimp-for-woocommerce': Object(external_wp_i18n_["__"])('Mailchimp for WooCommerce', 'woocommerce-admin'),
+  'creative-mail-by-constant-contact': Object(external_wp_i18n_["__"])('Creative Mail for WooCommerce', 'woocommerce-admin'),
+  'woocommerce-gateway-paypal-express-checkout': Object(external_wp_i18n_["__"])('WooCommerce PayPal', 'woocommerce-admin'),
+  'woocommerce-gateway-stripe': Object(external_wp_i18n_["__"])('WooCommerce Stripe', 'woocommerce-admin'),
+  'woocommerce-payfast-gateway': Object(external_wp_i18n_["__"])('WooCommerce PayFast', 'woocommerce-admin'),
+  'woocommerce-payments': Object(external_wp_i18n_["__"])('WooCommerce Payments', 'woocommerce-admin'),
+  'woocommerce-services': Object(external_wp_i18n_["__"])('WooCommerce Shipping & Tax', 'woocommerce-admin'),
+  'woocommerce-services:shipping': Object(external_wp_i18n_["__"])('WooCommerce Shipping & Tax', 'woocommerce-admin'),
+  'woocommerce-services:tax': Object(external_wp_i18n_["__"])('WooCommerce Shipping & Tax', 'woocommerce-admin'),
+  'woocommerce-shipstation-integration': Object(external_wp_i18n_["__"])('WooCommerce ShipStation Gateway', 'woocommerce-admin'),
+  'woocommerce-mercadopago': Object(external_wp_i18n_["__"])('Mercado Pago payments for WooCommerce', 'woocommerce-admin'),
+  'google-listings-and-ads': Object(external_wp_i18n_["__"])('Google Listings and Ads', 'woocommerce-admin'),
+  'woo-razorpay': Object(external_wp_i18n_["__"])('Razorpay', 'woocommerce-admin'),
+  mailpoet: Object(external_wp_i18n_["__"])('MailPoet', 'woocommerce-admin')
 };
 // CONCATENATED MODULE: ./packages/data/build-module/plugins/selectors.js
-var getActivePlugins = function getActivePlugins(state) {
+const getActivePlugins = state => {
   return state.active || [];
 };
-var getInstalledPlugins = function getInstalledPlugins(state) {
+const getInstalledPlugins = state => {
   return state.installed || [];
 };
-var isPluginsRequesting = function isPluginsRequesting(state, selector) {
+const isPluginsRequesting = (state, selector) => {
   return state.requesting[selector] || false;
 };
-var getPluginsError = function getPluginsError(state, selector) {
+const getPluginsError = (state, selector) => {
   return state.errors[selector] || false;
 };
-var isJetpackConnected = function isJetpackConnected(state) {
-  return state.jetpackConnection;
-};
-var getJetpackConnectUrl = function getJetpackConnectUrl(state, query) {
+const isJetpackConnected = state => state.jetpackConnection;
+const getJetpackConnectUrl = (state, query) => {
   return state.jetpackConnectUrls[query.redirect_url];
 };
-// CONCATENATED MODULE: ./packages/data/build-module/plugins/action-types.js
-var action_types_TYPES = {
-  UPDATE_ACTIVE_PLUGINS: 'UPDATE_ACTIVE_PLUGINS',
-  UPDATE_INSTALLED_PLUGINS: 'UPDATE_INSTALLED_PLUGINS',
-  SET_IS_REQUESTING: 'SET_IS_REQUESTING',
-  SET_ERROR: 'SET_ERROR',
-  UPDATE_JETPACK_CONNECTION: 'UPDATE_JETPACK_CONNECTION',
-  UPDATE_JETPACK_CONNECT_URL: 'UPDATE_JETPACK_CONNECT_URL'
+const getPluginInstallState = (state, plugin) => {
+  if (state.active.includes(plugin)) {
+    return 'activated';
+  } else if (state.installed.includes(plugin)) {
+    return 'installed';
+  }
+
+  return 'unavailable';
 };
-/* harmony default export */ var plugins_action_types = (action_types_TYPES);
+const getPaypalOnboardingStatus = state => state.paypalOnboardingStatus;
+const getRecommendedPlugins = (state, type) => {
+  return state.recommended[type];
+};
+// CONCATENATED MODULE: ./packages/data/build-module/plugins/action-types.js
+var ACTION_TYPES;
+
+(function (ACTION_TYPES) {
+  ACTION_TYPES["UPDATE_ACTIVE_PLUGINS"] = "UPDATE_ACTIVE_PLUGINS";
+  ACTION_TYPES["UPDATE_INSTALLED_PLUGINS"] = "UPDATE_INSTALLED_PLUGINS";
+  ACTION_TYPES["SET_IS_REQUESTING"] = "SET_IS_REQUESTING";
+  ACTION_TYPES["SET_ERROR"] = "SET_ERROR";
+  ACTION_TYPES["UPDATE_JETPACK_CONNECTION"] = "UPDATE_JETPACK_CONNECTION";
+  ACTION_TYPES["UPDATE_JETPACK_CONNECT_URL"] = "UPDATE_JETPACK_CONNECT_URL";
+  ACTION_TYPES["SET_PAYPAL_ONBOARDING_STATUS"] = "SET_PAYPAL_ONBOARDING_STATUS";
+  ACTION_TYPES["SET_RECOMMENDED_PLUGINS"] = "SET_RECOMMENDED_PLUGINS";
+})(ACTION_TYPES || (ACTION_TYPES = {}));
 // CONCATENATED MODULE: ./packages/data/build-module/plugins/actions.js
-
-
-var actions_marked = /*#__PURE__*/regenerator_default.a.mark(installPlugins),
-    actions_marked2 = /*#__PURE__*/regenerator_default.a.mark(activatePlugins),
-    _marked3 = /*#__PURE__*/regenerator_default.a.mark(installAndActivatePlugins);
 /**
  * External dependencies
  */
@@ -2101,230 +1500,470 @@ var actions_marked = /*#__PURE__*/regenerator_default.a.mark(installPlugins),
 
 
 
+ // Can be removed in WP 5.9, wp.data is supported in >5.7.
 
-function actions_updateActivePlugins(active) {
-  var replace = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+const actions_dispatch = external_wp_data_["controls"] && external_wp_data_["controls"].dispatch ? external_wp_data_["controls"].dispatch : external_wp_dataControls_["dispatch"];
+const actions_resolveSelect = external_wp_data_["controls"] && external_wp_data_["controls"].resolveSelect ? external_wp_data_["controls"].resolveSelect : external_wp_dataControls_["select"];
+
+function isWPError(error) {
+  return error.errors !== undefined;
+}
+
+function formatErrors(response) {
+  if (isWPError(response)) {
+    // Replace the slug with a plugin name if a constant exists.
+    Object.keys(response.errors).forEach(plugin => {
+      response.errors[plugin] = response.errors[plugin].map(pluginError => {
+        return pluginNames[plugin] ? pluginError.replace(`\`${plugin}\``, pluginNames[plugin]) : pluginError;
+      });
+    });
+  } else if (typeof response === 'string') {
+    return response;
+  } else {
+    return response.message;
+  }
+
+  return '';
+}
+
+const formatErrorMessage = (pluginErrors, actionType = 'install') => {
+  return Object(external_wp_i18n_["sprintf"])(
+  /* translators: %(actionType): install or activate (the plugin). %(pluginName): a plugin slug (e.g. woocommerce-services). %(error): a single error message or in plural a comma separated error message list.*/
+  Object(external_wp_i18n_["_n"])('Could not %(actionType)s %(pluginName)s plugin, %(error)s', 'Could not %(actionType)s the following plugins: %(pluginName)s with these Errors: %(error)s', Object.keys(pluginErrors).length || 1, 'woocommerce-admin'), {
+    actionType,
+    pluginName: Object.keys(pluginErrors).join(', '),
+    error: Object.values(pluginErrors).join(', \n')
+  });
+};
+
+function actions_updateActivePlugins(active, replace = false) {
   return {
-    type: plugins_action_types.UPDATE_ACTIVE_PLUGINS,
-    active: active,
-    replace: replace
+    type: ACTION_TYPES.UPDATE_ACTIVE_PLUGINS,
+    active,
+    replace
   };
 }
-function actions_updateInstalledPlugins(installed) {
-  var replace = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+function actions_updateInstalledPlugins(installed, replace = false) {
   return {
-    type: plugins_action_types.UPDATE_INSTALLED_PLUGINS,
-    installed: installed,
-    replace: replace
+    type: ACTION_TYPES.UPDATE_INSTALLED_PLUGINS,
+    installed,
+    replace
   };
 }
 function actions_setIsRequesting(selector, isRequesting) {
   return {
-    type: plugins_action_types.SET_IS_REQUESTING,
-    selector: selector,
-    isRequesting: isRequesting
+    type: ACTION_TYPES.SET_IS_REQUESTING,
+    selector,
+    isRequesting
   };
 }
 function setError(selector, error) {
   return {
-    type: plugins_action_types.SET_ERROR,
-    selector: selector,
-    error: error
+    type: ACTION_TYPES.SET_ERROR,
+    selector,
+    error
   };
 }
 function actions_updateIsJetpackConnected(jetpackConnection) {
   return {
-    type: plugins_action_types.UPDATE_JETPACK_CONNECTION,
-    jetpackConnection: jetpackConnection
+    type: ACTION_TYPES.UPDATE_JETPACK_CONNECTION,
+    jetpackConnection
   };
 }
 function updateJetpackConnectUrl(redirectUrl, jetpackConnectUrl) {
   return {
-    type: plugins_action_types.UPDATE_JETPACK_CONNECT_URL,
-    jetpackConnectUrl: jetpackConnectUrl,
-    redirectUrl: redirectUrl
+    type: ACTION_TYPES.UPDATE_JETPACK_CONNECT_URL,
+    jetpackConnectUrl,
+    redirectUrl
   };
 }
-function installPlugins(plugins) {
-  var results;
-  return regenerator_default.a.wrap(function installPlugins$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          _context.next = 2;
-          return actions_setIsRequesting('installPlugins', true);
+function* installPlugins(plugins) {
+  yield actions_setIsRequesting('installPlugins', true);
 
-        case 2:
-          _context.prev = 2;
-          _context.next = 5;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: "".concat(WC_ADMIN_NAMESPACE, "/plugins/install"),
-            method: 'POST',
-            data: {
-              plugins: plugins.join(',')
-            }
-          });
-
-        case 5:
-          results = _context.sent;
-
-          if (!results.data.installed.length) {
-            _context.next = 9;
-            break;
-          }
-
-          _context.next = 9;
-          return actions_updateInstalledPlugins(results.data.installed);
-
-        case 9:
-          if (!Object.keys(results.errors.errors).length) {
-            _context.next = 11;
-            break;
-          }
-
-          throw results.errors;
-
-        case 11:
-          _context.next = 13;
-          return actions_setIsRequesting('installPlugins', false);
-
-        case 13:
-          return _context.abrupt("return", results);
-
-        case 16:
-          _context.prev = 16;
-          _context.t0 = _context["catch"](2);
-          _context.next = 20;
-          return setError('installPlugins', _context.t0);
-
-        case 20:
-          throw formatErrors(_context.t0);
-
-        case 21:
-        case "end":
-          return _context.stop();
+  try {
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: `${WC_ADMIN_NAMESPACE}/plugins/install`,
+      method: 'POST',
+      data: {
+        plugins: plugins.join(',')
       }
-    }
-  }, actions_marked, null, [[2, 16]]);
-}
-function activatePlugins(plugins) {
-  var results;
-  return regenerator_default.a.wrap(function activatePlugins$(_context2) {
-    while (1) {
-      switch (_context2.prev = _context2.next) {
-        case 0:
-          _context2.next = 2;
-          return actions_setIsRequesting('activatePlugins', true);
-
-        case 2:
-          _context2.prev = 2;
-          _context2.next = 5;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: "".concat(WC_ADMIN_NAMESPACE, "/plugins/activate"),
-            method: 'POST',
-            data: {
-              plugins: plugins.join(',')
-            }
-          });
-
-        case 5:
-          results = _context2.sent;
-
-          if (!results.data.activated.length) {
-            _context2.next = 9;
-            break;
-          }
-
-          _context2.next = 9;
-          return actions_updateActivePlugins(results.data.activated);
-
-        case 9:
-          if (!Object.keys(results.errors.errors).length) {
-            _context2.next = 11;
-            break;
-          }
-
-          throw results.errors;
-
-        case 11:
-          _context2.next = 13;
-          return actions_setIsRequesting('activatePlugins', false);
-
-        case 13:
-          return _context2.abrupt("return", results);
-
-        case 16:
-          _context2.prev = 16;
-          _context2.t0 = _context2["catch"](2);
-          _context2.next = 20;
-          return setError('activatePlugins', _context2.t0);
-
-        case 20:
-          throw formatErrors(_context2.t0);
-
-        case 21:
-        case "end":
-          return _context2.stop();
-      }
-    }
-  }, actions_marked2, null, [[2, 16]]);
-}
-function installAndActivatePlugins(plugins) {
-  var activations;
-  return regenerator_default.a.wrap(function installAndActivatePlugins$(_context3) {
-    while (1) {
-      switch (_context3.prev = _context3.next) {
-        case 0:
-          _context3.prev = 0;
-          _context3.next = 3;
-          return Object(external_this_wp_dataControls_["dispatch"])(constants_STORE_NAME, 'installPlugins', plugins);
-
-        case 3:
-          _context3.next = 5;
-          return Object(external_this_wp_dataControls_["dispatch"])(constants_STORE_NAME, 'activatePlugins', plugins);
-
-        case 5:
-          activations = _context3.sent;
-          return _context3.abrupt("return", activations);
-
-        case 9:
-          _context3.prev = 9;
-          _context3.t0 = _context3["catch"](0);
-          throw _context3.t0;
-
-        case 12:
-        case "end":
-          return _context3.stop();
-      }
-    }
-  }, _marked3, null, [[0, 9]]);
-}
-function formatErrors(response) {
-  if (response.errors) {
-    // Replace the slug with a plugin name if a constant exists.
-    Object.keys(response.errors).forEach(function (plugin) {
-      response.errors[plugin] = response.errors[plugin].map(function (pluginError) {
-        return pluginNames[plugin] ? pluginError.replace("`".concat(plugin, "`"), pluginNames[plugin]) : pluginError;
-      });
     });
+
+    if (results.data.installed.length) {
+      yield actions_updateInstalledPlugins(results.data.installed);
+    }
+
+    if (Object.keys(results.errors.errors).length) {
+      throw results.errors.errors;
+    }
+
+    yield actions_setIsRequesting('installPlugins', false);
+    return results;
+  } catch (error) {
+    if (plugins.length === 1 && !error[plugins[0]]) {
+      // Incase of a network error
+      error = {
+        [plugins[0]]: error.message
+      };
+    }
+
+    yield setError('installPlugins', error);
+    throw new Error(formatErrorMessage(error));
   }
-
-  return response;
 }
-// EXTERNAL MODULE: external {"this":["wp","url"]}
-var external_this_wp_url_ = __webpack_require__(34);
+function* activatePlugins(plugins) {
+  yield actions_setIsRequesting('activatePlugins', true);
 
-// CONCATENATED MODULE: ./packages/data/build-module/plugins/resolvers.js
+  try {
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: `${WC_ADMIN_NAMESPACE}/plugins/activate`,
+      method: 'POST',
+      data: {
+        plugins: plugins.join(',')
+      }
+    });
 
+    if (results.data.activated.length) {
+      yield actions_updateActivePlugins(results.data.activated);
+    }
 
-var plugins_resolvers_marked = /*#__PURE__*/regenerator_default.a.mark(resolvers_getActivePlugins),
-    plugins_resolvers_marked2 = /*#__PURE__*/regenerator_default.a.mark(resolvers_getInstalledPlugins),
-    resolvers_marked3 = /*#__PURE__*/regenerator_default.a.mark(resolvers_isJetpackConnected),
-    _marked4 = /*#__PURE__*/regenerator_default.a.mark(resolvers_getJetpackConnectUrl);
+    if (Object.keys(results.errors.errors).length) {
+      throw results.errors.errors;
+    }
+
+    yield actions_setIsRequesting('activatePlugins', false);
+    return results;
+  } catch (error) {
+    if (plugins.length === 1 && !error[plugins[0]]) {
+      // Incase of a network error
+      error = {
+        [plugins[0]]: error.message
+      };
+    }
+
+    yield setError('activatePlugins', error);
+    throw new Error(formatErrorMessage(error, 'activate'));
+  }
+}
+function* installAndActivatePlugins(plugins) {
+  try {
+    yield actions_dispatch(constants_STORE_NAME, 'installPlugins', plugins);
+    const activations = yield actions_dispatch(constants_STORE_NAME, 'activatePlugins', plugins);
+    return activations;
+  } catch (error) {
+    throw error;
+  }
+}
+const createErrorNotice = errorMessage => {
+  return actions_dispatch('core/notices', 'createNotice', 'error', errorMessage);
+};
+function* connectToJetpack(getAdminLink) {
+  const url = yield actions_resolveSelect(constants_STORE_NAME, 'getJetpackConnectUrl', {
+    redirect_url: getAdminLink('admin.php?page=wc-admin')
+  });
+  const error = yield actions_resolveSelect(constants_STORE_NAME, 'getPluginsError', 'getJetpackConnectUrl');
+
+  if (error) {
+    throw new Error(error);
+  } else {
+    return url;
+  }
+}
+function* installJetpackAndConnect(errorAction, getAdminLink) {
+  try {
+    yield actions_dispatch(constants_STORE_NAME, 'installPlugins', ['jetpack']);
+    yield actions_dispatch(constants_STORE_NAME, 'activatePlugins', ['jetpack']);
+    const url = yield actions_dispatch(constants_STORE_NAME, 'connectToJetpack', getAdminLink);
+    window.location.href = url;
+  } catch (error) {
+    yield errorAction(error.message);
+  }
+}
+function* connectToJetpackWithFailureRedirect(failureRedirect, errorAction, getAdminLink) {
+  try {
+    const url = yield actions_dispatch(constants_STORE_NAME, 'connectToJetpack', getAdminLink);
+    window.location.href = url;
+  } catch (error) {
+    yield errorAction(error.message);
+    window.location.href = failureRedirect;
+  }
+}
+function setPaypalOnboardingStatus(status) {
+  return {
+    type: ACTION_TYPES.SET_PAYPAL_ONBOARDING_STATUS,
+    paypalOnboardingStatus: status
+  };
+}
+function setRecommendedPlugins(type, plugins) {
+  return {
+    type: ACTION_TYPES.SET_RECOMMENDED_PLUGINS,
+    recommendedType: type,
+    plugins
+  };
+}
+// EXTERNAL MODULE: external ["wp","url"]
+var external_wp_url_ = __webpack_require__(14);
+
+// CONCATENATED MODULE: ./packages/data/build-module/options/constants.js
+const options_constants_STORE_NAME = 'wc/admin/options';
+// CONCATENATED MODULE: ./packages/data/build-module/options/selectors.js
+/**
+ * Get option from state tree.
+ *
+ * @param {Object} state - Reducer state
+ * @param {Array} name - Option name
+ */
+const getOption = (state, name) => {
+  return state[name];
+};
+/**
+ * Determine if an options request resulted in an error.
+ *
+ * @param {Object} state - Reducer state
+ * @param {string} name - Option name
+ */
+
+const getOptionsRequestingError = (state, name) => {
+  return state.requestingErrors[name] || false;
+};
+/**
+ * Determine if options are being updated.
+ *
+ * @param {Object} state - Reducer state
+ */
+
+const isOptionsUpdating = state => {
+  return state.isUpdating || false;
+};
+/**
+ * Determine if an options update resulted in an error.
+ *
+ * @param {Object} state - Reducer state
+ */
+
+const getOptionsUpdatingError = state => {
+  return state.updatingError || false;
+};
+// CONCATENATED MODULE: ./packages/data/build-module/options/action-types.js
+const action_types_TYPES = {
+  RECEIVE_OPTIONS: 'RECEIVE_OPTIONS',
+  SET_IS_REQUESTING: 'SET_IS_REQUESTING',
+  SET_IS_UPDATING: 'SET_IS_UPDATING',
+  SET_REQUESTING_ERROR: 'SET_REQUESTING_ERROR',
+  SET_UPDATING_ERROR: 'SET_UPDATING_ERROR'
+};
+/* harmony default export */ var options_action_types = (action_types_TYPES);
+// CONCATENATED MODULE: ./packages/data/build-module/options/actions.js
 /**
  * External dependencies
  */
 
+/**
+ * Internal dependencies
+ */
+
+
+
+function actions_receiveOptions(options) {
+  return {
+    type: options_action_types.RECEIVE_OPTIONS,
+    options
+  };
+}
+function setRequestingError(error, name) {
+  return {
+    type: options_action_types.SET_REQUESTING_ERROR,
+    error,
+    name
+  };
+}
+function setUpdatingError(error) {
+  return {
+    type: options_action_types.SET_UPDATING_ERROR,
+    error
+  };
+}
+function setIsUpdating(isUpdating) {
+  return {
+    type: options_action_types.SET_IS_UPDATING,
+    isUpdating
+  };
+}
+function* updateOptions(data) {
+  yield setIsUpdating(true);
+  yield actions_receiveOptions(data);
+
+  try {
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: WC_ADMIN_NAMESPACE + '/options',
+      method: 'POST',
+      data
+    });
+    yield setIsUpdating(false);
+    return {
+      success: true,
+      ...results
+    };
+  } catch (error) {
+    yield setUpdatingError(error);
+    return {
+      success: false,
+      ...error
+    };
+  }
+}
+// EXTERNAL MODULE: external ["wp","apiFetch"]
+var external_wp_apiFetch_ = __webpack_require__(17);
+var external_wp_apiFetch_default = /*#__PURE__*/__webpack_require__.n(external_wp_apiFetch_);
+
+// CONCATENATED MODULE: ./packages/data/build-module/options/controls.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+let optionNames = [];
+const fetches = {};
+const batchFetch = optionName => {
+  return {
+    type: 'BATCH_FETCH',
+    optionName
+  };
+};
+const controls = { ...external_wp_dataControls_["controls"],
+
+  BATCH_FETCH({
+    optionName
+  }) {
+    optionNames.push(optionName);
+    return new Promise(resolve => {
+      setTimeout(function () {
+        const names = optionNames.join(',');
+
+        if (fetches[names]) {
+          return fetches[names].then(result => {
+            resolve(result[optionName]);
+          });
+        }
+
+        const url = WC_ADMIN_NAMESPACE + '/options?options=' + names;
+        fetches[names] = external_wp_apiFetch_default()({
+          path: url
+        });
+        fetches[names].then(result => resolve(result)); // Clear option names after all resolved;
+
+        setTimeout(() => {
+          optionNames = []; // Delete the fetch after to allow wp data to handle cache invalidation.
+
+          delete fetches[names];
+        }, 1);
+      }, 1);
+    });
+  }
+
+};
+// CONCATENATED MODULE: ./packages/data/build-module/options/resolvers.js
+/**
+ * Internal dependencies
+ */
+
+
+/**
+ * Request an option value.
+ *
+ * @param {string} name - Option name
+ */
+
+function* resolvers_getOption(name) {
+  try {
+    const result = yield batchFetch(name);
+    yield actions_receiveOptions(result);
+  } catch (error) {
+    yield setRequestingError(error, name);
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/options/reducer.js
+/**
+ * Internal dependencies
+ */
+
+
+const optionsReducer = (state = {
+  isUpdating: false,
+  requestingErrors: {}
+}, {
+  type,
+  options,
+  error,
+  isUpdating,
+  name
+}) => {
+  switch (type) {
+    case options_action_types.RECEIVE_OPTIONS:
+      state = { ...state,
+        ...options
+      };
+      break;
+
+    case options_action_types.SET_IS_UPDATING:
+      state = { ...state,
+        isUpdating
+      };
+      break;
+
+    case options_action_types.SET_REQUESTING_ERROR:
+      state = { ...state,
+        requestingErrors: {
+          [name]: error
+        }
+      };
+      break;
+
+    case options_action_types.SET_UPDATING_ERROR:
+      state = { ...state,
+        error,
+        updatingError: error,
+        isUpdating: false
+      };
+      break;
+  }
+
+  return state;
+};
+
+/* harmony default export */ var options_reducer = (optionsReducer);
+// CONCATENATED MODULE: ./packages/data/build-module/options/index.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+
+
+Object(external_wp_data_["registerStore"])(options_constants_STORE_NAME, {
+  reducer: options_reducer,
+  actions: options_actions_namespaceObject,
+  controls: controls,
+  selectors: options_selectors_namespaceObject,
+  resolvers: options_resolvers_namespaceObject
+});
+const OPTIONS_STORE_NAME = options_constants_STORE_NAME;
+// CONCATENATED MODULE: ./packages/data/build-module/plugins/resolvers.js
+/**
+ * External dependencies
+ */
 
 
 
@@ -2334,215 +1973,130 @@ var plugins_resolvers_marked = /*#__PURE__*/regenerator_default.a.mark(resolvers
 
 
 
-function resolvers_getActivePlugins() {
-  var url, results;
-  return regenerator_default.a.wrap(function getActivePlugins$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          _context.next = 2;
-          return actions_setIsRequesting('getActivePlugins', true);
 
-        case 2:
-          _context.prev = 2;
-          url = WC_ADMIN_NAMESPACE + '/plugins/active';
-          _context.next = 6;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: url,
-            method: 'GET'
-          });
+ // Can be removed in WP 5.9, wp.data is supported in >5.7.
 
-        case 6:
-          results = _context.sent;
-          _context.next = 9;
-          return actions_updateActivePlugins(results.plugins, true);
+const resolvers_resolveSelect = external_wp_data_["controls"] && external_wp_data_["controls"].resolveSelect ? external_wp_data_["controls"].resolveSelect : external_wp_dataControls_["select"];
+function* resolvers_getActivePlugins() {
+  yield actions_setIsRequesting('getActivePlugins', true);
 
-        case 9:
-          _context.next = 15;
-          break;
-
-        case 11:
-          _context.prev = 11;
-          _context.t0 = _context["catch"](2);
-          _context.next = 15;
-          return setError('getActivePlugins', _context.t0);
-
-        case 15:
-        case "end":
-          return _context.stop();
-      }
-    }
-  }, plugins_resolvers_marked, null, [[2, 11]]);
+  try {
+    const url = WC_ADMIN_NAMESPACE + '/plugins/active';
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'GET'
+    });
+    yield actions_updateActivePlugins(results.plugins, true);
+  } catch (error) {
+    yield setError('getActivePlugins', error);
+  }
 }
-function resolvers_getInstalledPlugins() {
-  var url, results;
-  return regenerator_default.a.wrap(function getInstalledPlugins$(_context2) {
-    while (1) {
-      switch (_context2.prev = _context2.next) {
-        case 0:
-          _context2.next = 2;
-          return actions_setIsRequesting('getInstalledPlugins', true);
+function* resolvers_getInstalledPlugins() {
+  yield actions_setIsRequesting('getInstalledPlugins', true);
 
-        case 2:
-          _context2.prev = 2;
-          url = WC_ADMIN_NAMESPACE + '/plugins/installed';
-          _context2.next = 6;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: url,
-            method: 'GET'
-          });
-
-        case 6:
-          results = _context2.sent;
-          _context2.next = 9;
-          return actions_updateInstalledPlugins(results, true);
-
-        case 9:
-          _context2.next = 15;
-          break;
-
-        case 11:
-          _context2.prev = 11;
-          _context2.t0 = _context2["catch"](2);
-          _context2.next = 15;
-          return setError('getInstalledPlugins', _context2.t0);
-
-        case 15:
-        case "end":
-          return _context2.stop();
-      }
-    }
-  }, plugins_resolvers_marked2, null, [[2, 11]]);
+  try {
+    const url = WC_ADMIN_NAMESPACE + '/plugins/installed';
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'GET'
+    });
+    yield actions_updateInstalledPlugins(results.plugins, true);
+  } catch (error) {
+    yield setError('getInstalledPlugins', error);
+  }
 }
-function resolvers_isJetpackConnected() {
-  var url, results;
-  return regenerator_default.a.wrap(function isJetpackConnected$(_context3) {
-    while (1) {
-      switch (_context3.prev = _context3.next) {
-        case 0:
-          _context3.next = 2;
-          return actions_setIsRequesting('isJetpackConnected', true);
+function* resolvers_isJetpackConnected() {
+  yield actions_setIsRequesting('isJetpackConnected', true);
 
-        case 2:
-          _context3.prev = 2;
-          url = JETPACK_NAMESPACE + '/connection';
-          _context3.next = 6;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: url,
-            method: 'GET'
-          });
+  try {
+    const url = JETPACK_NAMESPACE + '/connection';
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'GET'
+    });
+    yield actions_updateIsJetpackConnected(results.isActive);
+  } catch (error) {
+    yield setError('isJetpackConnected', error);
+  }
 
-        case 6:
-          results = _context3.sent;
-          _context3.next = 9;
-          return actions_updateIsJetpackConnected(results.isActive);
-
-        case 9:
-          _context3.next = 15;
-          break;
-
-        case 11:
-          _context3.prev = 11;
-          _context3.t0 = _context3["catch"](2);
-          _context3.next = 15;
-          return setError('isJetpackConnected', _context3.t0);
-
-        case 15:
-          _context3.next = 17;
-          return actions_setIsRequesting('isJetpackConnected', false);
-
-        case 17:
-        case "end":
-          return _context3.stop();
-      }
-    }
-  }, resolvers_marked3, null, [[2, 11]]);
+  yield actions_setIsRequesting('isJetpackConnected', false);
 }
-function resolvers_getJetpackConnectUrl(query) {
-  var url, results;
-  return regenerator_default.a.wrap(function getJetpackConnectUrl$(_context4) {
-    while (1) {
-      switch (_context4.prev = _context4.next) {
-        case 0:
-          _context4.next = 2;
-          return actions_setIsRequesting('getJetpackConnectUrl', true);
+function* resolvers_getJetpackConnectUrl(query) {
+  yield actions_setIsRequesting('getJetpackConnectUrl', true);
 
-        case 2:
-          _context4.prev = 2;
-          url = Object(external_this_wp_url_["addQueryArgs"])(WC_ADMIN_NAMESPACE + '/plugins/connect-jetpack', query);
-          _context4.next = 6;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: url,
-            method: 'GET'
-          });
+  try {
+    const url = Object(external_wp_url_["addQueryArgs"])(WC_ADMIN_NAMESPACE + '/plugins/connect-jetpack', query);
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'GET'
+    });
+    yield updateJetpackConnectUrl(query.redirect_url, results.connectAction);
+  } catch (error) {
+    yield setError('getJetpackConnectUrl', error);
+  }
 
-        case 6:
-          results = _context4.sent;
-          _context4.next = 9;
-          return updateJetpackConnectUrl(query.redirect_url, results.connectAction);
+  yield actions_setIsRequesting('getJetpackConnectUrl', false);
+}
 
-        case 9:
-          _context4.next = 15;
-          break;
-
-        case 11:
-          _context4.prev = 11;
-          _context4.t0 = _context4["catch"](2);
-          _context4.next = 15;
-          return setError('getJetpackConnectUrl', _context4.t0);
-
-        case 15:
-          _context4.next = 17;
-          return actions_setIsRequesting('getJetpackConnectUrl', false);
-
-        case 17:
-        case "end":
-          return _context4.stop();
-      }
+function* setOnboardingStatusWithOptions() {
+  const options = yield resolvers_resolveSelect(OPTIONS_STORE_NAME, 'getOption', 'woocommerce-ppcp-settings');
+  const onboarded = options.merchant_email_production && options.merchant_id_production && options.client_id_production && options.client_secret_production;
+  yield setPaypalOnboardingStatus({
+    production: {
+      state: onboarded ? 'onboarded' : 'unknown',
+      onboarded: onboarded ? true : false
     }
-  }, _marked4, null, [[2, 11]]);
+  });
+}
+
+function* resolvers_getPaypalOnboardingStatus() {
+  yield actions_setIsRequesting('getPaypalOnboardingStatus', true);
+  const errorData = yield resolvers_resolveSelect(constants_STORE_NAME, 'getPluginsError', 'getPaypalOnboardingStatus');
+
+  if (errorData && errorData.data && errorData.data.status === 404) {
+    // The get-status request doesn't exist fall back to using options.
+    yield setOnboardingStatusWithOptions();
+  } else {
+    try {
+      const url = PAYPAL_NAMESPACE + '/onboarding/get-status';
+      const results = yield Object(external_wp_dataControls_["apiFetch"])({
+        path: url,
+        method: 'GET'
+      });
+      yield setPaypalOnboardingStatus(results);
+    } catch (error) {
+      yield setOnboardingStatusWithOptions();
+      yield setError('getPaypalOnboardingStatus', error);
+    }
+  }
+
+  yield actions_setIsRequesting('getPaypalOnboardingStatus', false);
+}
+const SUPPORTED_TYPES = ['payments'];
+function* resolvers_getRecommendedPlugins(type) {
+  if (!SUPPORTED_TYPES.includes(type)) {
+    return [];
+  }
+
+  yield actions_setIsRequesting('getRecommendedPlugins', true);
+
+  try {
+    const url = WC_ADMIN_NAMESPACE + '/plugins/recommended-payment-plugins';
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'GET'
+    });
+    yield setRecommendedPlugins(type, results);
+  } catch (error) {
+    yield setError('getRecommendedPlugins', error);
+  }
+
+  yield actions_setIsRequesting('getRecommendedPlugins', false);
 }
 // CONCATENATED MODULE: ./packages/data/build-module/plugins/reducer.js
-
-
-function reducer_ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function reducer_objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      reducer_ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      reducer_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
 /**
  * External dependencies
  */
-
-
 
 /**
  * Internal dependencies
@@ -2550,79 +2104,91 @@ function reducer_objectSpread(target) {
 
 
 
-var reducer_plugins = function plugins() {
-  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
-    active: [],
-    installed: [],
-    requesting: {},
-    errors: {},
-    jetpackConnectUrls: {}
-  };
+const reducer_plugins = (state = {
+  active: [],
+  installed: [],
+  requesting: {},
+  errors: {},
+  jetpackConnectUrls: {},
+  recommended: {}
+}, payload) => {
+  if (payload && 'type' in payload) {
+    switch (payload.type) {
+      case ACTION_TYPES.UPDATE_ACTIVE_PLUGINS:
+        state = { ...state,
+          active: payload.replace ? payload.active : Object(external_lodash_["concat"])(state.active, payload.active),
+          requesting: { ...state.requesting,
+            getActivePlugins: false,
+            activatePlugins: false
+          },
+          errors: { ...state.errors,
+            getActivePlugins: false,
+            activatePlugins: false
+          }
+        };
+        break;
 
-  var _ref = arguments.length > 1 ? arguments[1] : undefined,
-      type = _ref.type,
-      active = _ref.active,
-      installed = _ref.installed,
-      selector = _ref.selector,
-      isRequesting = _ref.isRequesting,
-      error = _ref.error,
-      jetpackConnection = _ref.jetpackConnection,
-      redirectUrl = _ref.redirectUrl,
-      jetpackConnectUrl = _ref.jetpackConnectUrl,
-      replace = _ref.replace;
+      case ACTION_TYPES.UPDATE_INSTALLED_PLUGINS:
+        state = { ...state,
+          installed: payload.replace ? payload.installed : Object(external_lodash_["concat"])(state.installed, payload.installed),
+          requesting: { ...state.requesting,
+            getInstalledPlugins: false,
+            installPlugins: false
+          },
+          errors: { ...state.errors,
+            getInstalledPlugins: false,
+            installPlugin: false
+          }
+        };
+        break;
 
-  switch (type) {
-    case plugins_action_types.UPDATE_ACTIVE_PLUGINS:
-      state = reducer_objectSpread(reducer_objectSpread({}, state), {}, {
-        active: replace ? active : Object(external_lodash_["concat"])(state.active, active),
-        requesting: reducer_objectSpread(reducer_objectSpread({}, state.requesting), {}, {
-          getActivePlugins: false,
-          activatePlugins: false
-        }),
-        errors: reducer_objectSpread(reducer_objectSpread({}, state.errors), {}, {
-          getActivePlugins: false,
-          activatePlugins: false
-        })
-      });
-      break;
+      case ACTION_TYPES.SET_IS_REQUESTING:
+        state = { ...state,
+          requesting: { ...state.requesting,
+            [payload.selector]: payload.isRequesting
+          }
+        };
+        break;
 
-    case plugins_action_types.UPDATE_INSTALLED_PLUGINS:
-      state = reducer_objectSpread(reducer_objectSpread({}, state), {}, {
-        installed: replace ? installed : Object(external_lodash_["concat"])(state.installed, installed),
-        requesting: reducer_objectSpread(reducer_objectSpread({}, state.requesting), {}, {
-          getInstalledPlugins: false,
-          installPlugin: false
-        }),
-        errors: reducer_objectSpread(reducer_objectSpread({}, state.errors), {}, {
-          getInstalledPlugins: false,
-          installPlugin: false
-        })
-      });
-      break;
+      case ACTION_TYPES.SET_ERROR:
+        state = { ...state,
+          requesting: { ...state.requesting,
+            [payload.selector]: false
+          },
+          errors: { ...state.errors,
+            [payload.selector]: payload.error
+          }
+        };
+        break;
 
-    case plugins_action_types.SET_IS_REQUESTING:
-      state = reducer_objectSpread(reducer_objectSpread({}, state), {}, {
-        requesting: reducer_objectSpread(reducer_objectSpread({}, state.requesting), {}, defineProperty_default()({}, selector, isRequesting))
-      });
-      break;
+      case ACTION_TYPES.UPDATE_JETPACK_CONNECTION:
+        state = { ...state,
+          jetpackConnection: payload.jetpackConnection
+        };
+        break;
 
-    case plugins_action_types.SET_ERROR:
-      state = reducer_objectSpread(reducer_objectSpread({}, state), {}, {
-        requesting: reducer_objectSpread(reducer_objectSpread({}, state.requesting), {}, defineProperty_default()({}, selector, false)),
-        errors: reducer_objectSpread(reducer_objectSpread({}, state.errors), {}, defineProperty_default()({}, selector, error))
-      });
-      break;
+      case ACTION_TYPES.UPDATE_JETPACK_CONNECT_URL:
+        state = { ...state,
+          jetpackConnectUrls: { ...state.jetpackConnectUrls,
+            [payload.redirectUrl]: payload.jetpackConnectUrl
+          }
+        };
+        break;
 
-    case plugins_action_types.UPDATE_JETPACK_CONNECTION:
-      state = reducer_objectSpread(reducer_objectSpread({}, state), {}, {
-        jetpackConnection: jetpackConnection
-      });
-      break;
+      case ACTION_TYPES.SET_PAYPAL_ONBOARDING_STATUS:
+        state = { ...state,
+          paypalOnboardingStatus: payload.paypalOnboardingStatus
+        };
+        break;
 
-    case plugins_action_types.UPDATE_JETPACK_CONNECT_URL:
-      state = reducer_objectSpread(reducer_objectSpread({}, state), {}, {
-        jetpackConnectUrls: reducer_objectSpread(reducer_objectSpread({}, state.jetpackConnectUrl), {}, defineProperty_default()({}, redirectUrl, jetpackConnectUrl))
-      });
+      case ACTION_TYPES.SET_RECOMMENDED_PLUGINS:
+        state = { ...state,
+          recommended: { ...state.recommended,
+            [payload.recommendedType]: payload.plugins
+          }
+        };
+        break;
+    }
   }
 
   return state;
@@ -2644,22 +2210,15 @@ var reducer_plugins = function plugins() {
 
 
 
-var plugins_storeSelectors = Object(external_this_wp_data_["select"])(constants_STORE_NAME); // @todo This is used to prevent double registration of the store due to webpack chunks.
-// The `storeSelectors` condition can be removed once this is fixed.
-
-if (!plugins_storeSelectors) {
-  Object(external_this_wp_data_["registerStore"])(constants_STORE_NAME, {
-    reducer: plugins_reducer,
-    actions: plugins_actions_namespaceObject,
-    controls: external_this_wp_dataControls_["controls"],
-    selectors: plugins_selectors_namespaceObject,
-    resolvers: plugins_resolvers_namespaceObject
-  });
-}
-
-var PLUGINS_STORE_NAME = constants_STORE_NAME;
+Object(external_wp_data_["registerStore"])(constants_STORE_NAME, {
+  reducer: plugins_reducer,
+  actions: plugins_actions_namespaceObject,
+  controls: external_wp_dataControls_["controls"],
+  selectors: plugins_selectors_namespaceObject,
+  resolvers: plugins_resolvers_namespaceObject
+});
+const PLUGINS_STORE_NAME = constants_STORE_NAME;
 // CONCATENATED MODULE: ./packages/data/build-module/plugins/with-plugins-hydration.js
-
 /**
  * External dependencies
  */
@@ -2671,73 +2230,73 @@ var PLUGINS_STORE_NAME = constants_STORE_NAME;
  */
 
 
-var with_plugins_hydration_withPluginsHydration = function withPluginsHydration(data) {
-  return function (OriginalComponent) {
-    return function (props) {
-      var dataRef = Object(external_this_wp_element_["useRef"])(data);
-      Object(external_this_wp_data_["useSelect"])(function (select, registry) {
-        if (!dataRef.current) {
-          return;
-        }
+const withPluginsHydration = data => Object(external_wp_compose_["createHigherOrderComponent"])(OriginalComponent => props => {
+  const dataRef = Object(external_wp_element_["useRef"])(data);
+  Object(external_wp_data_["useSelect"])((select, registry) => {
+    if (!dataRef.current) {
+      return;
+    }
 
-        var _select = select(constants_STORE_NAME),
-            isResolving = _select.isResolving,
-            hasFinishedResolution = _select.hasFinishedResolution;
+    const {
+      isResolving,
+      hasFinishedResolution
+    } = select(constants_STORE_NAME);
+    const {
+      startResolution,
+      finishResolution,
+      updateActivePlugins,
+      updateInstalledPlugins,
+      updateIsJetpackConnected
+    } = registry.dispatch(constants_STORE_NAME);
 
-        var _registry$dispatch = registry.dispatch(constants_STORE_NAME),
-            startResolution = _registry$dispatch.startResolution,
-            finishResolution = _registry$dispatch.finishResolution,
-            updateActivePlugins = _registry$dispatch.updateActivePlugins,
-            updateInstalledPlugins = _registry$dispatch.updateInstalledPlugins,
-            updateIsJetpackConnected = _registry$dispatch.updateIsJetpackConnected;
-
-        if (!isResolving('getActivePlugins', []) && !hasFinishedResolution('getActivePlugins', [])) {
-          startResolution('getActivePlugins', []);
-          startResolution('getInstalledPlugins', []);
-          startResolution('isJetpackConnected', []);
-          updateActivePlugins(dataRef.current.activePlugins, true);
-          updateInstalledPlugins(dataRef.current.installedPlugins, true);
-          updateIsJetpackConnected(dataRef.current.jetpackStatus && dataRef.current.jetpackStatus.isActive);
-          finishResolution('getActivePlugins', []);
-          finishResolution('getInstalledPlugins', []);
-          finishResolution('isJetpackConnected', []);
-        }
-      }, []);
-      return Object(external_this_wp_element_["createElement"])(OriginalComponent, props);
-    };
-  };
-};
+    if (!isResolving('getActivePlugins', []) && !hasFinishedResolution('getActivePlugins', [])) {
+      startResolution('getActivePlugins', []);
+      startResolution('getInstalledPlugins', []);
+      startResolution('isJetpackConnected', []);
+      updateActivePlugins(dataRef.current.activePlugins, true);
+      updateInstalledPlugins(dataRef.current.installedPlugins, true);
+      updateIsJetpackConnected(dataRef.current.jetpackStatus && dataRef.current.jetpackStatus.isActive ? true : false);
+      finishResolution('getActivePlugins', []);
+      finishResolution('getInstalledPlugins', []);
+      finishResolution('isJetpackConnected', []);
+    }
+  }, []);
+  return Object(external_wp_element_["createElement"])(OriginalComponent, Object.assign({}, props));
+}, 'withPluginsHydration');
 // CONCATENATED MODULE: ./packages/data/build-module/onboarding/constants.js
 /**
  * Internal dependencies
  */
-var onboarding_constants_STORE_NAME = 'wc/admin/onboarding';
+const onboarding_constants_STORE_NAME = 'wc/admin/onboarding';
 // CONCATENATED MODULE: ./packages/data/build-module/onboarding/selectors.js
-var getProfileItems = function getProfileItems(state) {
+const getProfileItems = state => {
   return state.profileItems || {};
 };
-var getOnboardingError = function getOnboardingError(state, selector) {
+const getTasksStatus = state => {
+  return state.tasksStatus || {};
+};
+const getPaymentGatewaySuggestions = state => {
+  return state.paymentMethods || [];
+};
+const getOnboardingError = (state, selector) => {
   return state.errors[selector] || false;
 };
-var isOnboardingRequesting = function isOnboardingRequesting(state, selector) {
+const isOnboardingRequesting = (state, selector) => {
   return state.requesting[selector] || false;
 };
 // CONCATENATED MODULE: ./packages/data/build-module/onboarding/action-types.js
-var onboarding_action_types_TYPES = {
-  SET_PROFILE_ITEMS: 'SET_PROFILE_ITEMS',
+const onboarding_action_types_TYPES = {
   SET_ERROR: 'SET_ERROR',
-  SET_IS_REQUESTING: 'SET_IS_REQUESTING'
+  SET_IS_REQUESTING: 'SET_IS_REQUESTING',
+  SET_PROFILE_ITEMS: 'SET_PROFILE_ITEMS',
+  SET_TASKS_STATUS: 'SET_TASKS_STATUS',
+  GET_PAYMENT_METHODS_SUCCESS: 'GET_PAYMENT_METHODS_SUCCESS'
 };
 /* harmony default export */ var onboarding_action_types = (onboarding_action_types_TYPES);
 // CONCATENATED MODULE: ./packages/data/build-module/onboarding/actions.js
-
-
-var onboarding_actions_marked = /*#__PURE__*/regenerator_default.a.mark(updateProfileItems);
 /**
  * External dependencies
  */
-
-
 
 /**
  * Internal dependencies
@@ -2748,217 +2307,180 @@ var onboarding_actions_marked = /*#__PURE__*/regenerator_default.a.mark(updatePr
 function actions_setError(selector, error) {
   return {
     type: onboarding_action_types.SET_ERROR,
-    selector: selector,
-    error: error
+    selector,
+    error
   };
 }
 function onboarding_actions_setIsRequesting(selector, isRequesting) {
   return {
     type: onboarding_action_types.SET_IS_REQUESTING,
-    selector: selector,
-    isRequesting: isRequesting
+    selector,
+    isRequesting
   };
 }
-function actions_setProfileItems(profileItems) {
-  var replace = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+function actions_setProfileItems(profileItems, replace = false) {
   return {
     type: onboarding_action_types.SET_PROFILE_ITEMS,
-    profileItems: profileItems,
-    replace: replace
+    profileItems,
+    replace
   };
 }
-function updateProfileItems(items) {
-  var results;
-  return regenerator_default.a.wrap(function updateProfileItems$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          _context.next = 2;
-          return onboarding_actions_setIsRequesting('updateProfileItems', true);
+function actions_setTasksStatus(tasksStatus) {
+  return {
+    type: onboarding_action_types.SET_TASKS_STATUS,
+    tasksStatus
+  };
+}
+function setPaymentMethods(paymentMethods) {
+  return {
+    type: onboarding_action_types.GET_PAYMENT_METHODS_SUCCESS,
+    paymentMethods
+  };
+}
+function* updateProfileItems(items) {
+  yield onboarding_actions_setIsRequesting('updateProfileItems', true);
 
-        case 2:
-          _context.prev = 2;
-          _context.next = 5;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: "".concat(WC_ADMIN_NAMESPACE, "/onboarding/profile"),
-            method: 'POST',
-            data: items
-          });
+  try {
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: `${WC_ADMIN_NAMESPACE}/onboarding/profile`,
+      method: 'POST',
+      data: items
+    });
 
-        case 5:
-          results = _context.sent;
-
-          if (!(results && results.status === 'success')) {
-            _context.next = 12;
-            break;
-          }
-
-          _context.next = 9;
-          return actions_setProfileItems(items);
-
-        case 9:
-          _context.next = 11;
-          return onboarding_actions_setIsRequesting('updateProfileItems', false);
-
-        case 11:
-          return _context.abrupt("return", results);
-
-        case 12:
-          throw new Error();
-
-        case 15:
-          _context.prev = 15;
-          _context.t0 = _context["catch"](2);
-          _context.next = 19;
-          return actions_setError('updateProfileItems', _context.t0);
-
-        case 19:
-          _context.next = 21;
-          return onboarding_actions_setIsRequesting('updateProfileItems', false);
-
-        case 21:
-          throw new Error();
-
-        case 22:
-        case "end":
-          return _context.stop();
-      }
+    if (results && results.status === 'success') {
+      yield actions_setProfileItems(items);
+      yield onboarding_actions_setIsRequesting('updateProfileItems', false);
+      return results;
     }
-  }, onboarding_actions_marked, null, [[2, 15]]);
+
+    throw new Error();
+  } catch (error) {
+    yield actions_setError('updateProfileItems', error);
+    yield onboarding_actions_setIsRequesting('updateProfileItems', false);
+    throw new Error();
+  }
 }
 // CONCATENATED MODULE: ./packages/data/build-module/onboarding/resolvers.js
-
-
-var onboarding_resolvers_marked = /*#__PURE__*/regenerator_default.a.mark(resolvers_getProfileItems);
 /**
  * External dependencies
  */
 
-
-
 /**
  * Internal dependencies
  */
 
 
 
-function resolvers_getProfileItems() {
-  var results;
-  return regenerator_default.a.wrap(function getProfileItems$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          _context.prev = 0;
-          _context.next = 3;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: WC_ADMIN_NAMESPACE + '/onboarding/profile',
-            method: 'GET'
-          });
-
-        case 3:
-          results = _context.sent;
-          _context.next = 6;
-          return actions_setProfileItems(results, true);
-
-        case 6:
-          _context.next = 12;
-          break;
-
-        case 8:
-          _context.prev = 8;
-          _context.t0 = _context["catch"](0);
-          _context.next = 12;
-          return actions_setError('getProfileItems', _context.t0);
-
-        case 12:
-        case "end":
-          return _context.stop();
-      }
-    }
-  }, onboarding_resolvers_marked, null, [[0, 8]]);
+function* resolvers_getProfileItems() {
+  try {
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: WC_ADMIN_NAMESPACE + '/onboarding/profile',
+      method: 'GET'
+    });
+    yield actions_setProfileItems(results, true);
+  } catch (error) {
+    yield actions_setError('getProfileItems', error);
+  }
+}
+function* resolvers_getTasksStatus() {
+  try {
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: WC_ADMIN_NAMESPACE + '/onboarding/tasks/status',
+      method: 'GET'
+    });
+    yield actions_setTasksStatus(results, true);
+  } catch (error) {
+    yield actions_setError('getTasksStatus', error);
+  }
+}
+function* resolvers_getPaymentGatewaySuggestions() {
+  try {
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: WC_ADMIN_NAMESPACE + '/onboarding/payments',
+      method: 'GET'
+    });
+    yield setPaymentMethods(results);
+  } catch (error) {
+    yield actions_setError('getPaymentGatewaySuggestions', error);
+  }
 }
 // CONCATENATED MODULE: ./packages/data/build-module/onboarding/reducer.js
-
-
-function onboarding_reducer_ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function onboarding_reducer_objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      onboarding_reducer_ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      onboarding_reducer_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
 /**
  * Internal dependencies
  */
 
-
-
-
-var reducer_onboarding = function onboarding() {
-  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
-    profileItems: {},
-    errors: {},
-    requesting: {}
-  };
-
-  var _ref = arguments.length > 1 ? arguments[1] : undefined,
-      type = _ref.type,
-      profileItems = _ref.profileItems,
-      replace = _ref.replace,
-      error = _ref.error,
-      isRequesting = _ref.isRequesting,
-      selector = _ref.selector;
-
-  switch (type) {
-    case onboarding_action_types.SET_PROFILE_ITEMS:
-      state = onboarding_reducer_objectSpread(onboarding_reducer_objectSpread({}, state), {}, {
-        profileItems: replace ? profileItems : onboarding_reducer_objectSpread(onboarding_reducer_objectSpread({}, state.profileItems), profileItems)
-      });
-      break;
-
-    case onboarding_action_types.SET_ERROR:
-      state = onboarding_reducer_objectSpread(onboarding_reducer_objectSpread({}, state), {}, {
-        errors: onboarding_reducer_objectSpread(onboarding_reducer_objectSpread({}, state.errors), {}, defineProperty_default()({}, selector, error))
-      });
-      break;
-
-    case onboarding_action_types.SET_IS_REQUESTING:
-      state = onboarding_reducer_objectSpread(onboarding_reducer_objectSpread({}, state), {}, {
-        requesting: onboarding_reducer_objectSpread(onboarding_reducer_objectSpread({}, state.requesting), {}, defineProperty_default()({}, selector, isRequesting))
-      });
-      break;
-  }
-
-  return state;
+const defaultState = {
+  errors: {},
+  profileItems: {
+    business_extensions: null,
+    completed: null,
+    industry: null,
+    other_platform: null,
+    other_platform_name: null,
+    product_count: null,
+    product_types: null,
+    revenue: null,
+    selling_venues: null,
+    setup_client: null,
+    skipped: null,
+    theme: null,
+    wccom_connected: null
+  },
+  paymentMethods: [],
+  requesting: {},
+  tasksStatus: {}
 };
 
-/* harmony default export */ var onboarding_reducer = (reducer_onboarding);
+const onboarding = (state = defaultState, {
+  type,
+  profileItems,
+  paymentMethods,
+  replace,
+  error,
+  isRequesting,
+  selector,
+  tasksStatus
+}) => {
+  switch (type) {
+    case onboarding_action_types.SET_PROFILE_ITEMS:
+      return { ...state,
+        profileItems: replace ? profileItems : { ...state.profileItems,
+          ...profileItems
+        }
+      };
+
+    case onboarding_action_types.SET_TASKS_STATUS:
+      return { ...state,
+        tasksStatus: { ...state.tasksStatus,
+          ...tasksStatus
+        }
+      };
+
+    case onboarding_action_types.SET_ERROR:
+      return { ...state,
+        errors: { ...state.errors,
+          [selector]: error
+        }
+      };
+
+    case onboarding_action_types.SET_IS_REQUESTING:
+      return { ...state,
+        requesting: { ...state.requesting,
+          [selector]: isRequesting
+        }
+      };
+
+    case onboarding_action_types.GET_PAYMENT_METHODS_SUCCESS:
+      return { ...state,
+        paymentMethods
+      };
+
+    default:
+      return state;
+  }
+};
+
+/* harmony default export */ var onboarding_reducer = (onboarding);
 // CONCATENATED MODULE: ./packages/data/build-module/onboarding/index.js
 /**
  * External dependencies
@@ -2974,22 +2496,15 @@ var reducer_onboarding = function onboarding() {
 
 
 
-var onboarding_storeSelectors = Object(external_this_wp_data_["select"])(onboarding_constants_STORE_NAME); // @todo This is used to prevent double registration of the store due to webpack chunks.
-// The `storeSelectors` condition can be removed once this is fixed.
-
-if (!onboarding_storeSelectors) {
-  Object(external_this_wp_data_["registerStore"])(onboarding_constants_STORE_NAME, {
-    reducer: onboarding_reducer,
-    actions: onboarding_actions_namespaceObject,
-    controls: external_this_wp_dataControls_["controls"],
-    selectors: onboarding_selectors_namespaceObject,
-    resolvers: onboarding_resolvers_namespaceObject
-  });
-}
-
-var ONBOARDING_STORE_NAME = onboarding_constants_STORE_NAME;
+Object(external_wp_data_["registerStore"])(onboarding_constants_STORE_NAME, {
+  reducer: onboarding_reducer,
+  actions: onboarding_actions_namespaceObject,
+  controls: external_wp_dataControls_["controls"],
+  selectors: onboarding_selectors_namespaceObject,
+  resolvers: onboarding_resolvers_namespaceObject
+});
+const ONBOARDING_STORE_NAME = onboarding_constants_STORE_NAME;
 // CONCATENATED MODULE: ./packages/data/build-module/onboarding/with-onboarding-hydration.js
-
 /**
  * External dependencies
  */
@@ -3001,44 +2516,57 @@ var ONBOARDING_STORE_NAME = onboarding_constants_STORE_NAME;
  */
 
 
-var with_onboarding_hydration_withOnboardingHydration = function withOnboardingHydration(data) {
-  return function (OriginalComponent) {
-    return function (props) {
-      var onboardingRef = Object(external_this_wp_element_["useRef"])(data);
-      Object(external_this_wp_data_["useSelect"])(function (select, registry) {
-        if (!onboardingRef.current) {
-          return;
-        }
+const withOnboardingHydration = data => {
+  let hydratedProfileItems = false;
+  let hydratedTasksStatus = false;
+  return Object(external_wp_compose_["createHigherOrderComponent"])(OriginalComponent => props => {
+    const onboardingRef = Object(external_wp_element_["useRef"])(data);
+    Object(external_wp_data_["useSelect"])((select, registry) => {
+      if (!onboardingRef.current) {
+        return;
+      }
 
-        var _select = select(onboarding_constants_STORE_NAME),
-            isResolving = _select.isResolving,
-            hasFinishedResolution = _select.hasFinishedResolution;
+      const {
+        isResolving,
+        hasFinishedResolution
+      } = select(onboarding_constants_STORE_NAME);
+      const {
+        startResolution,
+        finishResolution,
+        setProfileItems,
+        setTasksStatus
+      } = registry.dispatch(onboarding_constants_STORE_NAME);
+      const {
+        profileItems,
+        tasksStatus
+      } = onboardingRef.current;
 
-        var _registry$dispatch = registry.dispatch(onboarding_constants_STORE_NAME),
-            startResolution = _registry$dispatch.startResolution,
-            finishResolution = _registry$dispatch.finishResolution,
-            setProfileItems = _registry$dispatch.setProfileItems;
+      if (profileItems && !hydratedProfileItems && !isResolving('getProfileItems', []) && !hasFinishedResolution('getProfileItems', [])) {
+        startResolution('getProfileItems', []);
+        setProfileItems(profileItems, true);
+        finishResolution('getProfileItems', []);
+        hydratedProfileItems = true;
+      }
 
-        if (!isResolving('getProfileItems', []) && !hasFinishedResolution('getProfileItems', [])) {
-          startResolution('getProfileItems', []);
-          setProfileItems(onboardingRef.current, true);
-          finishResolution('getProfileItems', []);
-        }
-      }, []);
-      return Object(external_this_wp_element_["createElement"])(OriginalComponent, props);
-    };
-  };
+      if (tasksStatus && !hydratedTasksStatus && !isResolving('getTasksStatus', []) && !hasFinishedResolution('getTasksStatus', [])) {
+        startResolution('getTasksStatus', []);
+        setTasksStatus(tasksStatus, true);
+        finishResolution('getTasksStatus', []);
+        hydratedTasksStatus = true;
+      }
+    }, []);
+    return Object(external_wp_element_["createElement"])(OriginalComponent, Object.assign({}, props));
+  }, 'withOnboardingHydration');
 };
-// CONCATENATED MODULE: ./packages/data/build-module/user-preferences/constants.js
-var user_preferences_constants_STORE_NAME = 'core';
-// CONCATENATED MODULE: ./packages/data/build-module/user-preferences/index.js
+// CONCATENATED MODULE: ./packages/data/build-module/user/constants.js
+const user_constants_STORE_NAME = 'core';
+// CONCATENATED MODULE: ./packages/data/build-module/user/index.js
 /**
  * Internal dependencies
  */
 
-var USER_STORE_NAME = user_preferences_constants_STORE_NAME;
-// CONCATENATED MODULE: ./packages/data/build-module/user-preferences/with-current-user-hydration.js
-
+const USER_STORE_NAME = user_constants_STORE_NAME;
+// CONCATENATED MODULE: ./packages/data/build-module/user/with-current-user-hydration.js
 /**
  * External dependencies
  */
@@ -3056,82 +2584,84 @@ var USER_STORE_NAME = user_preferences_constants_STORE_NAME;
  * @param {Object} currentUser Current user object in the same format as the WP REST API returns.
  */
 
-var with_current_user_hydration_withCurrentUserHydration = function withCurrentUserHydration(currentUser) {
-  return function (OriginalComponent) {
-    return function (props) {
-      var userRef = Object(external_this_wp_element_["useRef"])(currentUser); // Use currentUser to hydrate calls to @wordpress/core-data's getCurrentUser().
+const withCurrentUserHydration = currentUser => Object(external_wp_compose_["createHigherOrderComponent"])(OriginalComponent => props => {
+  const userRef = Object(external_wp_element_["useRef"])(currentUser); // Use currentUser to hydrate calls to @wordpress/core-data's getCurrentUser().
 
-      Object(external_this_wp_data_["useSelect"])(function (select, registry) {
-        if (!userRef.current) {
-          return;
-        }
-
-        var _select = select(user_preferences_constants_STORE_NAME),
-            isResolving = _select.isResolving,
-            hasFinishedResolution = _select.hasFinishedResolution;
-
-        var _registry$dispatch = registry.dispatch(user_preferences_constants_STORE_NAME),
-            startResolution = _registry$dispatch.startResolution,
-            finishResolution = _registry$dispatch.finishResolution,
-            receiveCurrentUser = _registry$dispatch.receiveCurrentUser;
-
-        if (!isResolving('getCurrentUser') && !hasFinishedResolution('getCurrentUser')) {
-          startResolution('getCurrentUser', []);
-          receiveCurrentUser(userRef.current);
-          finishResolution('getCurrentUser', []);
-        }
-      });
-      return Object(external_this_wp_element_["createElement"])(OriginalComponent, props);
-    };
-  };
-};
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/asyncToGenerator.js
-var asyncToGenerator = __webpack_require__(37);
-var asyncToGenerator_default = /*#__PURE__*/__webpack_require__.n(asyncToGenerator);
-
-// CONCATENATED MODULE: ./packages/data/build-module/user-preferences/use-user-preferences.js
-
-
-
-
-function use_user_preferences_ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function use_user_preferences_objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      use_user_preferences_ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      use_user_preferences_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
+  Object(external_wp_data_["useSelect"])((select, registry) => {
+    if (!userRef.current) {
+      return;
     }
-  }
 
-  return target;
-}
+    const {
+      isResolving,
+      hasFinishedResolution
+    } = select(user_constants_STORE_NAME);
+    const {
+      startResolution,
+      finishResolution,
+      receiveCurrentUser
+    } = registry.dispatch(user_constants_STORE_NAME);
+
+    if (!isResolving('getCurrentUser') && !hasFinishedResolution('getCurrentUser')) {
+      startResolution('getCurrentUser', []);
+      receiveCurrentUser(userRef.current);
+      finishResolution('getCurrentUser', []);
+    }
+  });
+  return Object(external_wp_element_["createElement"])(OriginalComponent, Object.assign({}, props));
+}, 'withCurrentUserHydration');
+// CONCATENATED MODULE: ./packages/data/build-module/user/use-user.js
 /**
  * External dependencies
  */
 
+/**
+ * Internal dependencies
+ */
 
+
+/**
+ * Custom react hook for shortcut methods around user.
+ *
+ * This is a wrapper around @wordpress/core-data's getCurrentUser().
+ */
+
+const useUser = () => {
+  const userData = Object(external_wp_data_["useSelect"])(select => {
+    const {
+      getCurrentUser,
+      hasStartedResolution,
+      hasFinishedResolution
+    } = select(user_constants_STORE_NAME);
+    return {
+      isRequesting: hasStartedResolution('getCurrentUser') && !hasFinishedResolution('getCurrentUser'),
+      user: getCurrentUser(),
+      getCurrentUser
+    };
+  });
+
+  const currentUserCan = capability => {
+    if (userData.user && userData.user.is_super_admin) {
+      return true;
+    }
+
+    if (userData.user && userData.user.capabilities[capability]) {
+      return true;
+    }
+
+    return false;
+  };
+
+  return {
+    currentUserCan,
+    user: userData.user,
+    isRequesting: userData.isRequesting
+  };
+};
+// CONCATENATED MODULE: ./packages/data/build-module/user/use-user-preferences.js
+/**
+ * External dependencies
+ */
 
 
 /**
@@ -3146,17 +2676,68 @@ function use_user_preferences_objectSpread(target) {
  * @return {Object} User's WooCommerce preferences.
  */
 
-var use_user_preferences_getWooCommerceMeta = function getWooCommerceMeta(user) {
-  var wooMeta = user.woocommerce_meta || {};
-  var userData = Object(external_lodash_["mapValues"])(wooMeta, function (data) {
+const getWooCommerceMeta = user => {
+  const wooMeta = user.woocommerce_meta || {};
+  const userData = Object(external_lodash_["mapValues"])(wooMeta, (data, key) => {
     if (!data || data.length === 0) {
       return '';
     }
 
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      /* eslint-disable no-console */
+      console.error(`Error parsing value '${data}' for ${key}`, e.message);
+      /* eslint-enable no-console */
+
+      return '';
+    }
   });
   return userData;
-};
+}; // Create wrapper for updating user's `woocommerce_meta`.
+
+
+async function updateUserPrefs(receiveCurrentUser, user, saveUser, getLastEntitySaveError, userPrefs) {
+  // @todo Handle unresolved getCurrentUser() here.
+  // Prep fields for update.
+  const metaData = Object(external_lodash_["mapValues"])(userPrefs, JSON.stringify);
+
+  if (Object.keys(metaData).length === 0) {
+    return {
+      error: new Error('Invalid woocommerce_meta data for update.'),
+      updatedUser: undefined
+    };
+  } // Optimistically propagate new woocommerce_meta to the store for instant update.
+
+
+  receiveCurrentUser({ ...user,
+    woocommerce_meta: { ...user.woocommerce_meta,
+      ...metaData
+    }
+  }); // Use saveUser() to update WooCommerce meta values.
+
+  const updatedUser = await saveUser({
+    id: user.id,
+    woocommerce_meta: metaData
+  });
+
+  if (undefined === updatedUser) {
+    // Return the encountered error to the caller.
+    const error = getLastEntitySaveError('root', 'user', user.id);
+    return {
+      error,
+      updatedUser
+    };
+  } // Decode the WooCommerce meta after save.
+
+
+  const updatedUserResponse = { ...updatedUser,
+    woocommerce_meta: getWooCommerceMeta(updatedUser)
+  };
+  return {
+    updatedUser: updatedUserResponse
+  };
+}
 /**
  * Custom react hook for retrieving thecurrent user's WooCommerce preferences.
  *
@@ -3164,249 +2745,73 @@ var use_user_preferences_getWooCommerceMeta = function getWooCommerceMeta(user) 
  */
 
 
-var use_user_preferences_useUserPreferences = function useUserPreferences() {
+const useUserPreferences = () => {
   // Get our dispatch methods now - this can't happen inside the callback below.
-  var dispatch = Object(external_this_wp_data_["useDispatch"])(user_preferences_constants_STORE_NAME);
-  var addEntities = dispatch.addEntities,
-      receiveCurrentUser = dispatch.receiveCurrentUser,
-      saveEntityRecord = dispatch.saveEntityRecord;
-  var saveUser = dispatch.saveUser;
-
-  var _useSelect = Object(external_this_wp_data_["useSelect"])(function (select) {
-    var _select = select(user_preferences_constants_STORE_NAME),
-        getCurrentUser = _select.getCurrentUser,
-        getEntity = _select.getEntity,
-        getEntityRecord = _select.getEntityRecord,
-        getLastEntitySaveError = _select.getLastEntitySaveError,
-        hasStartedResolution = _select.hasStartedResolution,
-        hasFinishedResolution = _select.hasFinishedResolution; // WP 5.3.x doesn't have the User entity defined.
-
-
-    if (typeof saveUser !== 'function') {
-      // Polyfill saveUser() - wrapper of saveEntityRecord.
-      saveUser = /*#__PURE__*/function () {
-        var _ref = asyncToGenerator_default()( /*#__PURE__*/regenerator_default.a.mark(function _callee(userToSave) {
-          var entityDefined;
-          return regenerator_default.a.wrap(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  entityDefined = Boolean(getEntity('root', 'user'));
-
-                  if (entityDefined) {
-                    _context.next = 4;
-                    break;
-                  }
-
-                  _context.next = 4;
-                  return addEntities([{
-                    name: 'user',
-                    kind: 'root',
-                    baseURL: '/wp/v2/users',
-                    plural: 'users'
-                  }]);
-
-                case 4:
-                  _context.next = 6;
-                  return saveEntityRecord('root', 'user', userToSave);
-
-                case 6:
-                  return _context.abrupt("return", getEntityRecord('root', 'user', userToSave.id));
-
-                case 7:
-                case "end":
-                  return _context.stop();
-              }
-            }
-          }, _callee);
-        }));
-
-        return function saveUser(_x) {
-          return _ref.apply(this, arguments);
-        };
-      }();
-    } // Use getCurrentUser() to get WooCommerce meta values.
-
-
-    var user = getCurrentUser();
-    var userData = use_user_preferences_getWooCommerceMeta(user); // Create wrapper for updating user's `woocommerce_meta`.
-
-    var updateUserPrefs = /*#__PURE__*/function () {
-      var _ref2 = asyncToGenerator_default()( /*#__PURE__*/regenerator_default.a.mark(function _callee2(userPrefs) {
-        var userDataFields, metaData, updatedUser, error, updatedUserResponse;
-        return regenerator_default.a.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                // @todo Handle unresolved getCurrentUser() here.
-                // Whitelist our meta fields.
-                userDataFields = ['categories_report_columns', 'coupons_report_columns', 'customers_report_columns', 'orders_report_columns', 'products_report_columns', 'revenue_report_columns', 'taxes_report_columns', 'variations_report_columns', 'dashboard_sections', 'dashboard_chart_type', 'dashboard_chart_interval', 'dashboard_leaderboard_rows', 'activity_panel_inbox_last_read', 'homepage_stats']; // Prep valid fields for update.
-
-                metaData = Object(external_lodash_["mapValues"])(Object(external_lodash_["pick"])(userPrefs, userDataFields), JSON.stringify);
-
-                if (!(Object.keys(metaData).length === 0)) {
-                  _context2.next = 4;
-                  break;
-                }
-
-                return _context2.abrupt("return", {
-                  error: new Error('No valid woocommerce_meta keys were provided for update.'),
-                  updatedUser: undefined
-                });
-
-              case 4:
-                // Optimistically propagate new woocommerce_meta to the store for instant update.
-                receiveCurrentUser(use_user_preferences_objectSpread(use_user_preferences_objectSpread({}, user), {}, {
-                  woocommerce_meta: use_user_preferences_objectSpread(use_user_preferences_objectSpread({}, user.woocommerce_meta), metaData)
-                })); // Use saveUser() to update WooCommerce meta values.
-
-                _context2.next = 7;
-                return saveUser({
-                  id: user.id,
-                  woocommerce_meta: metaData
-                });
-
-              case 7:
-                updatedUser = _context2.sent;
-
-                if (!(undefined === updatedUser)) {
-                  _context2.next = 11;
-                  break;
-                } // Return the encountered error to the caller.
-
-
-                error = getLastEntitySaveError('root', 'user', user.id);
-                return _context2.abrupt("return", {
-                  error: error,
-                  updatedUser: updatedUser
-                });
-
-              case 11:
-                // Decode the WooCommerce meta after save.
-                updatedUserResponse = use_user_preferences_objectSpread(use_user_preferences_objectSpread({}, updatedUser), {}, {
-                  woocommerce_meta: use_user_preferences_getWooCommerceMeta(updatedUser)
-                });
-                return _context2.abrupt("return", {
-                  updatedUser: updatedUserResponse
-                });
-
-              case 13:
-              case "end":
-                return _context2.stop();
-            }
-          }
-        }, _callee2);
-      }));
-
-      return function updateUserPrefs(_x2) {
-        return _ref2.apply(this, arguments);
-      };
-    }();
-
+  const dispatch = Object(external_wp_data_["useDispatch"])(user_constants_STORE_NAME);
+  const {
+    addEntities,
+    receiveCurrentUser,
+    saveEntityRecord
+  } = dispatch;
+  let {
+    saveUser
+  } = dispatch;
+  const userData = Object(external_wp_data_["useSelect"])(select => {
+    const {
+      getCurrentUser,
+      getEntity,
+      getEntityRecord,
+      getLastEntitySaveError,
+      hasStartedResolution,
+      hasFinishedResolution
+    } = select(user_constants_STORE_NAME);
     return {
       isRequesting: hasStartedResolution('getCurrentUser') && !hasFinishedResolution('getCurrentUser'),
-      userPreferences: userData,
-      updateUserPreferences: updateUserPrefs
+      user: getCurrentUser(),
+      getCurrentUser,
+      getEntity,
+      getEntityRecord,
+      getLastEntitySaveError
     };
-  }),
-      isRequesting = _useSelect.isRequesting,
-      userPreferences = _useSelect.userPreferences,
-      updateUserPreferences = _useSelect.updateUserPreferences;
-
-  return use_user_preferences_objectSpread(use_user_preferences_objectSpread({
-    isRequesting: isRequesting
-  }, userPreferences), {}, {
-    updateUserPreferences: updateUserPreferences
   });
+
+  const updateUserPreferences = userPrefs => {
+    // WP 5.3.x doesn't have the User entity defined.
+    if (typeof saveUser !== 'function') {
+      // Polyfill saveUser() - wrapper of saveEntityRecord.
+      saveUser = async userToSave => {
+        const entityDefined = Boolean(userData.getEntity('root', 'user'));
+
+        if (!entityDefined) {
+          // Add the User entity so saveEntityRecord works.
+          await addEntities([{
+            name: 'user',
+            kind: 'root',
+            baseURL: '/wp/v2/users',
+            plural: 'users'
+          }]);
+        } // Fire off the save action.
+
+
+        await saveEntityRecord('root', 'user', userToSave); // Respond with the updated user.
+
+        return userData.getEntityRecord('root', 'user', userToSave.id);
+      };
+    } // Get most recent user before update.
+
+
+    const currentUser = userData.getCurrentUser();
+    return updateUserPrefs(receiveCurrentUser, currentUser, saveUser, userData.getLastEntitySaveError, userPrefs);
+  };
+
+  const userPreferences = userData.user ? getWooCommerceMeta(userData.user) : {};
+  return {
+    isRequesting: userData.isRequesting,
+    ...userPreferences,
+    updateUserPreferences
+  };
 };
-// CONCATENATED MODULE: ./packages/data/build-module/options/constants.js
-var options_constants_STORE_NAME = 'wc/admin/options';
-// CONCATENATED MODULE: ./packages/data/build-module/options/selectors.js
-/**
- * Get option from state tree.
- *
- * @param {Object} state - Reducer state
- * @param {Array} name - Option name
- */
-var getOption = function getOption(state, name) {
-  return state[name];
-};
-/**
- * Determine if an options request resulted in an error.
- *
- * @param {Object} state - Reducer state
- * @param {string} name - Option name
- */
-
-var getOptionsRequestingError = function getOptionsRequestingError(state, name) {
-  return state.requestingErrors[name] || false;
-};
-/**
- * Determine if options are being updated.
- *
- * @param {Object} state - Reducer state
- */
-
-var isOptionsUpdating = function isOptionsUpdating(state) {
-  return state.isUpdating || false;
-};
-/**
- * Determine if an options update resulted in an error.
- *
- * @param {Object} state - Reducer state
- */
-
-var getOptionsUpdatingError = function getOptionsUpdatingError(state) {
-  return state.updatingError || false;
-};
-// CONCATENATED MODULE: ./packages/data/build-module/options/action-types.js
-var options_action_types_TYPES = {
-  RECEIVE_OPTIONS: 'RECEIVE_OPTIONS',
-  SET_IS_REQUESTING: 'SET_IS_REQUESTING',
-  SET_IS_UPDATING: 'SET_IS_UPDATING',
-  SET_REQUESTING_ERROR: 'SET_REQUESTING_ERROR',
-  SET_UPDATING_ERROR: 'SET_UPDATING_ERROR'
-};
-/* harmony default export */ var options_action_types = (options_action_types_TYPES);
-// CONCATENATED MODULE: ./packages/data/build-module/options/actions.js
-
-
-
-var options_actions_marked = /*#__PURE__*/regenerator_default.a.mark(updateOptions);
-
-function actions_ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function actions_objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      actions_ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      actions_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
+// CONCATENATED MODULE: ./packages/data/build-module/options/with-options-hydration.js
 /**
  * External dependencies
  */
@@ -3418,258 +2823,174 @@ function actions_objectSpread(target) {
  */
 
 
-
-function actions_receiveOptions(options) {
-  return {
-    type: options_action_types.RECEIVE_OPTIONS,
-    options: options
-  };
-}
-function setRequestingError(error, name) {
-  return {
-    type: options_action_types.SET_REQUESTING_ERROR,
-    error: error,
-    name: name
-  };
-}
-function setUpdatingError(error) {
-  return {
-    type: options_action_types.SET_UPDATING_ERROR,
-    error: error
-  };
-}
-function setIsUpdating(isUpdating) {
-  return {
-    type: options_action_types.SET_IS_UPDATING,
-    isUpdating: isUpdating
-  };
-}
-function updateOptions(data) {
-  var results;
-  return regenerator_default.a.wrap(function updateOptions$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          _context.next = 2;
-          return setIsUpdating(true);
-
-        case 2:
-          _context.next = 4;
-          return actions_receiveOptions(data);
-
-        case 4:
-          _context.prev = 4;
-          _context.next = 7;
-          return Object(external_this_wp_dataControls_["apiFetch"])({
-            path: WC_ADMIN_NAMESPACE + '/options',
-            method: 'POST',
-            data: data
-          });
-
-        case 7:
-          results = _context.sent;
-          _context.next = 10;
-          return setIsUpdating(false);
-
-        case 10:
-          return _context.abrupt("return", actions_objectSpread({
-            success: true
-          }, results));
-
-        case 13:
-          _context.prev = 13;
-          _context.t0 = _context["catch"](4);
-          _context.next = 17;
-          return setUpdatingError(_context.t0);
-
-        case 17:
-          return _context.abrupt("return", actions_objectSpread({
-            success: false
-          }, _context.t0));
-
-        case 18:
-        case "end":
-          return _context.stop();
-      }
+const useOptionsHydration = data => {
+  const dataRef = Object(external_wp_element_["useRef"])(data);
+  Object(external_wp_data_["useSelect"])((select, registry) => {
+    if (!dataRef.current) {
+      return;
     }
-  }, options_actions_marked, null, [[4, 13]]);
-}
-// EXTERNAL MODULE: external {"this":["wp","apiFetch"]}
-var external_this_wp_apiFetch_ = __webpack_require__(31);
-var external_this_wp_apiFetch_default = /*#__PURE__*/__webpack_require__.n(external_this_wp_apiFetch_);
 
-// CONCATENATED MODULE: ./packages/data/build-module/options/controls.js
-
-
-function controls_ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function controls_objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      controls_ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      controls_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
-/**
- * External dependencies
- */
-
-
-
-
-/**
- * Internal dependencies
- */
-
-
-var optionNames = [];
-var fetches = {};
-var batchFetch = function batchFetch(optionName) {
-  return {
-    type: 'BATCH_FETCH',
-    optionName: optionName
-  };
-};
-var controls = controls_objectSpread(controls_objectSpread({}, external_this_wp_dataControls_["controls"]), {}, {
-  BATCH_FETCH: function BATCH_FETCH(_ref) {
-    var optionName = _ref.optionName;
-    optionNames.push(optionName);
-    return new Promise(function (resolve) {
-      setTimeout(function () {
-        var names = optionNames.join(',');
-
-        if (fetches[names]) {
-          return fetches[names].then(function (result) {
-            resolve(result[optionName]);
-          });
-        }
-
-        var url = WC_ADMIN_NAMESPACE + '/options?options=' + names;
-        fetches[names] = external_this_wp_apiFetch_default()({
-          path: url
+    const {
+      isResolving,
+      hasFinishedResolution
+    } = select(options_constants_STORE_NAME);
+    const {
+      startResolution,
+      finishResolution,
+      receiveOptions
+    } = registry.dispatch(options_constants_STORE_NAME);
+    const names = Object.keys(dataRef.current);
+    names.forEach(name => {
+      if (!isResolving('getOption', [name]) && !hasFinishedResolution('getOption', [name])) {
+        startResolution('getOption', [name]);
+        receiveOptions({
+          [name]: dataRef.current[name]
         });
-        fetches[names].then(function (result) {
-          return resolve(result);
-        }); // Clear option names after all resolved;
-
-        setTimeout(function () {
-          optionNames = []; // Delete the fetch after to allow wp data to handle cache invalidation.
-
-          delete fetches[names];
-        }, 1);
-      }, 1);
-    });
-  }
-});
-// CONCATENATED MODULE: ./packages/data/build-module/options/resolvers.js
-
-
-var options_resolvers_marked = /*#__PURE__*/regenerator_default.a.mark(resolvers_getOption);
-/**
- * Internal dependencies
- */
-
-
-
-
-/**
- * Request an option value.
- *
- * @param {string} name - Option name
- */
-
-function resolvers_getOption(name) {
-  var result;
-  return regenerator_default.a.wrap(function getOption$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          _context.prev = 0;
-          _context.next = 3;
-          return batchFetch(name);
-
-        case 3:
-          result = _context.sent;
-          _context.next = 6;
-          return actions_receiveOptions(result);
-
-        case 6:
-          _context.next = 12;
-          break;
-
-        case 8:
-          _context.prev = 8;
-          _context.t0 = _context["catch"](0);
-          _context.next = 12;
-          return setRequestingError(_context.t0, name);
-
-        case 12:
-        case "end":
-          return _context.stop();
+        finishResolution('getOption', [name]);
       }
-    }
-  }, options_resolvers_marked, null, [[0, 8]]);
-}
-// CONCATENATED MODULE: ./packages/data/build-module/options/reducer.js
-
-
-function options_reducer_ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
     });
-    keys.push.apply(keys, symbols);
+  }, []);
+};
+const withOptionsHydration = data => Object(external_wp_compose_["createHigherOrderComponent"])(OriginalComponent => props => {
+  useOptionsHydration(data);
+  return Object(external_wp_element_["createElement"])(OriginalComponent, Object.assign({}, props));
+}, 'withOptionsHydration');
+// CONCATENATED MODULE: ./packages/data/build-module/reviews/constants.js
+const reviews_constants_STORE_NAME = 'wc/admin/reviews';
+// CONCATENATED MODULE: ./packages/data/build-module/reviews/selectors.js
+const getReviews = (state, query) => {
+  const stringifiedQuery = JSON.stringify(query);
+  const ids = state.reviews[stringifiedQuery] && state.reviews[stringifiedQuery].data || [];
+  return ids.map(id => state.data[id]);
+};
+const getReviewsTotalCount = (state, query) => {
+  const stringifiedQuery = JSON.stringify(query);
+  return state.reviews[stringifiedQuery] && state.reviews[stringifiedQuery].totalCount;
+};
+const getReviewsError = (state, query) => {
+  const stringifiedQuery = JSON.stringify(query);
+  return state.errors[stringifiedQuery];
+};
+// CONCATENATED MODULE: ./packages/data/build-module/reviews/action-types.js
+const reviews_action_types_TYPES = {
+  UPDATE_REVIEWS: 'UPDATE_REVIEWS',
+  SET_REVIEW: 'SET_REVIEW',
+  SET_ERROR: 'SET_ERROR',
+  SET_REVIEW_IS_UPDATING: 'SET_REVIEW_IS_UPDATING'
+};
+/* harmony default export */ var reviews_action_types = (reviews_action_types_TYPES);
+// CONCATENATED MODULE: ./packages/data/build-module/reviews/actions.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+function updateReviews(query, reviews, totalCount) {
+  return {
+    type: reviews_action_types.UPDATE_REVIEWS,
+    reviews,
+    query,
+    totalCount
+  };
+}
+function* updateReview(reviewId, reviewFields, query) {
+  yield setReviewIsUpdating(reviewId, true);
+
+  try {
+    const url = Object(external_wp_url_["addQueryArgs"])(`${NAMESPACE}/products/reviews/${reviewId}`, query || {});
+    const review = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'PUT',
+      data: reviewFields
+    });
+    yield setReview(reviewId, review);
+    yield setReviewIsUpdating(reviewId, false);
+  } catch (error) {
+    yield reviews_actions_setError('updateReview', error);
+    yield setReviewIsUpdating(reviewId, false);
+    throw new Error();
+  }
+}
+function* deleteReview(reviewId) {
+  yield setReviewIsUpdating(reviewId, true);
+
+  try {
+    const url = `${NAMESPACE}/products/reviews/${reviewId}`;
+    const response = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'DELETE'
+    });
+    yield setReview(reviewId, response);
+    yield setReviewIsUpdating(reviewId, false);
+    return response;
+  } catch (error) {
+    yield reviews_actions_setError('deleteReview', error);
+    yield setReviewIsUpdating(reviewId, false);
+    throw new Error();
+  }
+}
+function setReviewIsUpdating(reviewId, isUpdating) {
+  return {
+    type: reviews_action_types.SET_REVIEW_IS_UPDATING,
+    reviewId,
+    isUpdating
+  };
+}
+function setReview(reviewId, reviewData) {
+  return {
+    type: reviews_action_types.SET_REVIEW,
+    reviewId,
+    reviewData
+  };
+}
+function reviews_actions_setError(query, error) {
+  return {
+    type: reviews_action_types.SET_ERROR,
+    query,
+    error
+  };
+}
+// CONCATENATED MODULE: ./packages/data/build-module/controls.js
+/**
+ * External dependencies
+ */
+
+
+const fetchWithHeaders = options => {
+  return {
+    type: 'FETCH_WITH_HEADERS',
+    options
+  };
+};
+const controls_controls = { ...external_wp_dataControls_["controls"],
+
+  FETCH_WITH_HEADERS({
+    options
+  }) {
+    return external_wp_apiFetch_default()({ ...options,
+      parse: false
+    }).then(response => {
+      return Promise.all([response.headers, response.status, response.json()]);
+    }).then(([headers, status, data]) => ({
+      headers,
+      status,
+      data
+    }));
   }
 
-  return keys;
-}
+};
+/* harmony default export */ var build_module_controls = (controls_controls);
+// CONCATENATED MODULE: ./packages/data/build-module/reviews/resolvers.js
+/**
+ * External dependencies
+ */
 
-function options_reducer_objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      options_reducer_ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      options_reducer_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
 /**
  * Internal dependencies
  */
@@ -3677,53 +2998,683 @@ function options_reducer_objectSpread(target) {
 
 
 
-var reducer_optionsReducer = function optionsReducer() {
-  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
-    isUpdating: false,
-    requestingErrors: {}
-  };
+function* resolvers_getReviews(query) {
+  try {
+    const url = Object(external_wp_url_["addQueryArgs"])(`${NAMESPACE}/products/reviews`, query);
+    const response = yield fetchWithHeaders({
+      path: url,
+      method: 'GET'
+    });
+    const totalCount = parseInt(response.headers.get('x-wp-total'), 10);
+    yield updateReviews(query, response.data, totalCount);
+  } catch (error) {
+    yield reviews_actions_setError(query, error);
+  }
+}
+function* resolvers_getReviewsTotalCount(query) {
+  yield resolvers_getReviews(query);
+}
+// CONCATENATED MODULE: ./packages/data/build-module/reviews/reducer.js
+/**
+ * Internal dependencies
+ */
 
-  var _ref = arguments.length > 1 ? arguments[1] : undefined,
-      type = _ref.type,
-      options = _ref.options,
-      error = _ref.error,
-      isUpdating = _ref.isUpdating,
-      name = _ref.name;
 
+const reducer_reducer = (state = {
+  reviews: {},
+  errors: {},
+  data: {}
+}, {
+  type,
+  query,
+  reviews,
+  reviewId,
+  reviewData,
+  totalCount,
+  error,
+  isUpdating
+}) => {
   switch (type) {
-    case options_action_types.RECEIVE_OPTIONS:
-      state = options_reducer_objectSpread(options_reducer_objectSpread({}, state), options);
+    case reviews_action_types.UPDATE_REVIEWS:
+      const ids = [];
+      const nextReviews = reviews.reduce((result, review) => {
+        ids.push(review.id);
+        result[review.id] = { ...(state.data[review.id] || {}),
+          ...review
+        };
+        return result;
+      }, {});
+      return { ...state,
+        reviews: { ...state.reviews,
+          [JSON.stringify(query)]: {
+            data: ids,
+            totalCount
+          }
+        },
+        data: { ...state.data,
+          ...nextReviews
+        }
+      };
+
+    case reviews_action_types.SET_REVIEW:
+      return { ...state,
+        data: { ...state.data,
+          [reviewId]: reviewData
+        }
+      };
+
+    case reviews_action_types.SET_ERROR:
+      return { ...state,
+        errors: { ...state.errors,
+          [JSON.stringify(query)]: error
+        }
+      };
+
+    case reviews_action_types.SET_REVIEW_IS_UPDATING:
+      return { ...state,
+        data: { ...state.data,
+          [reviewId]: { ...state.data[reviewId],
+            isUpdating
+          }
+        }
+      };
+
+    default:
+      return state;
+  }
+};
+
+/* harmony default export */ var reviews_reducer = (reducer_reducer);
+// CONCATENATED MODULE: ./packages/data/build-module/reviews/index.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+
+
+Object(external_wp_data_["registerStore"])(reviews_constants_STORE_NAME, {
+  reducer: reviews_reducer,
+  actions: reviews_actions_namespaceObject,
+  controls: build_module_controls,
+  selectors: reviews_selectors_namespaceObject,
+  resolvers: reviews_resolvers_namespaceObject
+});
+const REVIEWS_STORE_NAME = reviews_constants_STORE_NAME;
+// CONCATENATED MODULE: ./packages/data/build-module/notes/constants.js
+/**
+ * Internal dependencies
+ */
+const notes_constants_STORE_NAME = 'wc/admin/notes';
+// CONCATENATED MODULE: ./node_modules/rememo/es/rememo.js
+
+
+var LEAF_KEY, hasWeakMap;
+
+/**
+ * Arbitrary value used as key for referencing cache object in WeakMap tree.
+ *
+ * @type {Object}
+ */
+LEAF_KEY = {};
+
+/**
+ * Whether environment supports WeakMap.
+ *
+ * @type {boolean}
+ */
+hasWeakMap = typeof WeakMap !== 'undefined';
+
+/**
+ * Returns the first argument as the sole entry in an array.
+ *
+ * @param {*} value Value to return.
+ *
+ * @return {Array} Value returned as entry in array.
+ */
+function arrayOf( value ) {
+	return [ value ];
+}
+
+/**
+ * Returns true if the value passed is object-like, or false otherwise. A value
+ * is object-like if it can support property assignment, e.g. object or array.
+ *
+ * @param {*} value Value to test.
+ *
+ * @return {boolean} Whether value is object-like.
+ */
+function isObjectLike( value ) {
+	return !! value && 'object' === typeof value;
+}
+
+/**
+ * Creates and returns a new cache object.
+ *
+ * @return {Object} Cache object.
+ */
+function createCache() {
+	var cache = {
+		clear: function() {
+			cache.head = null;
+		},
+	};
+
+	return cache;
+}
+
+/**
+ * Returns true if entries within the two arrays are strictly equal by
+ * reference from a starting index.
+ *
+ * @param {Array}  a         First array.
+ * @param {Array}  b         Second array.
+ * @param {number} fromIndex Index from which to start comparison.
+ *
+ * @return {boolean} Whether arrays are shallowly equal.
+ */
+function isShallowEqual( a, b, fromIndex ) {
+	var i;
+
+	if ( a.length !== b.length ) {
+		return false;
+	}
+
+	for ( i = fromIndex; i < a.length; i++ ) {
+		if ( a[ i ] !== b[ i ] ) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
+ * Returns a memoized selector function. The getDependants function argument is
+ * called before the memoized selector and is expected to return an immutable
+ * reference or array of references on which the selector depends for computing
+ * its own return value. The memoize cache is preserved only as long as those
+ * dependant references remain the same. If getDependants returns a different
+ * reference(s), the cache is cleared and the selector value regenerated.
+ *
+ * @param {Function} selector      Selector function.
+ * @param {Function} getDependants Dependant getter returning an immutable
+ *                                 reference or array of reference used in
+ *                                 cache bust consideration.
+ *
+ * @return {Function} Memoized selector.
+ */
+/* harmony default export */ var rememo = (function( selector, getDependants ) {
+	var rootCache, getCache;
+
+	// Use object source as dependant if getter not provided
+	if ( ! getDependants ) {
+		getDependants = arrayOf;
+	}
+
+	/**
+	 * Returns the root cache. If WeakMap is supported, this is assigned to the
+	 * root WeakMap cache set, otherwise it is a shared instance of the default
+	 * cache object.
+	 *
+	 * @return {(WeakMap|Object)} Root cache object.
+	 */
+	function getRootCache() {
+		return rootCache;
+	}
+
+	/**
+	 * Returns the cache for a given dependants array. When possible, a WeakMap
+	 * will be used to create a unique cache for each set of dependants. This
+	 * is feasible due to the nature of WeakMap in allowing garbage collection
+	 * to occur on entries where the key object is no longer referenced. Since
+	 * WeakMap requires the key to be an object, this is only possible when the
+	 * dependant is object-like. The root cache is created as a hierarchy where
+	 * each top-level key is the first entry in a dependants set, the value a
+	 * WeakMap where each key is the next dependant, and so on. This continues
+	 * so long as the dependants are object-like. If no dependants are object-
+	 * like, then the cache is shared across all invocations.
+	 *
+	 * @see isObjectLike
+	 *
+	 * @param {Array} dependants Selector dependants.
+	 *
+	 * @return {Object} Cache object.
+	 */
+	function getWeakMapCache( dependants ) {
+		var caches = rootCache,
+			isUniqueByDependants = true,
+			i, dependant, map, cache;
+
+		for ( i = 0; i < dependants.length; i++ ) {
+			dependant = dependants[ i ];
+
+			// Can only compose WeakMap from object-like key.
+			if ( ! isObjectLike( dependant ) ) {
+				isUniqueByDependants = false;
+				break;
+			}
+
+			// Does current segment of cache already have a WeakMap?
+			if ( caches.has( dependant ) ) {
+				// Traverse into nested WeakMap.
+				caches = caches.get( dependant );
+			} else {
+				// Create, set, and traverse into a new one.
+				map = new WeakMap();
+				caches.set( dependant, map );
+				caches = map;
+			}
+		}
+
+		// We use an arbitrary (but consistent) object as key for the last item
+		// in the WeakMap to serve as our running cache.
+		if ( ! caches.has( LEAF_KEY ) ) {
+			cache = createCache();
+			cache.isUniqueByDependants = isUniqueByDependants;
+			caches.set( LEAF_KEY, cache );
+		}
+
+		return caches.get( LEAF_KEY );
+	}
+
+	// Assign cache handler by availability of WeakMap
+	getCache = hasWeakMap ? getWeakMapCache : getRootCache;
+
+	/**
+	 * Resets root memoization cache.
+	 */
+	function clear() {
+		rootCache = hasWeakMap ? new WeakMap() : createCache();
+	}
+
+	// eslint-disable-next-line jsdoc/check-param-names
+	/**
+	 * The augmented selector call, considering first whether dependants have
+	 * changed before passing it to underlying memoize function.
+	 *
+	 * @param {Object} source    Source object for derivation.
+	 * @param {...*}   extraArgs Additional arguments to pass to selector.
+	 *
+	 * @return {*} Selector result.
+	 */
+	function callSelector( /* source, ...extraArgs */ ) {
+		var len = arguments.length,
+			cache, node, i, args, dependants;
+
+		// Create copy of arguments (avoid leaking deoptimization).
+		args = new Array( len );
+		for ( i = 0; i < len; i++ ) {
+			args[ i ] = arguments[ i ];
+		}
+
+		dependants = getDependants.apply( null, args );
+		cache = getCache( dependants );
+
+		// If not guaranteed uniqueness by dependants (primitive type or lack
+		// of WeakMap support), shallow compare against last dependants and, if
+		// references have changed, destroy cache to recalculate result.
+		if ( ! cache.isUniqueByDependants ) {
+			if ( cache.lastDependants && ! isShallowEqual( dependants, cache.lastDependants, 0 ) ) {
+				cache.clear();
+			}
+
+			cache.lastDependants = dependants;
+		}
+
+		node = cache.head;
+		while ( node ) {
+			// Check whether node arguments match arguments
+			if ( ! isShallowEqual( node.args, args, 1 ) ) {
+				node = node.next;
+				continue;
+			}
+
+			// At this point we can assume we've found a match
+
+			// Surface matched node to head if not already
+			if ( node !== cache.head ) {
+				// Adjust siblings to point to each other.
+				node.prev.next = node.next;
+				if ( node.next ) {
+					node.next.prev = node.prev;
+				}
+
+				node.next = cache.head;
+				node.prev = null;
+				cache.head.prev = node;
+				cache.head = node;
+			}
+
+			// Return immediately
+			return node.val;
+		}
+
+		// No cached value found. Continue to insertion phase:
+
+		node = {
+			// Generate the result from original function
+			val: selector.apply( null, args ),
+		};
+
+		// Avoid including the source object in the cache.
+		args[ 0 ] = null;
+		node.args = args;
+
+		// Don't need to check whether node is already head, since it would
+		// have been returned above already if it was
+
+		// Shift existing head down list
+		if ( cache.head ) {
+			cache.head.prev = node;
+			node.next = cache.head;
+		}
+
+		cache.head = node;
+
+		return node.val;
+	}
+
+	callSelector.getDependants = getDependants;
+	callSelector.clear = clear;
+	clear();
+
+	return callSelector;
+});
+
+// CONCATENATED MODULE: ./packages/data/build-module/notes/selectors.js
+/**
+ * External dependencies
+ */
+
+const getNotes = rememo((state, query) => {
+  const noteIds = state.noteQueries[JSON.stringify(query)] || [];
+  return noteIds.map(id => state.notes[id]);
+}, (state, query) => [state.noteQueries[JSON.stringify(query)], state.notes]);
+const getNotesError = (state, selector) => {
+  return state.errors[selector] || false;
+};
+const isNotesRequesting = (state, selector) => {
+  return state.requesting[selector] || false;
+};
+// CONCATENATED MODULE: ./packages/data/build-module/notes/action-types.js
+const notes_action_types_TYPES = {
+  SET_ERROR: 'SET_ERROR',
+  SET_NOTE: 'SET_NOTE',
+  SET_NOTE_IS_UPDATING: 'SET_NOTE_IS_UPDATING',
+  SET_NOTES: 'SET_NOTES',
+  SET_NOTES_QUERY: 'SET_NOTES_QUERY',
+  SET_IS_REQUESTING: 'SET_IS_REQUESTING'
+};
+/* harmony default export */ var notes_action_types = (notes_action_types_TYPES);
+// CONCATENATED MODULE: ./packages/data/build-module/notes/actions.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+
+function* triggerNoteAction(noteId, actionId) {
+  yield notes_actions_setIsRequesting('triggerNoteAction', true);
+  const url = `${NAMESPACE}/admin/notes/${noteId}/action/${actionId}`;
+
+  try {
+    const result = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'POST'
+    });
+    yield updateNote(noteId, result);
+    yield notes_actions_setIsRequesting('triggerNoteAction', false);
+  } catch (error) {
+    yield notes_actions_setError('triggerNoteAction', error);
+    yield notes_actions_setIsRequesting('triggerNoteAction', false);
+    throw new Error();
+  }
+}
+function* removeNote(noteId) {
+  yield notes_actions_setIsRequesting('removeNote', true);
+  yield setNoteIsUpdating(noteId, true);
+
+  try {
+    const url = `${NAMESPACE}/admin/notes/delete/${noteId}`;
+    const response = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'DELETE'
+    });
+    yield setNote(noteId, response);
+    yield notes_actions_setIsRequesting('removeNote', false);
+    return response;
+  } catch (error) {
+    yield notes_actions_setError('removeNote', error);
+    yield notes_actions_setIsRequesting('removeNote', false);
+    yield setNoteIsUpdating(noteId, false);
+    throw new Error();
+  }
+}
+function* removeAllNotes() {
+  yield notes_actions_setIsRequesting('removeAllNotes', true);
+
+  try {
+    const url = `${NAMESPACE}/admin/notes/delete/all`;
+    const notes = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'DELETE'
+    });
+    yield setNotes(notes);
+    yield notes_actions_setIsRequesting('removeAllNotes', false);
+    return notes;
+  } catch (error) {
+    yield notes_actions_setError('removeAllNotes', error);
+    yield notes_actions_setIsRequesting('removeAllNotes', false);
+    throw new Error();
+  }
+}
+function* batchUpdateNotes(noteIds, noteFields) {
+  yield notes_actions_setIsRequesting('batchUpdateNotes', true);
+
+  try {
+    const url = `${NAMESPACE}/admin/notes/update`;
+    const notes = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'PUT',
+      data: {
+        noteIds,
+        ...noteFields
+      }
+    });
+    yield setNotes(notes);
+    yield notes_actions_setIsRequesting('batchUpdateNotes', false);
+  } catch (error) {
+    yield notes_actions_setError('updateNote', error);
+    yield notes_actions_setIsRequesting('batchUpdateNotes', false);
+    throw new Error();
+  }
+}
+function* updateNote(noteId, noteFields) {
+  yield notes_actions_setIsRequesting('updateNote', true);
+  yield setNoteIsUpdating(noteId, true);
+
+  try {
+    const url = `${NAMESPACE}/admin/notes/${noteId}`;
+    const note = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'PUT',
+      data: noteFields
+    });
+    yield setNote(noteId, note);
+    yield notes_actions_setIsRequesting('updateNote', false);
+    yield setNoteIsUpdating(noteId, false);
+  } catch (error) {
+    yield notes_actions_setError('updateNote', error);
+    yield notes_actions_setIsRequesting('updateNote', false);
+    yield setNoteIsUpdating(noteId, false);
+    throw new Error();
+  }
+}
+function setNote(noteId, noteFields) {
+  return {
+    type: notes_action_types.SET_NOTE,
+    noteId,
+    noteFields
+  };
+}
+function setNoteIsUpdating(noteId, isUpdating) {
+  return {
+    type: notes_action_types.SET_NOTE_IS_UPDATING,
+    noteId,
+    isUpdating
+  };
+}
+function setNotes(notes) {
+  return {
+    type: notes_action_types.SET_NOTES,
+    notes
+  };
+}
+function setNotesQuery(query, noteIds) {
+  return {
+    type: notes_action_types.SET_NOTES_QUERY,
+    query,
+    noteIds
+  };
+}
+function notes_actions_setError(selector, error) {
+  return {
+    type: notes_action_types.SET_ERROR,
+    error,
+    selector
+  };
+}
+function notes_actions_setIsRequesting(selector, isRequesting) {
+  return {
+    type: notes_action_types.SET_IS_REQUESTING,
+    selector,
+    isRequesting
+  };
+}
+// CONCATENATED MODULE: ./packages/data/build-module/notes/resolvers.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+function* resolvers_getNotes(query = {}) {
+  const url = Object(external_wp_url_["addQueryArgs"])(`${NAMESPACE}/admin/notes`, query);
+
+  try {
+    const notes = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url
+    });
+    yield setNotes(notes);
+    yield setNotesQuery(query, notes.map(note => note.id));
+  } catch (error) {
+    yield notes_actions_setError('getNotes', error);
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/notes/reducer.js
+/**
+ * Internal dependencies
+ */
+
+
+const notesReducer = (state = {
+  errors: {},
+  noteQueries: {},
+  notes: {},
+  requesting: {}
+}, {
+  error,
+  isRequesting,
+  isUpdating,
+  noteFields,
+  noteId,
+  noteIds,
+  notes,
+  query,
+  selector,
+  type
+}) => {
+  switch (type) {
+    case notes_action_types.SET_NOTES:
+      state = { ...state,
+        notes: { ...state.notes,
+          ...notes.reduce((acc, item) => {
+            acc[item.id] = item;
+            return acc;
+          }, {})
+        }
+      };
       break;
 
-    case options_action_types.SET_IS_UPDATING:
-      state = options_reducer_objectSpread(options_reducer_objectSpread({}, state), {}, {
-        isUpdating: isUpdating
-      });
+    case notes_action_types.SET_NOTES_QUERY:
+      state = { ...state,
+        noteQueries: { ...state.noteQueries,
+          [JSON.stringify(query)]: noteIds
+        }
+      };
       break;
 
-    case options_action_types.SET_REQUESTING_ERROR:
-      state = options_reducer_objectSpread(options_reducer_objectSpread({}, state), {}, {
-        requestingErrors: defineProperty_default()({}, name, error)
-      });
+    case notes_action_types.SET_ERROR:
+      state = { ...state,
+        errors: { ...state.errors,
+          [selector]: error
+        }
+      };
       break;
 
-    case options_action_types.SET_UPDATING_ERROR:
-      state = options_reducer_objectSpread(options_reducer_objectSpread({}, state), {}, {
-        error: error,
-        updatingError: error,
-        isUpdating: false
-      });
+    case notes_action_types.SET_NOTE:
+      state = { ...state,
+        notes: { ...state.notes,
+          [noteId]: noteFields
+        }
+      };
+      break;
+
+    case notes_action_types.SET_NOTE_IS_UPDATING:
+      state = { ...state,
+        notes: { ...state.notes,
+          [noteId]: { ...state.notes[noteId],
+            isUpdating
+          }
+        }
+      };
+      break;
+
+    case notes_action_types.SET_IS_REQUESTING:
+      state = { ...state,
+        requesting: { ...state.requesting,
+          [selector]: isRequesting
+        }
+      };
       break;
   }
 
   return state;
 };
 
-/* harmony default export */ var options_reducer = (reducer_optionsReducer);
-// CONCATENATED MODULE: ./packages/data/build-module/options/index.js
+/* harmony default export */ var notes_reducer = (notesReducer);
+// CONCATENATED MODULE: ./packages/data/build-module/notes/index.js
 /**
  * External dependencies
  */
+
 
 /**
  * Internal dependencies
@@ -3734,165 +3685,2427 @@ var reducer_optionsReducer = function optionsReducer() {
 
 
 
-
-Object(external_this_wp_data_["registerStore"])(options_constants_STORE_NAME, {
-  reducer: options_reducer,
-  actions: options_actions_namespaceObject,
-  controls: controls,
-  selectors: options_selectors_namespaceObject,
-  resolvers: options_resolvers_namespaceObject
+Object(external_wp_data_["registerStore"])(notes_constants_STORE_NAME, {
+  reducer: notes_reducer,
+  actions: notes_actions_namespaceObject,
+  controls: external_wp_dataControls_["controls"],
+  selectors: notes_selectors_namespaceObject,
+  resolvers: notes_resolvers_namespaceObject
 });
-var OPTIONS_STORE_NAME = options_constants_STORE_NAME;
-// CONCATENATED MODULE: ./packages/data/build-module/options/with-options-hydration.js
-
-
+const NOTES_STORE_NAME = notes_constants_STORE_NAME;
+// CONCATENATED MODULE: ./packages/data/build-module/reports/constants.js
 /**
- * External dependencies
+ * Internal dependencies
  */
-
-
-
+const reports_constants_STORE_NAME = 'wc/admin/reports';
+// CONCATENATED MODULE: ./packages/data/build-module/reports/selectors.js
 /**
  * Internal dependencies
  */
 
-
-var with_options_hydration_withOptionsHydration = function withOptionsHydration(data) {
-  return function (OriginalComponent) {
-    return function (props) {
-      var dataRef = Object(external_this_wp_element_["useRef"])(data);
-      Object(external_this_wp_data_["useSelect"])(function (select, registry) {
-        if (!dataRef.current) {
-          return;
-        }
-
-        var _select = select(options_constants_STORE_NAME),
-            isResolving = _select.isResolving,
-            hasFinishedResolution = _select.hasFinishedResolution;
-
-        var _registry$dispatch = registry.dispatch(options_constants_STORE_NAME),
-            startResolution = _registry$dispatch.startResolution,
-            finishResolution = _registry$dispatch.finishResolution,
-            receiveOptions = _registry$dispatch.receiveOptions;
-
-        var names = Object.keys(dataRef.current);
-        names.forEach(function (name) {
-          if (!isResolving('getOption', [name]) && !hasFinishedResolution('getOption', [name])) {
-            startResolution('getOption', [name]);
-            receiveOptions(defineProperty_default()({}, name, dataRef.current[name]));
-            finishResolution('getOption', [name]);
-          }
-        });
-      }, []);
-      return Object(external_this_wp_element_["createElement"])(OriginalComponent, props);
-    };
-  };
+const EMPTY_OBJECT = {};
+const selectors_getReportItemsError = (state, endpoint, query) => {
+  const resourceName = getResourceName(endpoint, query);
+  return state.itemErrors[resourceName] || false;
 };
-// EXTERNAL MODULE: ./node_modules/memize/index.js
-var memize = __webpack_require__(430);
-var memize_default = /*#__PURE__*/__webpack_require__.n(memize);
+const selectors_getReportItems = (state, endpoint, query) => {
+  const resourceName = getResourceName(endpoint, query);
+  return state.items[resourceName] || EMPTY_OBJECT;
+};
+const selectors_getReportStats = (state, endpoint, query) => {
+  const resourceName = getResourceName(endpoint, query);
+  return state.stats[resourceName] || EMPTY_OBJECT;
+};
+const selectors_getReportStatsError = (state, endpoint, query) => {
+  const resourceName = getResourceName(endpoint, query);
+  return state.statErrors[resourceName] || false;
+};
+// CONCATENATED MODULE: ./packages/data/build-module/reports/action-types.js
+const reports_action_types_TYPES = {
+  SET_ITEM_ERROR: 'SET_ITEM_ERROR',
+  SET_STAT_ERROR: 'SET_STAT_ERROR',
+  SET_REPORT_ITEMS: 'SET_REPORT_ITEMS',
+  SET_REPORT_STATS: 'SET_REPORT_STATS'
+};
+/* harmony default export */ var reports_action_types = (reports_action_types_TYPES);
+// CONCATENATED MODULE: ./packages/data/build-module/reports/actions.js
+/**
+ * Internal dependencies
+ */
 
-// CONCATENATED MODULE: ./packages/data/build-module/registry.js
+
+function setReportItemsError(endpoint, query, error) {
+  const resourceName = getResourceName(endpoint, query);
+  return {
+    type: reports_action_types.SET_ITEM_ERROR,
+    resourceName,
+    error
+  };
+}
+function setReportItems(endpoint, query, items) {
+  const resourceName = getResourceName(endpoint, query);
+  return {
+    type: reports_action_types.SET_REPORT_ITEMS,
+    resourceName,
+    items
+  };
+}
+function setReportStats(endpoint, query, stats) {
+  const resourceName = getResourceName(endpoint, query);
+  return {
+    type: reports_action_types.SET_REPORT_STATS,
+    resourceName,
+    stats
+  };
+}
+function setReportStatsError(endpoint, query, error) {
+  const resourceName = getResourceName(endpoint, query);
+  return {
+    type: reports_action_types.SET_STAT_ERROR,
+    resourceName,
+    error
+  };
+}
+// CONCATENATED MODULE: ./packages/data/build-module/reports/resolvers.js
 /**
  * External dependencies
  */
 
-
-
-function __experimentalResolveSelect(reducerKey) {
-  return getResolveSelectors(Object(external_this_wp_data_["select"])(reducerKey));
-}
 /**
- * Returns a promise that resolves once a selector has finished resolving.
- * This is directly pulled from https://github.com/WordPress/gutenberg/blob/909c9274b2440de5f6049ffddfcc8e0e6158df2d/packages/data/src/registry.js#L91-L130
- * and will be removed in favor of the @wordpress/data function.
+ * Internal dependencies
  */
 
-var getResolveSelectors = memize_default()(function (selectors) {
-  return Object(external_lodash_["mapValues"])(Object(external_lodash_["omit"])(selectors, ['getIsResolving', 'hasStartedResolution', 'hasFinishedResolution', 'isResolving', 'getCachedResolvers']), function (selector, selectorName) {
-    return function () {
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      return new Promise(function (resolve) {
-        var hasFinished = function hasFinished() {
-          return selectors.hasFinishedResolution(selectorName, args);
-        };
-
-        var getResult = function getResult() {
-          return selector.apply(null, args);
-        }; // trigger the selector (to trigger the resolver)
 
 
-        var result = getResult();
 
-        if (hasFinished()) {
-          return resolve(result);
-        }
+function* resolvers_getReportItems(endpoint, query) {
+  const fetchArgs = {
+    parse: false,
+    path: Object(external_wp_url_["addQueryArgs"])(`${NAMESPACE}/reports/${endpoint}`, query)
+  };
 
-        var unsubscribe = Object(external_this_wp_data_["subscribe"])(function () {
-          if (hasFinished()) {
-            unsubscribe();
-            resolve(getResult());
-          }
-        });
-      });
-    };
-  });
+  try {
+    const response = yield fetchWithHeaders(fetchArgs);
+    const data = response.data;
+    const totalResults = parseInt(response.headers.get('x-wp-total'), 10);
+    const totalPages = parseInt(response.headers.get('x-wp-totalpages'), 10);
+    yield setReportItems(endpoint, query, {
+      data,
+      totalResults,
+      totalPages
+    });
+  } catch (error) {
+    yield setReportItemsError(endpoint, query, error);
+  }
+}
+function* resolvers_getReportStats(endpoint, query) {
+  const fetchArgs = {
+    parse: false,
+    path: Object(external_wp_url_["addQueryArgs"])(`${NAMESPACE}/reports/${endpoint}/stats`, query)
+  };
+
+  try {
+    const response = yield fetchWithHeaders(fetchArgs);
+    const data = response.data;
+    const totalResults = parseInt(response.headers.get('x-wp-total'), 10);
+    const totalPages = parseInt(response.headers.get('x-wp-totalpages'), 10);
+    yield setReportStats(endpoint, query, {
+      data,
+      totalResults,
+      totalPages
+    });
+  } catch (error) {
+    yield setReportStatsError(endpoint, query, error);
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/reports/reducer.js
+/**
+ * Internal dependencies
+ */
+
+
+const reports = (state = {
+  itemErrors: {},
+  items: {},
+  statErrors: {},
+  stats: {}
 }, {
-  maxSize: 1
+  type,
+  items,
+  stats,
+  error,
+  resourceName
+}) => {
+  switch (type) {
+    case reports_action_types.SET_REPORT_ITEMS:
+      return { ...state,
+        items: { ...state.items,
+          [resourceName]: items
+        }
+      };
+
+    case reports_action_types.SET_REPORT_STATS:
+      return { ...state,
+        stats: { ...state.stats,
+          [resourceName]: stats
+        }
+      };
+
+    case reports_action_types.SET_ITEM_ERROR:
+      return { ...state,
+        itemErrors: { ...state.itemErrors,
+          [resourceName]: error
+        }
+      };
+
+    case reports_action_types.SET_STAT_ERROR:
+      return { ...state,
+        statErrors: { ...state.statErrors,
+          [resourceName]: error
+        }
+      };
+
+    default:
+      return state;
+  }
+};
+
+/* harmony default export */ var reports_reducer = (reports);
+// CONCATENATED MODULE: ./packages/data/build-module/reports/index.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+
+
+Object(external_wp_data_["registerStore"])(reports_constants_STORE_NAME, {
+  reducer: reports_reducer,
+  actions: reports_actions_namespaceObject,
+  controls: build_module_controls,
+  selectors: reports_selectors_namespaceObject,
+  resolvers: reports_resolvers_namespaceObject
 });
-// CONCATENATED MODULE: ./packages/data/build-module/index.js
+const REPORTS_STORE_NAME = reports_constants_STORE_NAME;
+// CONCATENATED MODULE: ./packages/data/build-module/items/constants.js
+const items_constants_STORE_NAME = 'wc/admin/items';
+// EXTERNAL MODULE: external ["wc","date"]
+var external_wc_date_ = __webpack_require__(19);
+
+// CONCATENATED MODULE: ./packages/data/build-module/items/utils.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
 
 
 
+/**
+ * Returns leaderboard data to render a leaderboard table.
+ *
+ * @param  {Object} options                 arguments
+ * @param  {string} options.id              Leaderboard ID
+ * @param  {number} options.per_page       Per page limit
+ * @param  {Object} options.persisted_query Persisted query passed to endpoint
+ * @param  {Object} options.query           Query parameters in the url
+ * @param  {Object} options.select          Instance of @wordpress/select
+ * @param  {string} options.defaultDateRange   User specified default date range.
+ * @return {Object} Object containing leaderboard responses.
+ */
 
+function getLeaderboard(options) {
+  const endpoint = 'leaderboards';
+  const {
+    per_page: perPage,
+    persisted_query: persistedQuery,
+    query,
+    select,
+    filterQuery
+  } = options;
+  const {
+    getItems,
+    getItemsError,
+    isResolving
+  } = select(items_constants_STORE_NAME);
+  const response = {
+    isRequesting: false,
+    isError: false,
+    rows: []
+  };
+  const datesFromQuery = Object(external_wc_date_["getCurrentDates"])(query, options.defaultDateRange);
+  const leaderboardQuery = { ...filterQuery,
+    after: Object(external_wc_date_["appendTimestamp"])(datesFromQuery.primary.after, 'start'),
+    before: Object(external_wc_date_["appendTimestamp"])(datesFromQuery.primary.before, 'end'),
+    per_page: perPage,
+    persisted_query: JSON.stringify(persistedQuery)
+  }; // Disable eslint rule requiring `getItems` to be defined below because the next two statements
+  // depend on `getItems` to have been called.
+  // eslint-disable-next-line @wordpress/no-unused-vars-before-return
 
+  const leaderboards = getItems(endpoint, leaderboardQuery);
 
-
-
-
-
-
-
-
-
-
-/***/ }),
-
-/***/ 73:
-/***/ (function(module, exports) {
-
-function _arrayLikeToArray(arr, len) {
-  if (len == null || len > arr.length) len = arr.length;
-
-  for (var i = 0, arr2 = new Array(len); i < len; i++) {
-    arr2[i] = arr[i];
+  if (isResolving('getItems', [endpoint, leaderboardQuery])) {
+    return { ...response,
+      isRequesting: true
+    };
+  } else if (getItemsError(endpoint, leaderboardQuery)) {
+    return { ...response,
+      isError: true
+    };
   }
 
-  return arr2;
+  const leaderboard = leaderboards.get(options.id);
+  return { ...response,
+    rows: leaderboard === null || leaderboard === void 0 ? void 0 : leaderboard.rows
+  };
+}
+/**
+ * Returns items based on a search query.
+ *
+ * @param  {Object}   select    Instance of @wordpress/select
+ * @param  {string}   endpoint  Report API Endpoint
+ * @param  {string[]} search    Array of search strings.
+ * @return {Object}   Object containing API request information and the matching items.
+ */
+
+function searchItemsByString(select, endpoint, search) {
+  const {
+    getItems,
+    getItemsError,
+    isResolving
+  } = select(items_constants_STORE_NAME);
+  const items = {};
+  let isRequesting = false;
+  let isError = false;
+  search.forEach(searchWord => {
+    const query = {
+      search: searchWord,
+      per_page: 10
+    };
+    const newItems = getItems(endpoint, query);
+    newItems.forEach((item, id) => {
+      items[id] = item;
+    });
+
+    if (isResolving('getItems', [endpoint, query])) {
+      isRequesting = true;
+    }
+
+    if (getItemsError(endpoint, query)) {
+      isError = true;
+    }
+  });
+  return {
+    items,
+    isRequesting,
+    isError
+  };
+}
+/**
+ * Generate a resource name for item totals count.
+ *
+ * It omits query parameters from the identifier that don't affect
+ * totals values like pagination and response field filtering.
+ *
+ * @param {string} itemType Item type for totals count.
+ * @param {Object} query Query for item totals count.
+ * @return {string} Resource name for item totals.
+ */
+
+function getTotalCountResourceName(itemType, query) {
+  // Disable eslint rule because we're using this spread to omit properties
+  // that don't affect item totals count results.
+  // eslint-disable-next-line no-unused-vars, camelcase
+  const {
+    _fields,
+    page,
+    per_page,
+    ...totalsQuery
+  } = query;
+  return getResourceName('total-' + itemType, totalsQuery);
+}
+// CONCATENATED MODULE: ./packages/data/build-module/items/selectors.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+
+const selectors_getItems = rememo((state, itemType, query, defaultValue = new Map()) => {
+  const resourceName = getResourceName(itemType, query);
+  const ids = state.items[resourceName] && state.items[resourceName].data;
+
+  if (!ids) {
+    return defaultValue;
+  }
+
+  return ids.reduce((map, id) => {
+    map.set(id, state.data[itemType][id]);
+    return map;
+  }, new Map());
+}, (state, itemType, query) => {
+  const resourceName = getResourceName(itemType, query);
+  return [state.items[resourceName]];
+});
+const getItemsTotalCount = (state, itemType, query, defaultValue = 0) => {
+  const resourceName = getTotalCountResourceName(itemType, query);
+  const totalCount = state.items.hasOwnProperty(resourceName) ? state.items[resourceName] : defaultValue;
+  return totalCount;
+};
+const selectors_getItemsError = (state, itemType, query) => {
+  const resourceName = getResourceName(itemType, query);
+  return state.errors[resourceName];
+};
+// CONCATENATED MODULE: ./packages/data/build-module/items/action-types.js
+const items_action_types_TYPES = {
+  SET_ITEM: 'SET_ITEM',
+  SET_ITEMS: 'SET_ITEMS',
+  SET_ITEMS_TOTAL_COUNT: 'SET_ITEMS_TOTAL_COUNT',
+  SET_ERROR: 'SET_ERROR'
+};
+/* harmony default export */ var items_action_types = (items_action_types_TYPES);
+// CONCATENATED MODULE: ./packages/data/build-module/items/actions.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+function setItem(itemType, id, item) {
+  return {
+    type: items_action_types.SET_ITEM,
+    id,
+    item,
+    itemType
+  };
+}
+function setItems(itemType, query, items, totalCount) {
+  return {
+    type: items_action_types.SET_ITEMS,
+    items,
+    itemType,
+    query,
+    totalCount
+  };
+}
+function setItemsTotalCount(itemType, query, totalCount) {
+  return {
+    type: items_action_types.SET_ITEMS_TOTAL_COUNT,
+    itemType,
+    query,
+    totalCount
+  };
+}
+function items_actions_setError(itemType, query, error) {
+  return {
+    type: items_action_types.SET_ERROR,
+    itemType,
+    query,
+    error
+  };
+}
+function* updateProductStock(product, quantity) {
+  const updatedProduct = { ...product,
+    stock_quantity: quantity
+  };
+  const {
+    id,
+    parent_id: parentId,
+    type
+  } = updatedProduct; // Optimistically update product stock.
+
+  yield setItem('products', id, updatedProduct);
+  let url = NAMESPACE;
+
+  switch (type) {
+    case 'variation':
+      url += `/products/${parentId}/variations/${id}`;
+      break;
+
+    case 'variable':
+    case 'simple':
+    default:
+      url += `/products/${id}`;
+  }
+
+  try {
+    yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'PUT',
+      data: updatedProduct
+    });
+    return true;
+  } catch (error) {
+    // Update failed, return product back to original state.
+    yield setItem('products', id, product);
+    yield items_actions_setError('products', id, error);
+    return false;
+  }
+}
+function* createProductFromTemplate(itemFields, query) {
+  try {
+    const url = Object(external_wp_url_["addQueryArgs"])(`${WC_ADMIN_NAMESPACE}/onboarding/tasks/create_product_from_template`, query || {});
+    const newItem = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url,
+      method: 'POST',
+      data: itemFields
+    });
+    yield setItem('products', newItem.id, newItem);
+    return newItem;
+  } catch (error) {
+    yield items_actions_setError('createProductFromTemplate', query, error);
+    throw error;
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/items/resolvers.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+function* request(itemType, query) {
+  const endpoint = itemType === 'categories' ? 'products/categories' : itemType;
+  const url = Object(external_wp_url_["addQueryArgs"])(`${NAMESPACE}/${endpoint}`, query);
+  const isUnboundedRequest = query.per_page === -1;
+  const fetch = isUnboundedRequest ? external_wp_dataControls_["apiFetch"] : fetchWithHeaders;
+  const response = yield fetch({
+    path: url,
+    method: 'GET'
+  });
+
+  if (isUnboundedRequest) {
+    return {
+      items: response,
+      totalCount: response.length
+    };
+  }
+
+  const totalCount = parseInt(response.headers.get('x-wp-total'), 10);
+  return {
+    items: response.data,
+    totalCount
+  };
 }
 
-module.exports = _arrayLikeToArray;
+function* resolvers_getItems(itemType, query) {
+  try {
+    const {
+      items,
+      totalCount
+    } = yield request(itemType, query);
+    yield setItemsTotalCount(itemType, query, totalCount);
+    yield setItems(itemType, query, items);
+  } catch (error) {
+    yield items_actions_setError(itemType, query, error);
+  }
+}
+function* items_resolvers_getReviewsTotalCount(itemType, query) {
+  yield resolvers_getItemsTotalCount(itemType, query);
+}
+function* resolvers_getItemsTotalCount(itemType, query) {
+  try {
+    const totalsQuery = { ...query,
+      page: 1,
+      per_page: 1
+    };
+    const {
+      totalCount
+    } = yield request(itemType, totalsQuery);
+    yield setItemsTotalCount(itemType, query, totalCount);
+  } catch (error) {
+    yield items_actions_setError(itemType, query, error);
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/items/reducer.js
+/**
+ * Internal dependencies
+ */
+
+
+
+
+const items_reducer_reducer = (state = {
+  items: {},
+  errors: {},
+  data: {}
+}, {
+  type,
+  id,
+  itemType,
+  query,
+  item,
+  items,
+  totalCount,
+  error
+}) => {
+  switch (type) {
+    case items_action_types.SET_ITEM:
+      const itemData = state.data[itemType] || {};
+      return { ...state,
+        data: { ...state.data,
+          [itemType]: { ...itemData,
+            [id]: { ...(itemData[id] || {}),
+              ...item
+            }
+          }
+        }
+      };
+
+    case items_action_types.SET_ITEMS:
+      const ids = [];
+      const nextItems = items.reduce((result, theItem) => {
+        ids.push(theItem.id);
+        result[theItem.id] = theItem;
+        return result;
+      }, {});
+      const resourceName = getResourceName(itemType, query);
+      return { ...state,
+        items: { ...state.items,
+          [resourceName]: {
+            data: ids
+          }
+        },
+        data: { ...state.data,
+          [itemType]: { ...state.data[itemType],
+            ...nextItems
+          }
+        }
+      };
+
+    case items_action_types.SET_ITEMS_TOTAL_COUNT:
+      const totalResourceName = getTotalCountResourceName(itemType, query);
+      return { ...state,
+        items: { ...state.items,
+          [totalResourceName]: totalCount
+        }
+      };
+
+    case items_action_types.SET_ERROR:
+      return { ...state,
+        errors: { ...state.errors,
+          [getResourceName(itemType, query)]: error
+        }
+      };
+
+    default:
+      return state;
+  }
+};
+
+/* harmony default export */ var items_reducer = (items_reducer_reducer);
+// CONCATENATED MODULE: ./packages/data/build-module/items/index.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+
+
+Object(external_wp_data_["registerStore"])(items_constants_STORE_NAME, {
+  reducer: items_reducer,
+  actions: items_actions_namespaceObject,
+  controls: build_module_controls,
+  selectors: items_selectors_namespaceObject,
+  resolvers: items_resolvers_namespaceObject
+});
+const ITEMS_STORE_NAME = items_constants_STORE_NAME;
+// CONCATENATED MODULE: ./packages/data/build-module/navigation/constants.js
+const navigation_constants_STORE_NAME = 'woocommerce-navigation';
+// EXTERNAL MODULE: external ["wp","hooks"]
+var external_wp_hooks_ = __webpack_require__(30);
+
+// CONCATENATED MODULE: ./packages/data/build-module/navigation/selectors.js
+/**
+ * External dependencies
+ */
+
+const MENU_ITEMS_HOOK = 'woocommerce_navigation_menu_items';
+const getMenuItems = state => {
+  return Object(external_wp_hooks_["applyFilters"])(MENU_ITEMS_HOOK, state.menuItems);
+};
+const getFavorites = state => {
+  return state.favorites || [];
+};
+const isNavigationRequesting = (state, selector) => {
+  return state.requesting[selector] || false;
+};
+const getPersistedQuery = state => {
+  return state.persistedQuery || {};
+};
+// EXTERNAL MODULE: external ["wc","navigation"]
+var external_wc_navigation_ = __webpack_require__(12);
+
+// CONCATENATED MODULE: ./packages/data/build-module/navigation/action-types.js
+const navigation_action_types_TYPES = {
+  ADD_MENU_ITEMS: 'ADD_MENU_ITEMS',
+  SET_MENU_ITEMS: 'SET_MENU_ITEMS',
+  ON_HISTORY_CHANGE: 'ON_HISTORY_CHANGE',
+  ADD_FAVORITE_FAILURE: 'ADD_FAVORITE_FAILURE',
+  ADD_FAVORITE_REQUEST: 'ADD_FAVORITE_REQUEST',
+  ADD_FAVORITE_SUCCESS: 'ADD_FAVORITE_SUCCESS',
+  GET_FAVORITES_FAILURE: 'GET_FAVORITES_FAILURE',
+  GET_FAVORITES_REQUEST: 'GET_FAVORITES_REQUEST',
+  GET_FAVORITES_SUCCESS: 'GET_FAVORITES_SUCCESS',
+  REMOVE_FAVORITE_FAILURE: 'REMOVE_FAVORITE_FAILURE',
+  REMOVE_FAVORITE_REQUEST: 'REMOVE_FAVORITE_REQUEST',
+  REMOVE_FAVORITE_SUCCESS: 'REMOVE_FAVORITE_SUCCESS'
+};
+/* harmony default export */ var navigation_action_types = (navigation_action_types_TYPES);
+// CONCATENATED MODULE: ./packages/data/build-module/navigation/actions.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+function actions_setMenuItems(menuItems) {
+  return {
+    type: navigation_action_types.SET_MENU_ITEMS,
+    menuItems
+  };
+}
+function addMenuItems(menuItems) {
+  return {
+    type: navigation_action_types.ADD_MENU_ITEMS,
+    menuItems
+  };
+}
+function getFavoritesFailure(error) {
+  return {
+    type: navigation_action_types.GET_FAVORITES_FAILURE,
+    error
+  };
+}
+function getFavoritesRequest(favorites) {
+  return {
+    type: navigation_action_types.GET_FAVORITES_REQUEST,
+    favorites
+  };
+}
+function getFavoritesSuccess(favorites) {
+  return {
+    type: navigation_action_types.GET_FAVORITES_SUCCESS,
+    favorites
+  };
+}
+function addFavoriteRequest(favorite) {
+  return {
+    type: navigation_action_types.ADD_FAVORITE_REQUEST,
+    favorite
+  };
+}
+function addFavoriteFailure(favorite, error) {
+  return {
+    type: navigation_action_types.ADD_FAVORITE_FAILURE,
+    favorite,
+    error
+  };
+}
+function addFavoriteSuccess(favorite) {
+  return {
+    type: navigation_action_types.ADD_FAVORITE_SUCCESS,
+    favorite
+  };
+}
+function removeFavoriteRequest(favorite) {
+  return {
+    type: navigation_action_types.REMOVE_FAVORITE_REQUEST,
+    favorite
+  };
+}
+function removeFavoriteFailure(favorite, error) {
+  return {
+    type: navigation_action_types.REMOVE_FAVORITE_FAILURE,
+    favorite,
+    error
+  };
+}
+function removeFavoriteSuccess(favorite, error) {
+  return {
+    type: navigation_action_types.REMOVE_FAVORITE_SUCCESS,
+    favorite,
+    error
+  };
+}
+function* actions_onLoad() {
+  yield actions_onHistoryChange();
+}
+function* actions_onHistoryChange() {
+  const persistedQuery = Object(external_wc_navigation_["getPersistedQuery"])();
+
+  if (!Object.keys(persistedQuery).length) {
+    return null;
+  }
+
+  yield {
+    type: navigation_action_types.ON_HISTORY_CHANGE,
+    persistedQuery
+  };
+}
+function* addFavorite(favorite) {
+  yield addFavoriteRequest(favorite);
+
+  try {
+    const results = yield external_wp_apiFetch_default()({
+      path: `${WC_ADMIN_NAMESPACE}/navigation/favorites/me`,
+      method: 'POST',
+      data: {
+        item_id: favorite
+      }
+    });
+
+    if (results) {
+      yield addFavoriteSuccess(favorite);
+      return results;
+    }
+
+    throw new Error();
+  } catch (error) {
+    yield addFavoriteFailure(favorite, error);
+    throw new Error();
+  }
+}
+function* removeFavorite(favorite) {
+  yield removeFavoriteRequest(favorite);
+
+  try {
+    const results = yield external_wp_apiFetch_default()({
+      path: `${WC_ADMIN_NAMESPACE}/navigation/favorites/me`,
+      method: 'DELETE',
+      data: {
+        item_id: favorite
+      }
+    });
+
+    if (results) {
+      yield removeFavoriteSuccess(favorite);
+      return results;
+    }
+
+    throw new Error();
+  } catch (error) {
+    yield removeFavoriteFailure(favorite, error);
+    throw new Error();
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/navigation/reducer.js
+/**
+ * Internal dependencies
+ */
+
+
+const navigation_reducer_reducer = (state = {
+  error: null,
+  menuItems: [],
+  favorites: [],
+  requesting: {},
+  persistedQuery: {}
+}, {
+  type,
+  error,
+  favorite,
+  favorites,
+  menuItems,
+  persistedQuery
+}) => {
+  switch (type) {
+    case navigation_action_types.SET_MENU_ITEMS:
+      state = { ...state,
+        menuItems
+      };
+      break;
+
+    case navigation_action_types.ADD_MENU_ITEMS:
+      state = { ...state,
+        menuItems: [...state.menuItems, ...menuItems]
+      };
+      break;
+
+    case navigation_action_types.ON_HISTORY_CHANGE:
+      state = { ...state,
+        persistedQuery
+      };
+      break;
+
+    case navigation_action_types.GET_FAVORITES_FAILURE:
+      state = { ...state,
+        requesting: { ...state.requesting,
+          getFavorites: false
+        }
+      };
+      break;
+
+    case navigation_action_types.GET_FAVORITES_REQUEST:
+      state = { ...state,
+        requesting: { ...state.requesting,
+          getFavorites: true
+        }
+      };
+      break;
+
+    case navigation_action_types.GET_FAVORITES_SUCCESS:
+      state = { ...state,
+        favorites,
+        requesting: { ...state.requesting,
+          getFavorites: false
+        }
+      };
+      break;
+
+    case navigation_action_types.ADD_FAVORITE_FAILURE:
+      state = { ...state,
+        error,
+        requesting: { ...state.requesting,
+          addFavorite: false
+        }
+      };
+      break;
+
+    case navigation_action_types.ADD_FAVORITE_REQUEST:
+      state = { ...state,
+        requesting: { ...state.requesting,
+          addFavorite: true
+        }
+      };
+      break;
+
+    case navigation_action_types.ADD_FAVORITE_SUCCESS:
+      const newFavorites = !state.favorites.includes(favorite) ? [...state.favorites, favorite] : state.favorites;
+      state = { ...state,
+        favorites: newFavorites,
+        menuItems: state.menuItems.map(item => {
+          if (item.id === favorite) {
+            return { ...item,
+              menuId: 'favorites'
+            };
+          }
+
+          return item;
+        }),
+        requesting: { ...state.requesting,
+          addFavorite: false
+        }
+      };
+      break;
+
+    case navigation_action_types.REMOVE_FAVORITE_FAILURE:
+      state = { ...state,
+        requesting: { ...state.requesting,
+          error,
+          removeFavorite: false
+        }
+      };
+      break;
+
+    case navigation_action_types.REMOVE_FAVORITE_REQUEST:
+      state = { ...state,
+        requesting: { ...state.requesting,
+          removeFavorite: true
+        }
+      };
+      break;
+
+    case navigation_action_types.REMOVE_FAVORITE_SUCCESS:
+      const filteredFavorites = state.favorites.filter(f => f !== favorite);
+      state = { ...state,
+        favorites: filteredFavorites,
+        menuItems: state.menuItems.map(item => {
+          if (item.id === favorite) {
+            return { ...item,
+              menuId: 'plugins'
+            };
+          }
+
+          return item;
+        }),
+        requesting: { ...state.requesting,
+          removeFavorite: false
+        }
+      };
+      break;
+  }
+
+  return state;
+};
+
+/* harmony default export */ var navigation_reducer = (navigation_reducer_reducer);
+// CONCATENATED MODULE: ./packages/data/build-module/navigation/resolvers.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+
+function* resolvers_getFavorites() {
+  yield getFavoritesRequest();
+
+  try {
+    const results = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: `${WC_ADMIN_NAMESPACE}/navigation/favorites/me`
+    });
+
+    if (results) {
+      yield getFavoritesSuccess(results);
+      return;
+    }
+
+    throw new Error();
+  } catch (error) {
+    yield getFavoritesFailure(error);
+    throw new Error();
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/navigation/dispatchers.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+/* harmony default export */ var dispatchers = (async () => {
+  const {
+    onLoad,
+    onHistoryChange
+  } = Object(external_wp_data_["dispatch"])(navigation_constants_STORE_NAME);
+  await onLoad();
+  Object(external_wc_navigation_["addHistoryListener"])(async () => {
+    setTimeout(async () => {
+      await onHistoryChange();
+    }, 0);
+  });
+});
+// CONCATENATED MODULE: ./packages/data/build-module/navigation/index.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+
+
+Object(external_wp_data_["registerStore"])(navigation_constants_STORE_NAME, {
+  reducer: navigation_reducer,
+  actions: navigation_actions_namespaceObject,
+  controls: external_wp_dataControls_["controls"],
+  resolvers: navigation_resolvers_namespaceObject,
+  selectors: navigation_selectors_namespaceObject
+});
+dispatchers();
+const NAVIGATION_STORE_NAME = navigation_constants_STORE_NAME;
+// CONCATENATED MODULE: ./packages/data/build-module/navigation/with-navigation-hydration.js
+/**
+ * External dependencies
+ */
+
+
+
+/**
+ * Internal dependencies
+ */
+
+
+/**
+ * Higher-order component used to hydrate navigation data.
+ *
+ * @param {Object} data Data object with menu items and site information.
+ */
+
+const withNavigationHydration = data => Object(external_wp_compose_["createHigherOrderComponent"])(OriginalComponent => props => {
+  const dataRef = Object(external_wp_element_["useRef"])(data);
+  Object(external_wp_data_["useSelect"])((select, registry) => {
+    if (!dataRef.current) {
+      return;
+    }
+
+    const {
+      isResolving,
+      hasFinishedResolution
+    } = select(navigation_constants_STORE_NAME);
+    const {
+      startResolution,
+      finishResolution,
+      setMenuItems
+    } = registry.dispatch(navigation_constants_STORE_NAME);
+
+    if (!isResolving('getMenuItems') && !hasFinishedResolution('getMenuItems')) {
+      startResolution('getMenuItems', []);
+      setMenuItems(dataRef.current.menuItems);
+      finishResolution('getMenuItems', []);
+    }
+  });
+  return Object(external_wp_element_["createElement"])(OriginalComponent, Object.assign({}, props));
+}, 'withNavigationHydration');
+// CONCATENATED MODULE: ./packages/data/build-module/payment-gateways/action-types.js
+var action_types_ACTION_TYPES;
+
+(function (ACTION_TYPES) {
+  ACTION_TYPES["GET_PAYMENT_GATEWAYS_REQUEST"] = "GET_PAYMENT_GATEWAYS_REQUEST";
+  ACTION_TYPES["GET_PAYMENT_GATEWAYS_SUCCESS"] = "GET_PAYMENT_GATEWAYS_SUCCESS";
+  ACTION_TYPES["GET_PAYMENT_GATEWAYS_ERROR"] = "GET_PAYMENT_GATEWAYS_ERROR";
+  ACTION_TYPES["UPDATE_PAYMENT_GATEWAY_REQUEST"] = "UPDATE_PAYMENT_GATEWAY_REQUEST";
+  ACTION_TYPES["UPDATE_PAYMENT_GATEWAY_SUCCESS"] = "UPDATE_PAYMENT_GATEWAY_SUCCESS";
+  ACTION_TYPES["UPDATE_PAYMENT_GATEWAY_ERROR"] = "UPDATE_PAYMENT_GATEWAY_ERROR";
+  ACTION_TYPES["GET_PAYMENT_GATEWAY_REQUEST"] = "GET_PAYMENT_GATEWAY_REQUEST";
+  ACTION_TYPES["GET_PAYMENT_GATEWAY_SUCCESS"] = "GET_PAYMENT_GATEWAY_SUCCESS";
+  ACTION_TYPES["GET_PAYMENT_GATEWAY_ERROR"] = "GET_PAYMENT_GATEWAY_ERROR";
+})(action_types_ACTION_TYPES || (action_types_ACTION_TYPES = {}));
+// CONCATENATED MODULE: ./packages/data/build-module/payment-gateways/constants.js
+const STORE_KEY = 'wc/payment-gateways';
+const API_NAMESPACE = 'wc/v3';
+// CONCATENATED MODULE: ./packages/data/build-module/payment-gateways/actions.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+
+function getPaymentGatewaysRequest() {
+  return {
+    type: action_types_ACTION_TYPES.GET_PAYMENT_GATEWAYS_REQUEST
+  };
+}
+function getPaymentGatewaysSuccess(paymentGateways) {
+  return {
+    type: action_types_ACTION_TYPES.GET_PAYMENT_GATEWAYS_SUCCESS,
+    paymentGateways
+  };
+}
+function getPaymentGatewaysError(error) {
+  return {
+    type: action_types_ACTION_TYPES.GET_PAYMENT_GATEWAYS_ERROR,
+    error
+  };
+}
+function getPaymentGatewayRequest() {
+  return {
+    type: action_types_ACTION_TYPES.GET_PAYMENT_GATEWAY_REQUEST
+  };
+}
+function getPaymentGatewayError(error) {
+  return {
+    type: action_types_ACTION_TYPES.GET_PAYMENT_GATEWAY_ERROR,
+    error
+  };
+}
+function getPaymentGatewaySuccess(paymentGateway) {
+  return {
+    type: action_types_ACTION_TYPES.GET_PAYMENT_GATEWAY_SUCCESS,
+    paymentGateway
+  };
+}
+function updatePaymentGatewaySuccess(paymentGateway) {
+  return {
+    type: action_types_ACTION_TYPES.UPDATE_PAYMENT_GATEWAY_SUCCESS,
+    paymentGateway
+  };
+}
+function updatePaymentGatewayRequest() {
+  return {
+    type: action_types_ACTION_TYPES.UPDATE_PAYMENT_GATEWAY_REQUEST
+  };
+}
+function updatePaymentGatewayError(error) {
+  return {
+    type: action_types_ACTION_TYPES.UPDATE_PAYMENT_GATEWAY_ERROR,
+    error
+  };
+}
+function* updatePaymentGateway(id, data) {
+  try {
+    yield updatePaymentGatewayRequest();
+    const response = yield Object(external_wp_dataControls_["apiFetch"])({
+      method: 'PUT',
+      path: API_NAMESPACE + '/payment_gateways/' + id,
+      body: JSON.stringify(data)
+    });
+
+    if (response && response.id === id) {
+      // Update the already loaded payment gateway list with the new data
+      yield updatePaymentGatewaySuccess(response);
+      return response;
+    }
+  } catch (e) {
+    yield updatePaymentGatewayError(e);
+    throw e;
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/payment-gateways/resolvers.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+ // Can be removed in WP 5.9.
+
+const payment_gateways_resolvers_dispatch = external_wp_data_["controls"] && external_wp_data_["controls"].dispatch ? external_wp_data_["controls"].dispatch : external_wp_dataControls_["dispatch"];
+function* getPaymentGateways() {
+  yield getPaymentGatewaysRequest();
+
+  try {
+    const response = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: API_NAMESPACE + '/payment_gateways'
+    });
+    yield getPaymentGatewaysSuccess(response);
+
+    for (let i = 0; i < response.length; i++) {
+      yield payment_gateways_resolvers_dispatch(STORE_KEY, 'finishResolution', 'getPaymentGateway', [response[i].id]);
+    }
+  } catch (e) {
+    yield getPaymentGatewaysError(e);
+  }
+}
+function* getPaymentGateway(id) {
+  yield getPaymentGatewayRequest();
+
+  try {
+    const response = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: API_NAMESPACE + '/payment_gateways/' + id
+    });
+
+    if (response && response.id) {
+      yield getPaymentGatewaySuccess(response);
+      return response;
+    }
+  } catch (e) {
+    yield getPaymentGatewayError(e);
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/payment-gateways/selectors.js
+function selectors_getPaymentGateway(state, id) {
+  return state.paymentGateways.find(paymentGateway => paymentGateway.id === id);
+}
+function selectors_getPaymentGateways(state) {
+  return state.paymentGateways;
+}
+function selectors_getPaymentGatewayError(state, selector) {
+  return state.errors[selector] || null;
+}
+function isPaymentGatewayUpdating(state) {
+  return state.isUpdating || false;
+}
+// CONCATENATED MODULE: ./packages/data/build-module/payment-gateways/reducer.js
+/**
+ * Internal dependencies
+ */
+
+
+function updatePaymentGatewayList(state, paymentGateway) {
+  const targetIndex = state.paymentGateways.findIndex(gateway => gateway.id === paymentGateway.id);
+
+  if (targetIndex === -1) {
+    return { ...state,
+      paymentGateways: [...state.paymentGateways, paymentGateway],
+      isUpdating: false
+    };
+  }
+
+  return { ...state,
+    paymentGateways: [...state.paymentGateways.slice(0, targetIndex), paymentGateway, ...state.paymentGateways.slice(targetIndex + 1)],
+    isUpdating: false
+  };
+}
+
+const payment_gateways_reducer_reducer = (state = {
+  paymentGateways: [],
+  isUpdating: false,
+  errors: {}
+}, payload) => {
+  if (payload && 'type' in payload) {
+    switch (payload.type) {
+      case action_types_ACTION_TYPES.GET_PAYMENT_GATEWAYS_REQUEST:
+      case action_types_ACTION_TYPES.GET_PAYMENT_GATEWAY_REQUEST:
+        return state;
+
+      case action_types_ACTION_TYPES.GET_PAYMENT_GATEWAYS_SUCCESS:
+        return { ...state,
+          paymentGateways: payload.paymentGateways
+        };
+
+      case action_types_ACTION_TYPES.GET_PAYMENT_GATEWAYS_ERROR:
+        return { ...state,
+          errors: { ...state.errors,
+            getPaymentGateways: payload.error
+          }
+        };
+
+      case action_types_ACTION_TYPES.GET_PAYMENT_GATEWAY_ERROR:
+        return { ...state,
+          errors: { ...state.errors,
+            getPaymentGateway: payload.error
+          }
+        };
+
+      case action_types_ACTION_TYPES.UPDATE_PAYMENT_GATEWAY_REQUEST:
+        return { ...state,
+          isUpdating: true
+        };
+
+      case action_types_ACTION_TYPES.UPDATE_PAYMENT_GATEWAY_SUCCESS:
+        return updatePaymentGatewayList(state, payload.paymentGateway);
+
+      case action_types_ACTION_TYPES.GET_PAYMENT_GATEWAY_SUCCESS:
+        return updatePaymentGatewayList(state, payload.paymentGateway);
+
+      case action_types_ACTION_TYPES.UPDATE_PAYMENT_GATEWAY_ERROR:
+        return { ...state,
+          errors: { ...state.errors,
+            updatePaymentGateway: payload.error
+          },
+          isUpdating: false
+        };
+    }
+  }
+
+  return state;
+};
+
+/* harmony default export */ var payment_gateways_reducer = (payment_gateways_reducer_reducer);
+// CONCATENATED MODULE: ./packages/data/build-module/payment-gateways/index.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+
+const PAYMENT_GATEWAYS_STORE_NAME = STORE_KEY;
+Object(external_wp_data_["registerStore"])(STORE_KEY, {
+  actions: payment_gateways_actions_namespaceObject,
+  selectors: payment_gateways_selectors_namespaceObject,
+  resolvers: payment_gateways_resolvers_namespaceObject,
+  controls: external_wp_dataControls_["controls"],
+  reducer: payment_gateways_reducer
+});
+// EXTERNAL MODULE: external "moment"
+var external_moment_ = __webpack_require__(9);
+var external_moment_default = /*#__PURE__*/__webpack_require__.n(external_moment_);
+
+// CONCATENATED MODULE: ./packages/data/build-module/reports/utils.js
+/**
+ * External dependencies
+ */
+
+
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+/**
+ * Add filters and advanced filters values to a query object.
+ *
+ * @param  {Object} options                   arguments
+ * @param  {string} options.endpoint          Report API Endpoint
+ * @param  {Object} options.query             Query parameters in the url
+ * @param  {Array}  options.limitBy           Properties used to limit the results. It will be used in the API call to send the IDs.
+ * @param  {Array}  [options.filters]         config filters
+ * @param  {Object} [options.advancedFilters] config advanced filters
+ * @return {Object} A query object with the values from filters and advanced fitlters applied.
+ */
+
+function getFilterQuery(options) {
+  const {
+    endpoint,
+    query,
+    limitBy,
+    filters = [],
+    advancedFilters = {}
+  } = options;
+
+  if (query.search) {
+    const limitProperties = limitBy || [endpoint];
+    return limitProperties.reduce((result, limitProperty) => {
+      result[limitProperty] = query[limitProperty];
+      return result;
+    }, {});
+  }
+
+  return filters.map(filter => getQueryFromConfig(filter, advancedFilters, query)).reduce((result, configQuery) => Object.assign(result, configQuery), {});
+} // Some stats endpoints don't have interval data, so they can ignore after/before params and omit that part of the response.
+
+const noIntervalEndpoints = ['stock', 'customers'];
+/**
+ * Add timestamp to advanced filter parameters involving date. The api
+ * expects a timestamp for these values similar to `before` and `after`.
+ *
+ * @param {Object} config - advancedFilters config object.
+ * @param {Object} activeFilter - an active filter.
+ * @return {Object} - an active filter with timestamp added to date values.
+ */
+
+function timeStampFilterDates(config, activeFilter) {
+  const advancedFilterConfig = config.filters[activeFilter.key];
+
+  if (Object(external_lodash_["get"])(advancedFilterConfig, ['input', 'component']) !== 'Date') {
+    return activeFilter;
+  }
+
+  const {
+    rule,
+    value
+  } = activeFilter;
+  const timeOfDayMap = {
+    after: 'start',
+    before: 'end'
+  }; // If the value is an array, it signifies "between" values which must have a timestamp
+  // appended to each value.
+
+  if (Array.isArray(value)) {
+    const [after, before] = value;
+    return Object.assign({}, activeFilter, {
+      value: [Object(external_wc_date_["appendTimestamp"])(external_moment_default()(after), timeOfDayMap.after), Object(external_wc_date_["appendTimestamp"])(external_moment_default()(before), timeOfDayMap.before)]
+    });
+  }
+
+  return Object.assign({}, activeFilter, {
+    value: Object(external_wc_date_["appendTimestamp"])(external_moment_default()(value), timeOfDayMap[rule])
+  });
+}
+function getQueryFromConfig(config, advancedFilters, query) {
+  const queryValue = query[config.param];
+
+  if (!queryValue) {
+    return {};
+  }
+
+  if (queryValue === 'advanced') {
+    const activeFilters = Object(external_wc_navigation_["getActiveFiltersFromQuery"])(query, advancedFilters.filters);
+
+    if (activeFilters.length === 0) {
+      return {};
+    }
+
+    const filterQuery = Object(external_wc_navigation_["getQueryFromActiveFilters"])(activeFilters.map(filter => timeStampFilterDates(advancedFilters, filter)), {}, advancedFilters.filters);
+    return {
+      match: query.match || 'all',
+      ...filterQuery
+    };
+  }
+
+  const filter = Object(external_lodash_["find"])(Object(external_wc_navigation_["flattenFilters"])(config.filters), {
+    value: queryValue
+  });
+
+  if (!filter) {
+    return {};
+  }
+
+  if (filter.settings && filter.settings.param) {
+    const {
+      param
+    } = filter.settings;
+
+    if (query[param]) {
+      return {
+        [param]: query[param]
+      };
+    }
+
+    return {};
+  }
+
+  return {
+    [config.param]: queryValue
+  };
+}
+/**
+ * Returns true if a report object is empty.
+ *
+ * @param  {Object}  report   Report to check
+ * @param  {string}  endpoint Endpoint slug
+ * @return {boolean}        True if report is data is empty.
+ */
+
+function isReportDataEmpty(report, endpoint) {
+  if (!report) {
+    return true;
+  }
+
+  if (!report.data) {
+    return true;
+  }
+
+  if (!report.data.totals || Object(external_lodash_["isNull"])(report.data.totals)) {
+    return true;
+  }
+
+  const checkIntervals = !Object(external_lodash_["includes"])(noIntervalEndpoints, endpoint);
+
+  if (checkIntervals && (!report.data.intervals || report.data.intervals.length === 0)) {
+    return true;
+  }
+
+  return false;
+}
+/**
+ * Constructs and returns a query associated with a Report data request.
+ *
+ * @param  {Object} options           arguments
+ * @param  {string} options.endpoint  Report API Endpoint
+ * @param  {string} options.dataType  'primary' or 'secondary'.
+ * @param  {Object} options.query     Query parameters in the url.
+ * @param  {Array}  options.limitBy   Properties used to limit the results. It will be used in the API call to send the IDs.
+ * @param  {string}  options.defaultDateRange   User specified default date range.
+ * @return {Object} data request query parameters.
+ */
+
+function getRequestQuery(options) {
+  const {
+    endpoint,
+    dataType,
+    query,
+    fields
+  } = options;
+  const datesFromQuery = Object(external_wc_date_["getCurrentDates"])(query, options.defaultDateRange);
+  const interval = Object(external_wc_date_["getIntervalForQuery"])(query);
+  const filterQuery = getFilterQuery(options);
+  const end = datesFromQuery[dataType].before;
+  const noIntervals = Object(external_lodash_["includes"])(noIntervalEndpoints, endpoint);
+  return noIntervals ? { ...filterQuery,
+    fields
+  } : {
+    order: 'asc',
+    interval,
+    per_page: MAX_PER_PAGE,
+    after: Object(external_wc_date_["appendTimestamp"])(datesFromQuery[dataType].after, 'start'),
+    before: Object(external_wc_date_["appendTimestamp"])(end, 'end'),
+    segmentby: query.segmentby,
+    fields,
+    ...filterQuery
+  };
+}
+/**
+ * Returns summary number totals needed to render a report page.
+ *
+ * @param  {Object} options           arguments
+ * @param  {string} options.endpoint  Report API Endpoint
+ * @param  {Object} options.query     Query parameters in the url
+ * @param  {Object} options.select    Instance of @wordpress/select
+ * @param  {Array}  options.limitBy   Properties used to limit the results. It will be used in the API call to send the IDs.
+ * @param  {string}  options.defaultDateRange   User specified default date range.
+ * @return {Object} Object containing summary number responses.
+ */
+
+
+function getSummaryNumbers(options) {
+  const {
+    endpoint,
+    select
+  } = options;
+  const {
+    getReportStats,
+    getReportStatsError,
+    isResolving
+  } = select(reports_constants_STORE_NAME);
+  const response = {
+    isRequesting: false,
+    isError: false,
+    totals: {
+      primary: null,
+      secondary: null
+    }
+  };
+  const primaryQuery = getRequestQuery({ ...options,
+    dataType: 'primary'
+  }); // Disable eslint rule requiring `getReportStats` to be defined below because the next two statements
+  // depend on `getReportStats` to have been called.
+  // eslint-disable-next-line @wordpress/no-unused-vars-before-return
+
+  const primary = getReportStats(endpoint, primaryQuery);
+
+  if (isResolving('getReportStats', [endpoint, primaryQuery])) {
+    return { ...response,
+      isRequesting: true
+    };
+  } else if (getReportStatsError(endpoint, primaryQuery)) {
+    return { ...response,
+      isError: true
+    };
+  }
+
+  const primaryTotals = primary && primary.data && primary.data.totals || null;
+  const secondaryQuery = getRequestQuery({ ...options,
+    dataType: 'secondary'
+  }); // Disable eslint rule requiring `getReportStats` to be defined below because the next two statements
+  // depend on `getReportStats` to have been called.
+  // eslint-disable-next-line @wordpress/no-unused-vars-before-return
+
+  const secondary = getReportStats(endpoint, secondaryQuery);
+
+  if (isResolving('getReportStats', [endpoint, secondaryQuery])) {
+    return { ...response,
+      isRequesting: true
+    };
+  } else if (getReportStatsError(endpoint, secondaryQuery)) {
+    return { ...response,
+      isError: true
+    };
+  }
+
+  const secondaryTotals = secondary && secondary.data && secondary.data.totals || null;
+  return { ...response,
+    totals: {
+      primary: primaryTotals,
+      secondary: secondaryTotals
+    }
+  };
+}
+/**
+ * Static responses object to avoid returning new references each call.
+ */
+
+const reportChartDataResponses = {
+  requesting: {
+    isEmpty: false,
+    isError: false,
+    isRequesting: true,
+    data: {
+      totals: {},
+      intervals: []
+    }
+  },
+  error: {
+    isEmpty: false,
+    isError: true,
+    isRequesting: false,
+    data: {
+      totals: {},
+      intervals: []
+    }
+  },
+  empty: {
+    isEmpty: true,
+    isError: false,
+    isRequesting: false,
+    data: {
+      totals: {},
+      intervals: []
+    }
+  }
+};
+const EMPTY_ARRAY = [];
+/**
+ * Cache helper for returning the full chart dataset after multiple
+ * requests. Memoized on the request query (string), only called after
+ * all the requests have resolved successfully.
+ */
+
+const getReportChartDataResponse = Object(external_lodash_["memoize"])((requestString, totals, intervals) => ({
+  isEmpty: false,
+  isError: false,
+  isRequesting: false,
+  data: {
+    totals,
+    intervals
+  }
+}), (requestString, totals, intervals) => [requestString, totals.length, intervals.length].join(':'));
+/**
+ * Returns all of the data needed to render a chart with summary numbers on a report page.
+ *
+ * @param  {Object} options           arguments
+ * @param  {string} options.endpoint  Report API Endpoint
+ * @param  {string} options.dataType  'primary' or 'secondary'
+ * @param  {Object} options.query     Query parameters in the url
+ * @param  {Object} options.select    Instance of @wordpress/select
+ * @param  {Array}  options.limitBy   Properties used to limit the results. It will be used in the API call to send the IDs.
+ * @param  {string}  options.defaultDateRange   User specified default date range.
+ * @return {Object}  Object containing API request information (response, fetching, and error details)
+ */
+
+function getReportChartData(options) {
+  const {
+    endpoint,
+    select
+  } = options;
+  const {
+    getReportStats,
+    getReportStatsError,
+    isResolving
+  } = select(reports_constants_STORE_NAME);
+  const requestQuery = getRequestQuery(options); // Disable eslint rule requiring `stats` to be defined below because the next two if statements
+  // depend on `getReportStats` to have been called.
+  // eslint-disable-next-line @wordpress/no-unused-vars-before-return
+
+  const stats = getReportStats(endpoint, requestQuery);
+
+  if (isResolving('getReportStats', [endpoint, requestQuery])) {
+    return reportChartDataResponses.requesting;
+  }
+
+  if (getReportStatsError(endpoint, requestQuery)) {
+    return reportChartDataResponses.error;
+  }
+
+  if (isReportDataEmpty(stats, endpoint)) {
+    return reportChartDataResponses.empty;
+  }
+
+  const totals = stats && stats.data && stats.data.totals || null;
+  let intervals = stats && stats.data && stats.data.intervals || EMPTY_ARRAY; // If we have more than 100 results for this time period,
+  // we need to make additional requests to complete the response.
+
+  if (stats.totalResults > MAX_PER_PAGE) {
+    let isFetching = true;
+    let isError = false;
+    const pagedData = [];
+    const totalPages = Math.ceil(stats.totalResults / MAX_PER_PAGE);
+    let pagesFetched = 1;
+
+    for (let i = 2; i <= totalPages; i++) {
+      const nextQuery = { ...requestQuery,
+        page: i
+      };
+
+      const _data = getReportStats(endpoint, nextQuery);
+
+      if (isResolving('getReportStats', [endpoint, nextQuery])) {
+        continue;
+      }
+
+      if (getReportStatsError(endpoint, nextQuery)) {
+        isError = true;
+        isFetching = false;
+        break;
+      }
+
+      pagedData.push(_data);
+      pagesFetched++;
+
+      if (pagesFetched === totalPages) {
+        isFetching = false;
+        break;
+      }
+    }
+
+    if (isFetching) {
+      return reportChartDataResponses.requesting;
+    } else if (isError) {
+      return reportChartDataResponses.error;
+    }
+
+    Object(external_lodash_["forEach"])(pagedData, function (_data) {
+      if (_data.data && _data.data.intervals && Array.isArray(_data.data.intervals)) {
+        intervals = intervals.concat(_data.data.intervals);
+      }
+    });
+  }
+
+  return getReportChartDataResponse(getResourceName(endpoint, requestQuery), totals, intervals);
+}
+/**
+ * Returns a formatting function or string to be used by d3-format
+ *
+ * @param  {string} type Type of number, 'currency', 'number', 'percent', 'average'
+ * @param  {Function} formatAmount format currency function
+ * @return {string|Function}  returns a number format based on the type or an overriding formatting function
+ */
+
+function getTooltipValueFormat(type, formatAmount) {
+  switch (type) {
+    case 'currency':
+      return formatAmount;
+
+    case 'percent':
+      return '.0%';
+
+    case 'number':
+      return ',';
+
+    case 'average':
+      return ',.2r';
+
+    default:
+      return ',';
+  }
+}
+/**
+ * Returns query needed for a request to populate a table.
+ *
+ * @param  {Object} options              arguments
+ * @param  {Object} options.query        Query parameters in the url
+ * @param  {Object} options.tableQuery   Query parameters specific for that endpoint
+ * @param  {string} options.defaultDateRange   User specified default date range.
+ * @return {Object} Object    Table data response
+ */
+
+function getReportTableQuery(options) {
+  const {
+    query,
+    tableQuery = {}
+  } = options;
+  const filterQuery = getFilterQuery(options);
+  const datesFromQuery = Object(external_wc_date_["getCurrentDates"])(query, options.defaultDateRange);
+  const noIntervals = Object(external_lodash_["includes"])(noIntervalEndpoints, options.endpoint);
+  return {
+    orderby: query.orderby || 'date',
+    order: query.order || 'desc',
+    after: noIntervals ? undefined : Object(external_wc_date_["appendTimestamp"])(datesFromQuery.primary.after, 'start'),
+    before: noIntervals ? undefined : Object(external_wc_date_["appendTimestamp"])(datesFromQuery.primary.before, 'end'),
+    page: query.paged || 1,
+    per_page: query.per_page || QUERY_DEFAULTS.pageSize,
+    ...filterQuery,
+    ...tableQuery
+  };
+}
+/**
+ * Returns table data needed to render a report page.
+ *
+ * @param  {Object} options                arguments
+ * @param  {string} options.endpoint       Report API Endpoint
+ * @param  {Object} options.query          Query parameters in the url
+ * @param  {Object} options.select         Instance of @wordpress/select
+ * @param  {Object} options.tableQuery     Query parameters specific for that endpoint
+ * @param  {string}  options.defaultDateRange   User specified default date range.
+ * @return {Object} Object    Table data response
+ */
+
+function getReportTableData(options) {
+  const {
+    endpoint,
+    select
+  } = options;
+  const {
+    getReportItems,
+    getReportItemsError,
+    isResolving
+  } = select(reports_constants_STORE_NAME);
+  const tableQuery = getReportTableQuery(options);
+  const response = {
+    query: tableQuery,
+    isRequesting: false,
+    isError: false,
+    items: {
+      data: [],
+      totalResults: 0
+    }
+  }; // Disable eslint rule requiring `items` to be defined below because the next two if statements
+  // depend on `getReportItems` to have been called.
+  // eslint-disable-next-line @wordpress/no-unused-vars-before-return
+
+  const items = getReportItems(endpoint, tableQuery);
+
+  if (isResolving('getReportItems', [endpoint, tableQuery])) {
+    return { ...response,
+      isRequesting: true
+    };
+  } else if (getReportItemsError(endpoint, tableQuery)) {
+    return { ...response,
+      isError: true
+    };
+  }
+
+  return { ...response,
+    items
+  };
+}
+// CONCATENATED MODULE: ./packages/data/build-module/export/constants.js
+/**
+ * Internal dependencies
+ */
+const export_constants_STORE_NAME = 'wc/admin/export';
+// EXTERNAL MODULE: ./node_modules/md5/md5.js
+var md5 = __webpack_require__(266);
+var md5_default = /*#__PURE__*/__webpack_require__.n(md5);
+
+// CONCATENATED MODULE: ./packages/data/build-module/export/utils.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+const hashExportArgs = args => {
+  return md5_default()(getResourceName('export', args));
+};
+// CONCATENATED MODULE: ./packages/data/build-module/export/selectors.js
+/**
+ * Internal dependencies
+ */
+
+const isExportRequesting = (state, selector, selectorArgs) => {
+  return Boolean(state.requesting[selector] && state.requesting[selector][hashExportArgs(selectorArgs)]);
+};
+const getExportId = (state, exportType, exportArgs) => {
+  return state.exportIds[exportType] && state.exportIds[exportType][hashExportArgs(exportArgs)];
+};
+const getError = (state, selector, selectorArgs) => {
+  return state.errors[selector] && state.errors[selector][hashExportArgs(selectorArgs)];
+};
+// CONCATENATED MODULE: ./packages/data/build-module/export/action-types.js
+const export_action_types_TYPES = {
+  START_EXPORT: 'START_EXPORT',
+  SET_EXPORT_ID: 'SET_EXPORT_ID',
+  SET_ERROR: 'SET_ERROR',
+  SET_IS_REQUESTING: 'SET_IS_REQUESTING'
+};
+/* harmony default export */ var export_action_types = (export_action_types_TYPES);
+// CONCATENATED MODULE: ./packages/data/build-module/export/actions.js
+/**
+ * Internal dependencies
+ */
+
+
+
+function setExportId(exportType, exportArgs, exportId) {
+  return {
+    type: export_action_types.SET_EXPORT_ID,
+    exportType,
+    exportArgs,
+    exportId
+  };
+}
+function export_actions_setIsRequesting(selector, selectorArgs, isRequesting) {
+  return {
+    type: export_action_types.SET_IS_REQUESTING,
+    selector,
+    selectorArgs,
+    isRequesting
+  };
+}
+function export_actions_setError(selector, selectorArgs, error) {
+  return {
+    type: export_action_types.SET_ERROR,
+    selector,
+    selectorArgs,
+    error
+  };
+}
+function* startExport(type, args) {
+  yield export_actions_setIsRequesting('startExport', {
+    type,
+    args
+  }, true);
+
+  try {
+    const response = yield fetchWithHeaders({
+      path: `${NAMESPACE}/reports/${type}/export`,
+      method: 'POST',
+      data: {
+        report_args: args,
+        email: true
+      }
+    });
+    yield export_actions_setIsRequesting('startExport', {
+      type,
+      args
+    }, false);
+    const {
+      export_id: exportId,
+      message
+    } = response.data;
+
+    if (exportId) {
+      yield setExportId(type, args, exportId);
+    } else {
+      throw new Error(message);
+    }
+
+    return response.data;
+  } catch (error) {
+    yield export_actions_setError('startExport', {
+      type,
+      args
+    }, error.message);
+    yield export_actions_setIsRequesting('startExport', {
+      type,
+      args
+    }, false);
+    throw error;
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/export/reducer.js
+/**
+ * Internal dependencies
+ */
+
+
+
+const exportReducer = (state = {
+  errors: {},
+  requesting: {},
+  exportMeta: {},
+  exportIds: {}
+}, {
+  error,
+  exportArgs,
+  exportId,
+  exportType,
+  isRequesting,
+  selector,
+  selectorArgs,
+  type
+}) => {
+  switch (type) {
+    case export_action_types.SET_IS_REQUESTING:
+      return { ...state,
+        requesting: { ...state.requesting,
+          [selector]: { ...state.requesting[selector],
+            [hashExportArgs(selectorArgs)]: isRequesting
+          }
+        }
+      };
+
+    case export_action_types.SET_EXPORT_ID:
+      return { ...state,
+        exportMeta: { ...state.exportMeta,
+          [exportId]: {
+            exportType,
+            exportArgs
+          }
+        },
+        exportIds: { ...state.exportIds,
+          [exportType]: { ...state.exportIds[exportType],
+            [hashExportArgs({
+              type: exportType,
+              args: exportArgs
+            })]: exportId
+          }
+        }
+      };
+
+    case export_action_types.SET_ERROR:
+      return { ...state,
+        errors: { ...state.errors,
+          [selector]: { ...state.errors[selector],
+            [hashExportArgs(selectorArgs)]: error
+          }
+        }
+      };
+
+    default:
+      return state;
+  }
+};
+
+/* harmony default export */ var export_reducer = (exportReducer);
+// CONCATENATED MODULE: ./packages/data/build-module/export/index.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+
+Object(external_wp_data_["registerStore"])(export_constants_STORE_NAME, {
+  reducer: export_reducer,
+  actions: export_actions_namespaceObject,
+  controls: build_module_controls,
+  selectors: export_selectors_namespaceObject
+});
+const EXPORT_STORE_NAME = export_constants_STORE_NAME;
+// CONCATENATED MODULE: ./packages/data/build-module/import/constants.js
+/**
+ * Internal dependencies
+ */
+const import_constants_STORE_NAME = 'wc/admin/import';
+// CONCATENATED MODULE: ./packages/data/build-module/import/selectors.js
+const getImportStarted = state => {
+  const {
+    activeImport,
+    lastImportStartTimestamp
+  } = state;
+  return {
+    activeImport,
+    lastImportStartTimestamp
+  } || {};
+};
+const getFormSettings = state => {
+  const {
+    period,
+    skipPrevious
+  } = state;
+  return {
+    period,
+    skipPrevious
+  } || {};
+};
+const getImportStatus = (state, query) => {
+  const stringifiedQuery = JSON.stringify(query);
+  return state.importStatus[stringifiedQuery] || {};
+};
+const getImportTotals = (state, query) => {
+  const {
+    importTotals,
+    lastImportStartTimestamp
+  } = state;
+  const stringifiedQuery = JSON.stringify(query);
+  return { ...importTotals[stringifiedQuery],
+    lastImportStartTimestamp
+  } || {};
+};
+const getImportError = (state, query) => {
+  const stringifiedQuery = JSON.stringify(query);
+  return state.errors[stringifiedQuery] || false;
+};
+// CONCATENATED MODULE: ./packages/data/build-module/import/action-types.js
+const import_action_types_TYPES = {
+  SET_IMPORT_DATE: 'SET_IMPORT_DATE',
+  SET_IMPORT_ERROR: 'SET_IMPORT_ERROR',
+  SET_IMPORT_PERIOD: 'SET_IMPORT_PERIOD',
+  SET_IMPORT_STARTED: 'SET_IMPORT_STARTED',
+  SET_IMPORT_STATUS: 'SET_IMPORT_STATUS',
+  SET_IMPORT_TOTALS: 'SET_IMPORT_TOTALS',
+  SET_SKIP_IMPORTED: 'SET_SKIP_IMPORTED'
+};
+/* harmony default export */ var import_action_types = (import_action_types_TYPES);
+// CONCATENATED MODULE: ./packages/data/build-module/import/actions.js
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+
+
+function setImportStarted(activeImport) {
+  return {
+    type: import_action_types.SET_IMPORT_STARTED,
+    activeImport
+  };
+}
+function setImportPeriod(date, dateModified) {
+  if (!dateModified) {
+    return {
+      type: import_action_types.SET_IMPORT_PERIOD,
+      date
+    };
+  }
+
+  return {
+    type: import_action_types.SET_IMPORT_DATE,
+    date
+  };
+}
+function setSkipPrevious(skipPrevious) {
+  return {
+    type: import_action_types.SET_SKIP_IMPORTED,
+    skipPrevious
+  };
+}
+function setImportStatus(query, importStatus) {
+  return {
+    type: import_action_types.SET_IMPORT_STATUS,
+    importStatus,
+    query
+  };
+}
+function setImportTotals(query, importTotals) {
+  return {
+    type: import_action_types.SET_IMPORT_TOTALS,
+    importTotals,
+    query
+  };
+}
+function setImportError(query, error) {
+  return {
+    type: import_action_types.SET_IMPORT_ERROR,
+    error,
+    query
+  };
+}
+function* updateImportation(path, importStarted = false) {
+  yield setImportStarted(importStarted);
+
+  try {
+    const response = yield Object(external_wp_dataControls_["apiFetch"])({
+      path,
+      method: 'POST'
+    });
+    return response;
+  } catch (error) {
+    yield setImportError(path, error);
+    throw error;
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/import/resolvers.js
+/**
+ * External dependencies
+ */
+
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+function* resolvers_getImportStatus(query) {
+  try {
+    const url = Object(external_wp_url_["addQueryArgs"])(`${NAMESPACE}/reports/import/status`, Object(external_lodash_["omit"])(query, ['timestamp']));
+    const response = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url
+    });
+    yield setImportStatus(query, response);
+  } catch (error) {
+    yield setImportError(query, error);
+  }
+}
+function* resolvers_getImportTotals(query) {
+  try {
+    const url = Object(external_wp_url_["addQueryArgs"])(`${NAMESPACE}/reports/import/totals`, query);
+    const response = yield Object(external_wp_dataControls_["apiFetch"])({
+      path: url
+    });
+    yield setImportTotals(query, response);
+  } catch (error) {
+    yield setImportError(query, error);
+  }
+}
+// CONCATENATED MODULE: ./packages/data/build-module/import/reducer.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+const import_reducer_reducer = (state = {
+  activeImport: false,
+  importStatus: {},
+  importTotals: {},
+  errors: {},
+  lastImportStartTimestamp: 0,
+  period: {
+    date: external_moment_default()().format(Object(external_wp_i18n_["__"])('MM/DD/YYYY', 'woocommerce-admin')),
+    label: 'all'
+  },
+  skipPrevious: true
+}, {
+  type,
+  query,
+  importStatus,
+  importTotals,
+  activeImport,
+  date,
+  error,
+  skipPrevious
+}) => {
+  switch (type) {
+    case import_action_types.SET_IMPORT_STARTED:
+      state = { ...state,
+        activeImport,
+        lastImportStartTimestamp: activeImport ? Date.now() : state.lastImportStartTimestamp
+      };
+      break;
+
+    case import_action_types.SET_IMPORT_PERIOD:
+      state = { ...state,
+        period: { ...state.period,
+          label: date
+        },
+        activeImport: false
+      };
+      break;
+
+    case import_action_types.SET_IMPORT_DATE:
+      state = { ...state,
+        period: {
+          date,
+          label: 'custom'
+        },
+        activeImport: false
+      };
+      break;
+
+    case import_action_types.SET_SKIP_IMPORTED:
+      state = { ...state,
+        skipPrevious,
+        activeImport: false
+      };
+      break;
+
+    case import_action_types.SET_IMPORT_STATUS:
+      state = { ...state,
+        importStatus: { ...state.importStatus,
+          [JSON.stringify(query)]: importStatus
+        },
+        errors: { ...state.errors,
+          [JSON.stringify(query)]: false
+        }
+      };
+      break;
+
+    case import_action_types.SET_IMPORT_TOTALS:
+      state = { ...state,
+        importTotals: { ...state.importTotals,
+          [JSON.stringify(query)]: importTotals
+        }
+      };
+      break;
+
+    case import_action_types.SET_IMPORT_ERROR:
+      state = { ...state,
+        errors: { ...state.errors,
+          [JSON.stringify(query)]: error
+        }
+      };
+      break;
+  }
+
+  return state;
+};
+
+/* harmony default export */ var import_reducer = (import_reducer_reducer);
+// CONCATENATED MODULE: ./packages/data/build-module/import/index.js
+/**
+ * External dependencies
+ */
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+
+
+Object(external_wp_data_["registerStore"])(import_constants_STORE_NAME, {
+  reducer: import_reducer,
+  actions: import_actions_namespaceObject,
+  controls: external_wp_dataControls_["controls"],
+  selectors: import_selectors_namespaceObject,
+  resolvers: import_resolvers_namespaceObject
+});
+const IMPORT_STORE_NAME = import_constants_STORE_NAME;
+// CONCATENATED MODULE: ./packages/data/build-module/index.js
+/**
+ * External dependencies
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /***/ }),
 
-/***/ 77:
-/***/ (function(module, exports, __webpack_require__) {
+/***/ 7:
+/***/ (function(module, exports) {
 
-var arrayLikeToArray = __webpack_require__(73);
+(function() { module.exports = window["wp"]["data"]; }());
 
-function _unsupportedIterableToArray(o, minLen) {
-  if (!o) return;
-  if (typeof o === "string") return arrayLikeToArray(o, minLen);
-  var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return arrayLikeToArray(o, minLen);
-}
+/***/ }),
 
-module.exports = _unsupportedIterableToArray;
+/***/ 9:
+/***/ (function(module, exports) {
+
+(function() { module.exports = window["moment"]; }());
 
 /***/ })
 
