@@ -13,21 +13,21 @@ services:
       MYSQL_USER: analogo
       MYSQL_PASSWORD: analogo
       MYSQL_ROOT_PASSWORD: root
-#Web PHP
+
   web:
-    build: .
-    command: php -S 0.0.0.0:8000 -t /code
+    image: php:7.3.16-apache
     domainname: venganza-analogo.test
     container_name: venganza-analogo.test
+    build:
+            context: ./
+            dockerfile: Dockerfile
     ports:
-      - "80:8000"
+      - "80:80"
     links:
       - db
     volumes:
-      - .:/code
+      - .:/var/www/html/
       - ./php-settings:/usr/local/etc/php/conf.d
       - ./apache-conf/vhost.conf:/etc/apache2/sites-enabled/000-default.conf
-    environment:
-      PHP_MEMORY_LIMIT: 2048M
     depends_on:
       - db
