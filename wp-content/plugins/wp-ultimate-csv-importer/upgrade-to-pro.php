@@ -123,8 +123,6 @@ border-right: 10px solid#00a699;border-bottom: 10px solid#00a699;
   <h2>Features Of Ultimate CSV Importer</h2><br />	
   <div class='pro'>
 <article class='upgrade'>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
 
 <table>
   <thead>

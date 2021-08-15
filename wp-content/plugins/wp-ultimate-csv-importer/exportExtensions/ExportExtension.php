@@ -46,8 +46,6 @@ class ExportExtension {
 	public  function doHooks(){
 		add_action('wp_ajax_total_records', array($this, 'totalRecords'));
 		add_action('wp_ajax_check_export', array($this, 'checkExport'));
-		/*add_action('wp_ajax_parse_data',array($this,'parseData'));
-		add_action('wp_ajax_total_records', array($this, 'totalRecords'));*/
 	}
 
 	public function checkExport(){
@@ -124,6 +122,9 @@ class ExportExtension {
 			if($module == 'CustomPosts') {
 				$optional_type = $optionalType;
 			}
+			else{
+				$optional_type = '';
+			}
 			$module = $post_export_class->import_post_types($module,$optional_type);
 		}
 		$get_post_ids = "select DISTINCT ID from {$wpdb->prefix}posts";
@@ -173,11 +174,6 @@ class ExportExtension {
 		$this->plugin = Plugin::getInstance();
 	}
 
-	public  function parseData(){
-		global $export_class;
-		$export_class->parseData($_POST);
-	}
-
 	public function commentsCount($mode = null) {
 		global $wpdb;
 		$get_comments = "select * from $wpdb->comments";
@@ -216,5 +212,4 @@ class ExportExtension {
 		$active_plugins = get_option('active_plugins');
 		return $active_plugins;
 	}
-
 }

@@ -38,6 +38,8 @@ if ( !defined( 'ABSPATH' ) ) {
       elseif($get_export_addon_selected == 'unchecked'){
         $export_checked = '';
       }
+      $gif = WP_PLUGIN_URL . '/wp-ultimate-csv-importer/assets/images/ajax-loader.gif';
+ 
   ?>
     
     <div class="row">
@@ -46,11 +48,11 @@ if ( !defined( 'ABSPATH' ) ) {
     <img src="https://cdn.smackcoders.com/wp-content/uploads/2018/03/CSV-Importer-Logo.png" alt="Paris" style="max-width: 16%;margin-top: 10px;margin-right: 0px;">
       <h1>WP ULTIMATE CSV IMPORTER</h1>
   </div>
-      <h2><a href="https://wordpress.org/plugins/import-users/" target="_blank">IMPORT USERS</a></h2><span class="slider"><input type="checkbox" name="offline" id="offline" value="Users" <?php echo $user_checked; ?>><label for="offline"></label></span>
+      <h2><a href="https://wordpress.org/plugins/import-users/" target="_blank">IMPORT USERS</a></h2><span class="slider"><input type="checkbox" name="offline" id="offline" value="Users" <?php echo esc_attr($user_checked); ?>><label for="offline"></label></span>
       <p>Import your user records available in the CSV/XML file with custom fields, Woocommerce Shipping and Billing details.</p>
-      <h2><a href="https://wordpress.org/plugins/import-woocommerce/" target="_blank">IMPORT WOOCOMMERCE</a></h2><span class="slider"><input type="checkbox" name="offline" id="notifications" value="WooCommerce" <?php echo $woocom_checked; ?>><label for="notifications"></label></span>
+      <h2><a href="https://wordpress.org/plugins/import-woocommerce/" target="_blank">IMPORT WOOCOMMERCE</a></h2><span class="slider"><input type="checkbox" name="offline" id="notifications" value="WooCommerce" <?php echo esc_attr($woocom_checked); ?>><label for="notifications"></label></span>
       <p>Import your WooCommerce Products records with attributes, categories, tags, and images available in the CSV/XML file.</p>
-      <h2><a href="https://wordpress.org/plugins/wp-ultimate-exporter/" target="_blank">EXPORT WORDPRESS DATA</a></h2><span class="slider"><input type="checkbox" name="offline" id="export" value="Exporter" <?php echo $export_checked; ?>><label for="export"></label></span>
+      <h2><a href="https://wordpress.org/plugins/wp-ultimate-exporter/" target="_blank">EXPORT WORDPRESS DATA</a></h2><span class="slider"><input type="checkbox" name="offline" id="export" value="Exporter" <?php echo esc_attr($export_checked); ?>><label for="export"></label></span>
       <p>Export your Posts, Pages, Custom Posts, Users, Comments, and WooCommerce Products data as CSV files from the WordPress.</a></p>
 
     </section>
@@ -301,7 +303,7 @@ section span  {
 
   jQuery(document).ready(function(){
       document.getElementById('click_get_started').onclick = function () { 
-       jQuery(this).html('<img src="<?php echo esc_url(plugins_url());?>/wp-ultimate-csv-importer/assets/images/ajax-loader.gif" />');
+       jQuery(this).html('<img src="<?php echo esc_url($gif);?>" />');
         var addons = [];
         
         jQuery.each(jQuery("input[name='offline']:checked"), function(){
@@ -345,7 +347,7 @@ section span  {
                     }
                 ?>
 
-                var mess = '<?php echo $message; ?>';
+                var mess = '<?php echo esc_textarea($message); ?>';
                 if(mess === ''){
                  // no alert box
                 }else{

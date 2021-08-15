@@ -72,6 +72,11 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 		}
 
 		add_filter( 'woocommerce_ajax_get_endpoint', array( $this, 'pass_return_args_to_ajax' ), 10, 2 );
+
+		if ( function_exists( 'add_image_size' ) ) {
+			add_image_size( 'ppec_logo_image_size', 190, 60 );
+			add_image_size( 'ppec_header_image_size', 750, 90 );
+		}
 	}
 
 	/**
@@ -221,9 +226,15 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 			}
 
 			$expiry_date = new WC_DateTime( "@{$valid_until}", new DateTimeZone( 'UTC' ) );
-			$expiry_date->setTimezone( wp_timezone() );
+			$timestamp   = $expiry_date->getTimestamp();
 
-			$expires = sprintf( $expires, date_i18n( get_option( 'date_format' ), $expiry_date->getTimestamp() + $expiry_date->getOffset() ), $expiry_date->format( 'T' ) );
+			// If there's support for wp_timezone(), display the expiry date in server time. Otherwise, use UTC.
+			if ( function_exists( 'wp_timezone' ) ) {
+				$timestamp += $expiry_date->getOffset();
+				$expiry_date->setTimezone( wp_timezone() );
+			}
+
+			$expires = sprintf( $expires, date_i18n( get_option( 'date_format' ), $timestamp ), $expiry_date->format( 'T' ) );
 			// Translators: 1) is a certificate's CN, 2) is the expiration date.
 			$output = sprintf( __( 'Certificate belongs to API username %1$s; %2$s.', 'woocommerce-gateway-paypal-express-checkout' ), $cert_info['subject']['CN'], $expires );
 		} else {
@@ -576,7 +587,7 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 				<div class="image-preview-wrapper">
 					<?php
 					if ( ! $value_is_url ) {
-						echo wp_get_attachment_image( $value, 'thumbnail' );
+						echo wp_get_attachment_image( $value, 'logo_image_url' === $key ? 'ppec_logo_image_size' : 'ppec_header_image_size' );
 					} else {
 						// Translators: placeholder is an image's URL.
 						echo sprintf( esc_html__( 'Already using URL as image: %s', 'woocommerce-gateway-paypal-express-checkout' ), esc_attr( $value ) );

@@ -26,22 +26,22 @@ class MediaHandling{
 	}
 
 	public static function imageOptions(){		
-		$media_settings['use_ExistingImage'] = $_POST['use_ExistingImage'];
-		$media_settings['overwriteImage'] = $_POST['overwriteImage'];
-		$media_settings['title'] = $_POST['title'];
-		$media_settings['caption'] = $_POST['caption'];
-		$media_settings['alttext'] = $_POST['alttext'];		
-		$media_settings['description'] = $_POST['description'];	
-		$media_settings['file_name'] = $_POST['file_name'];			
-		$media_settings['thumbnail'] = $_POST['thumbnail'];
-		$media_settings['media_handle_option'] = $_POST['media_handle_option'];				
-		$media_settings['medium'] = $_POST['medium'];		
-		$media_settings['medium_large'] = $_POST['medium_large'];		
-		$media_settings['large'] = $_POST['large'];		
-		$media_settings['custom'] = $_POST['custom'];
-		$media_settings['custom_slug'] = $_POST['custom_slug'];
-		$media_settings['custom_slug'] = $_POST['custom_width'];
-		$media_settings['custom_height'] = $_POST['custom_height'];
+		$media_settings['use_ExistingImage'] = sanitize_text_field($_POST['use_ExistingImage']);
+		$media_settings['overwriteImage'] = sanitize_text_field($_POST['overwriteImage']);
+		$media_settings['title'] = sanitize_text_field($_POST['title']);
+		$media_settings['caption'] = sanitize_text_field($_POST['caption']);
+		$media_settings['alttext'] = sanitize_text_field($_POST['alttext']);		
+		$media_settings['description'] = sanitize_text_field($_POST['description']);	
+		$media_settings['file_name'] = sanitize_file_name($_POST['file_name']);			
+		$media_settings['thumbnail'] = sanitize_text_field($_POST['thumbnail']);
+		$media_settings['media_handle_option'] = sanitize_text_field($_POST['media_handle_option']);				
+		$media_settings['medium'] = sanitize_text_field($_POST['medium']);		
+		$media_settings['medium_large'] = sanitize_text_field($_POST['medium_large']);		
+		$media_settings['large'] = sanitize_text_field($_POST['large']);		
+		$media_settings['custom'] = sanitize_text_field($_POST['custom']);
+		$media_settings['custom_slug'] = sanitize_text_field($_POST['custom_slug']);
+		$media_settings['custom_slug'] = sanitize_text_field($_POST['custom_width']);
+		$media_settings['custom_height'] = sanitize_text_field($_POST['custom_height']);
 		$image_info = array(
 				'media_settings'  => $media_settings
 				);
@@ -60,7 +60,7 @@ class MediaHandling{
 	}
 
 	public function deleteImage(){
-		$image = $_POST['image'];
+		$image = sanitize_text_field($_POST['image']);
 		$media_dir = wp_get_upload_dir();
 		$names = glob($media_dir['path'].'/'.'*.*');
 		foreach($names as $values){
@@ -442,13 +442,12 @@ class MediaHandling{
 			foreach($dom_obj->getElementsByTagName('meta') as $meta) {
 				if($meta->getAttribute('property')=='og:image'){ 
     				$meta_val = $meta->getAttribute('content');
-					}
 				}
-			$ch = curl_init($meta_val);
-			curl_setopt($ch, CURLOPT_HEADER, 0);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
-			$rawdata=curl_exec ($ch);	
+			}
+		
+			$response = wp_remote_get($meta_val);
+			$rawdata =  wp_remote_retrieve_body($response);	
+
 		}
 		//Removed curl and added wordpress http api
 		else{

@@ -60,7 +60,7 @@ class UsersExtension extends ExtensionHandler{
                 'Cart' => '_wpsc_cart'
             );				
         }
-        
+        $billing_fields = isset($billing_fields) ? $billing_fields :'';
         $billing_value = $this->convert_static_fields_to_array($billing_fields);
         $response['billing_and_shipping_information'] = $billing_value;
         

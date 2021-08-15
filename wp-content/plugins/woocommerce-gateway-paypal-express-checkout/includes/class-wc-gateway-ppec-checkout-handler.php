@@ -135,7 +135,7 @@ class WC_Gateway_PPEC_Checkout_Handler {
 			return $fields;
 		}
 
-		if ( method_exists( WC()->cart, 'needs_shipping' ) && ! WC()->cart->needs_shipping() && 'no' === wc_gateway_ppec()->settings->require_billing ) {
+		if ( is_callable( array( WC()->cart, 'needs_shipping' ) ) && ! WC()->cart->needs_shipping() && 'no' === wc_gateway_ppec()->settings->require_billing ) {
 			$not_required_fields = array( 'first_name', 'last_name', 'company', 'address_1', 'address_2', 'city', 'postcode', 'country' );
 			foreach ( $not_required_fields as $not_required_field ) {
 				if ( array_key_exists( $not_required_field, $fields ) ) {
@@ -992,12 +992,15 @@ class WC_Gateway_PPEC_Checkout_Handler {
 		$destination = $this->get_mapped_shipping_address( $checkout_details );
 
 		if ( ! empty( $destination ) ) {
-			$packages[0]['destination']['country']   = $destination['country'];
-			$packages[0]['destination']['state']     = $destination['state'];
-			$packages[0]['destination']['postcode']  = $destination['postcode'];
-			$packages[0]['destination']['city']      = $destination['city'];
-			$packages[0]['destination']['address']   = $destination['address_1'];
-			$packages[0]['destination']['address_2'] = $destination['address_2'];
+			// WC Subscriptions uses string package keys so we need to get the package key dynamically.
+			$package_key = key( $packages );
+
+			$packages[ $package_key ]['destination']['country']   = $destination['country'];
+			$packages[ $package_key ]['destination']['state']     = $destination['state'];
+			$packages[ $package_key ]['destination']['postcode']  = $destination['postcode'];
+			$packages[ $package_key ]['destination']['city']      = $destination['city'];
+			$packages[ $package_key ]['destination']['address']   = $destination['address_1'];
+			$packages[ $package_key ]['destination']['address_2'] = $destination['address_2'];
 		}
 
 		return $packages;

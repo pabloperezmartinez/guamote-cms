@@ -7,12 +7,13 @@
 
 namespace Automattic\Jetpack\JITMS;
 
+use Automattic\Jetpack\A8c_Mc_Stats;
 use Automattic\Jetpack\Connection\Client;
 use Automattic\Jetpack\Connection\Manager;
+use Automattic\Jetpack\Device_Detection;
 use Automattic\Jetpack\Partner;
 use Automattic\Jetpack\Redirect;
 use Automattic\Jetpack\Tracking;
-use Automattic\Jetpack\JITMS\JITM;
 
 /**
  * Jetpack just in time messaging through out the admin
@@ -228,7 +229,7 @@ class Post_Connection_JITM extends JITM {
 			echo "<label for='owner'>" . esc_html__( 'You can choose to transfer connection ownership to one of these already-connected admins:', 'jetpack' ) . ' </label>';
 
 			$connected_admin_ids = array_map(
-				function( $connected_admin ) {
+				function ( $connected_admin ) {
 						return $connected_admin->ID;
 				},
 				$connected_admins
@@ -283,7 +284,8 @@ class Post_Connection_JITM extends JITM {
 			<?php
 		} else {
 			echo '<p>' . esc_html__( 'Every Jetpack site needs at least one connected admin for the features to work properly. Please connect to your WordPress.com account via the button below. Once you connect, you may refresh this page to see an option to change the connection owner.', 'jetpack' ) . '</p>';
-			$connect_url = \Jetpack::init()->build_connect_url( false, false, 'delete_connection_owner_notice' );
+			$connect_url = $connection_manager->get_authorization_url();
+			$connect_url = add_query_arg( 'from', 'delete_connection_owner_notice', $connect_url );
 			echo "<a href='" . esc_url( $connect_url ) . "' target='_blank' rel='noopener noreferrer' class='button-primary'>" . esc_html__( 'Connect to WordPress.com', 'jetpack' ) . '</a>';
 		}
 
@@ -377,7 +379,7 @@ class Post_Connection_JITM extends JITM {
 				'external_user_id' => urlencode_deep( $user->ID ),
 				'user_roles'       => urlencode_deep( $user_roles ),
 				'query_string'     => urlencode_deep( $query ),
-				'mobile_browser'   => jetpack_is_mobile( 'smart' ) ? 1 : 0,
+				'mobile_browser'   => Device_Detection::is_smartphone() ? 1 : 0,
 				'_locale'          => get_user_locale(),
 			),
 			sprintf( '/sites/%d/jitm/%s', $site_id, $message_path )
@@ -389,8 +391,14 @@ class Post_Connection_JITM extends JITM {
 		// If something is in the cache and it was put in the cache after the last sync we care about, use it.
 		$use_cache = false;
 
-		/** This filter is documented in class.jetpack.php */
-		if ( apply_filters( 'jetpack_just_in_time_msg_cache', false ) ) {
+		/**
+		 * Filter to turn off jitm caching
+		 *
+		 * @since 5.4.0
+		 *
+		 * @param bool true Whether to cache just in time messages
+		 */
+		if ( apply_filters( 'jetpack_just_in_time_msg_cache', true ) ) {
 			$use_cache = true;
 		}
 
@@ -466,12 +474,8 @@ class Post_Connection_JITM extends JITM {
 				)
 			);
 
-			$normalized_site_url = \Jetpack::build_raw_urls( get_home_url() );
-
 			$url_params = array(
-				'source' => "jitm-$envelope->id",
-				'site'   => $normalized_site_url,
-				'u'      => $user->ID,
+				'u' => $user->ID,
 			);
 
 			// Get affiliate code and add it to the array of URL parameters.
@@ -480,9 +484,16 @@ class Post_Connection_JITM extends JITM {
 				$url_params['aff'] = $aff;
 			}
 
-			$envelope->url = add_query_arg( $url_params, 'https://jetpack.com/redirect/' );
+			// Check if the current user has connected their WP.com account
+			// and if not add this information to the the array of URL parameters.
+			if ( ! ( new Manager() )->is_user_connected( $user->ID ) ) {
+				$url_params['query'] = 'unlinked=1';
+			}
+			$envelope->url = esc_url( Redirect::get_url( "jitm-$envelope->id", $url_params ) );
 
-			$envelope->jitm_stats_url = \Jetpack::build_stats_url( array( 'x_jetpack-jitm' => $envelope->id ) );
+			$stats = new A8c_Mc_Stats();
+
+			$envelope->jitm_stats_url = $stats->build_stats_url( array( 'x_jetpack-jitm' => $envelope->id ) );
 
 			// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 			// $CTA is not valid per PHPCS, but it is part of the return from WordPress.com, so allowing.
@@ -505,9 +516,8 @@ class Post_Connection_JITM extends JITM {
 
 			$envelope->content->icon = $this->generate_icon( $envelope->content->icon, $full_jp_logo_exists );
 
-			$jetpack = \Jetpack::init();
-			$jetpack->stat( 'jitm', $envelope->id . '-viewed-' . JETPACK__VERSION );
-			$jetpack->do_stats( 'server_side' );
+			$stats->add( 'jitm', $envelope->id . '-viewed' );
+			$stats->do_server_side_stats();
 		}
 
 		return $envelopes;

@@ -36,7 +36,7 @@ class CommentsImport {
 		$skipped_count = $updated_row_counts['skipped'];
 		
 		$commentid = '';
-		$post_id = $data_array['comment_post_ID'];
+		$post_id = isset($data_array['comment_post_ID']) ? $data_array['comment_post_ID'] :'';
 		$post_exists = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}posts WHERE id = '" . $post_id . "' and post_status in ('publish','draft','future','private','pending')", ARRAY_A);
 		$valid_status = array('1', '0', 'spam');
 		if(empty($data_array['comment_approved'])) {
@@ -104,7 +104,7 @@ class CommentsImport {
 		}
 			
 		$returnArr['ID'] = $retID;
-		$returnArr['MODE'] = $mode_of_affect;
+		$returnArr['MODE'] = isset($mode_of_affect) ? $mode_of_affect :'';
 		return $returnArr;
 		}
 		

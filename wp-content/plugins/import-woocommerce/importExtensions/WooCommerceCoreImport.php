@@ -26,17 +26,18 @@ class WooCommerceCoreImport extends ImportHelpers {
 		return WooCommerceCoreImport::$woocommerce_core_instance;
 	}
 
-		public function woocommerce_product_import($data_array, $mode , $check , $hash_key , $line_number) {
+		public function woocommerce_product_import($data_array, $mode , $check , $hash_key , $line_number, $unmatched_row) {
 
 			$helpers_instance = ImportHelpers::getInstance();
 			global $wpdb; 
 			global $core_instance;
 
 			$log_table_name = $wpdb->prefix ."import_detail_log";
-			$data_array['PRODUCTSKU'] = trim($data_array['PRODUCTSKU']);
+			$data_array['PRODUCTSKU'] = trim(isset($data_array['PRODUCTSKU']));
 
 			$returnArr = array();
 			$assigned_author = '';
+			$get_result = '';
 			$mode_of_affect = 'Inserted';
 
 			// Assign post type
@@ -76,7 +77,7 @@ class WooCommerceCoreImport extends ImportHelpers {
 				}else{
 
 					$post_id = wp_insert_post($data_array); 
-					set_post_format($post_id , $data_array['post_format']);	
+					set_post_format($post_id , isset($data_array['post_format']));	
 
 					if(is_wp_error($post_id) || $post_id == '') {
 # skipped
@@ -90,6 +91,17 @@ class WooCommerceCoreImport extends ImportHelpers {
 							$helpers_instance->UCI_WPML_Supported_Posts($data_array, $post_id);
 						}
 					}
+
+					if($unmatched_row == 'true'){
+						global $wpdb;
+						$type = isset($type) ? $type :'';
+						$post_entries_table = $wpdb->prefix ."ultimate_post_entries";
+						$file_table_name = $wpdb->prefix."smackcsv_file_events";
+						$get_id  = $wpdb->get_results( "SELECT file_name  FROM $file_table_name WHERE `hash_key` = '$hash_key'");	
+						$file_name = $get_id[0]->file_name;
+						$wpdb->get_results("INSERT INTO $post_entries_table (`ID`,`type`, `file_name`,`status`) VALUES ( '{$post_id}','{$type}', '{$file_name}','Inserted')");
+					}
+
 					$core_instance->detailed_log[$line_number]['Message'] = 'Inserted Product ID: ' . $post_id . ', ' . $assigned_author;	
 					$fields = $wpdb->get_results("UPDATE $log_table_name SET created = $created_count WHERE hash_key = '$hash_key'");
 				}	
@@ -101,6 +113,15 @@ class WooCommerceCoreImport extends ImportHelpers {
 					$data_array['ID'] = $post_id;
 					wp_update_post($data_array);
 					set_post_format($post_id , $data_array['post_format']);		
+
+					if($unmatched_row == 'true'){
+						global $wpdb;
+						$post_entries_table = $wpdb->prefix ."ultimate_post_entries";
+						$file_table_name = $wpdb->prefix."smackcsv_file_events";
+						$get_id  = $wpdb->get_results( "SELECT file_name  FROM $file_table_name WHERE `hash_key` = '$hash_key'");	
+						$file_name = $get_id[0]->file_name;
+						$wpdb->get_results("INSERT INTO $post_entries_table (`ID`,`type`, `file_name`,`status`) VALUES ( '{$post_id}','{$type}', '{$file_name}','Updated')");
+					}
 					$core_instance->detailed_log[$line_number]['Message'] = 'Updated Product ID: ' . $post_id . ', ' . $assigned_author;
 					$fields = $wpdb->get_results("UPDATE $log_table_name SET updated = $updated_count WHERE hash_key = '$hash_key'");
 
@@ -113,6 +134,15 @@ class WooCommerceCoreImport extends ImportHelpers {
 						$core_instance->detailed_log[$line_number]['Message'] = "Can't insert this Product. " . $post_id->get_error_message();
 						$fields = $wpdb->get_results("UPDATE $log_table_name SET skipped = $skipped_count WHERE hash_key = '$hash_key'");
 						return array('MODE' => $mode);
+					}
+
+					if($unmatched_row == 'true'){
+						global $wpdb;
+						$post_entries_table = $wpdb->prefix ."ultimate_post_entries";
+						$file_table_name = $wpdb->prefix."smackcsv_file_events";
+						$get_id  = $wpdb->get_results( "SELECT file_name  FROM $file_table_name WHERE `hash_key` = '$hash_key'");	
+						$file_name = $get_id[0]->file_name;
+						$wpdb->get_results("INSERT INTO $post_entries_table (`ID`,`type`, `file_name`,`status`) VALUES ( '{$post_id}','{$type}', '{$file_name}','Updated')");
 					}
 					$core_instance->detailed_log[$line_number]['Message'] = 'Inserted Product ID: ' . $post_id . ', ' . $assigned_author;
 					$fields = $wpdb->get_results("UPDATE $log_table_name SET created = $created_count WHERE hash_key = '$hash_key'");	

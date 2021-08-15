@@ -89,7 +89,6 @@ class ProductMetaExtension extends ExtensionHandler{
 					'_subscription_trial_period' => '_subscription_trial_period',
 					'_subscription_trial_length' => '_subscription_trial_length',
 					'_subscription_price' => '_subscription_price',
-					'_subscription_sign_up_fee' => '_subscription_sign_up_fee',
 					'Bundle Sells' =>'_wc_pb_bundle_sell_ids',
 					'Bundle Sells Title' => '_wc_pb_bundle_sells_title',
 					'Bundle Sells Discount' => '_wc_pb_bundle_sells_discount',

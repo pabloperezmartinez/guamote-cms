@@ -73,4 +73,6 @@ $plugin_ajax_hooks = [
     'listuploads',
     'install_plugins',
     'activate_addon',
+    'DeactivateMail',
+    'get_ftp_details',
 ];  

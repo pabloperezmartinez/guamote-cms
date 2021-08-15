@@ -12,8 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use SkyVerge\WooCommerce\Facebook\Products;
 use SkyVerge\WooCommerce\Facebook\Products\Feed;
-use SkyVerge\WooCommerce\PluginFramework\v5_5_4 as Framework;
+use SkyVerge\WooCommerce\PluginFramework\v5_10_0 as Framework;
 
 if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 
@@ -45,9 +46,9 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 		/**
 		 * WC_Facebook_Product_Feed constructor.
 		 *
-		 * @param string|null $facebook_catalog_id Facebook catalog ID, if any
+		 * @param string|null                         $facebook_catalog_id Facebook catalog ID, if any
 		 * @param \WC_Facebookcommerce_Graph_API|null $fbgraph Facebook Graph API instance
-		 * @param string|null $feed_id Facebook feed ID, if any
+		 * @param string|null                         $feed_id Facebook feed ID, if any
 		 */
 		public function __construct( $facebook_catalog_id = null, $fbgraph = null, $feed_id = null ) {
 
@@ -65,7 +66,7 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 		public function schedule_feed_generation() {
 
 			// don't schedule another if one's already scheduled or in progress
-			if ( false !== as_next_scheduled_action( 'wc_facebook_generate_product_catalog_feed', [], 'facebook-for-woocommerce' ) ) {
+			if ( false !== as_next_scheduled_action( 'wc_facebook_generate_product_catalog_feed', array(), 'facebook-for-woocommerce' ) ) {
 				return;
 			}
 
@@ -73,9 +74,9 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 
 			// if async priority actions are supported (AS 3.0+)
 			if ( function_exists( 'as_enqueue_async_action' ) ) {
-				as_enqueue_async_action( 'wc_facebook_generate_product_catalog_feed', [], 'facebook-for-woocommerce' );
+				as_enqueue_async_action( 'wc_facebook_generate_product_catalog_feed', array(), 'facebook-for-woocommerce' );
 			} else {
-				as_schedule_single_action( time(), 'wc_facebook_generate_product_catalog_feed', [], 'facebook-for-woocommerce' );
+				as_schedule_single_action( time(), 'wc_facebook_generate_product_catalog_feed', array(), 'facebook-for-woocommerce' );
 			}
 		}
 
@@ -88,6 +89,8 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 		 * @since 1.11.0
 		 */
 		public function generate_feed() {
+			$profiling_logger = facebook_for_woocommerce()->get_profiling_logger();
+			$profiling_logger->start( 'generate_feed' );
 
 			\WC_Facebookcommerce_Utils::log( 'Generating a fresh product feed file' );
 
@@ -98,6 +101,7 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 				$this->generate_productfeed_file();
 
 				$generation_time = microtime( true ) - $start_time;
+				facebook_for_woocommerce()->get_tracker()->track_feed_file_generation_time( $generation_time );
 
 				$this->set_feed_generation_time_with_decay( $generation_time );
 
@@ -106,7 +110,12 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 			} catch ( \Exception $exception ) {
 
 				\WC_Facebookcommerce_Utils::log( $exception->getMessage() );
+				// Feed generation failed - clear the generation time to track that there's an issue.
+				facebook_for_woocommerce()->get_tracker()->track_feed_file_generation_time( -1 );
+
 			}
+
+			$profiling_logger->stop( 'generate_feed' );
 		}
 
 
@@ -205,7 +214,7 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 				$time_estimate = $buffer_time;
 			}
 
-			WC_Facebookcommerce_Utils::log( 'Feed Generation Time Estimate: '. $time_estimate );
+			WC_Facebookcommerce_Utils::log( 'Feed Generation Time Estimate: ' . $time_estimate );
 
 			return $time_estimate;
 		}
@@ -376,7 +385,6 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 				if ( ! $this->generate_productfeed_file() ) {
 					throw new Framework\SV_WC_Plugin_Exception( 'Feed file not generated' );
 				}
-
 			} catch ( Framework\SV_WC_Plugin_Exception $exception ) {
 
 				$this->log_feed_progress(
@@ -445,29 +453,7 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 		 * @return int[]
 		 */
 		private function get_product_ids() {
-
-			$post_ids = $this->get_product_wpid();
-
-			// remove variations with unpublished parents
-			$post_ids = array_filter( $post_ids,
-				function ( $post_id ) {
-					return ( 'product_variation' !== get_post_type( $post_id )
-					         || 'publish' === get_post( wp_get_post_parent_id( $post_id ) )->post_status );
-				}
-			);
-
-			$all_parent_product = array_map(
-				function( $post_id ) {
-					if ( 'product_variation' === get_post_type( $post_id ) ) {
-						return wp_get_post_parent_id( $post_id );
-					}
-				},
-				$post_ids
-			);
-
-			$all_parent_product = array_filter( array_unique( $all_parent_product ) );
-
-			return array_diff( $post_ids, $all_parent_product );
+			return \WC_Facebookcommerce_Utils::get_all_product_ids_for_sync();
 		}
 
 
@@ -498,18 +484,18 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 
 			$catalog_feed_directory = trailingslashit( $this->get_file_directory() );
 
-			$files = [
-				[
+			$files = array(
+				array(
 					'base'    => $catalog_feed_directory,
 					'file'    => 'index.html',
 					'content' => '',
-				],
-				[
+				),
+				array(
 					'base'    => $catalog_feed_directory,
 					'file'    => '.htaccess',
 					'content' => 'deny from all',
-				],
-			];
+				),
+			);
 
 			foreach ( $files as $file ) {
 
@@ -531,13 +517,12 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 		 * @since 1.11.0
 		 *
 		 * @param int[] $wp_ids product IDs
-		 * @param bool $is_dry_run whether this is a dry run or the file should be written
+		 * @param bool  $is_dry_run whether this is a dry run or the file should be written
 		 * @return bool
 		 */
 		public function write_product_feed_file( $wp_ids, $is_dry_run = false ) {
 
 			try {
-
 
 				if ( ! $is_dry_run ) {
 
@@ -565,16 +550,13 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 
 					$woo_product = new WC_Facebook_Product( $wp_id );
 
-					if ( $woo_product->is_hidden() ) {
-						continue;
-					}
-
-					if ( get_option( 'woocommerce_hide_out_of_stock_items' ) === 'yes' && ! $woo_product->is_in_stock() ) {
+					// skip if we don't have a valid product object
+					if ( ! $woo_product->woo_product instanceof \WC_Product ) {
 						continue;
 					}
 
 					// skip if not enabled for sync
-					if ( $woo_product->woo_product instanceof \WC_Product && ! SkyVerge\WooCommerce\Facebook\Products::product_should_be_synced( $woo_product->woo_product ) ) {
+					if ( ! Products::product_should_be_synced( $woo_product->woo_product ) ) {
 						continue;
 					}
 
@@ -589,7 +571,6 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 				}
 
 				wp_reset_postdata();
-
 
 				if ( ! empty( $temp_feed_file ) ) {
 					fclose( $temp_feed_file );
@@ -632,7 +613,7 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 			return 'id,title,description,image_link,link,product_type,' .
 			'brand,price,availability,item_group_id,checkout_url,' .
 			'additional_image_link,sale_price_effective_date,sale_price,condition,' .
-			'visibility,default_product,variant' . PHP_EOL;
+			'visibility,gender,color,size,pattern,google_product_category,default_product,variant' . PHP_EOL;
 		}
 
 
@@ -640,12 +621,12 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 		 * Assembles product payload in feed upload for initial sync.
 		 *
 		 * @param \WC_Facebook_Product $woo_product WooCommerce product object normalized by Facebook
-		 * @param array $attribute_variants passed by reference
+		 * @param array                $attribute_variants passed by reference
 		 * @return string product feed line data
 		 */
 		private function prepare_product_for_feed( $woo_product, &$attribute_variants ) {
 
-			$product_data  = $woo_product->prepare_product( null, true );
+			$product_data  = $woo_product->prepare_product( null, \WC_Facebook_Product::PRODUCT_PREP_TYPE_FEED );
 			$item_group_id = $product_data['retailer_id'];
 
 			// prepare variant column for variable products
@@ -661,11 +642,11 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 					$gallery_urls            = array_filter( $parent_product->get_gallery_urls() );
 					$variation_id            = $parent_product->find_matching_product_variation();
 					$variants_for_group      = $parent_product->prepare_variants_for_group( true );
-					$parent_attribute_values = [
+					$parent_attribute_values = array(
 						'gallery_urls'       => $gallery_urls,
 						'default_variant_id' => $variation_id,
 						'item_group_id'      => \WC_Facebookcommerce_Utils::get_fb_retailer_id( $parent_product ),
-					];
+					);
 
 					foreach ( $variants_for_group as $variant ) {
 						if ( isset( $variant['product_field'], $variant['options'] ) ) {
@@ -681,8 +662,8 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 					$parent_attribute_values = $attribute_variants[ $parent_id ];
 				}
 
-				$variants_for_item    = $woo_product->prepare_variants_for_item( $product_data );
-				$variant_feed_column  = [];
+				$variants_for_item   = $woo_product->prepare_variants_for_item( $product_data );
+				$variant_feed_column = array();
 
 				foreach ( $variants_for_item as $variant_array ) {
 
@@ -737,33 +718,41 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 				$product_data['default_product'] = '';
 			}
 
+			// when dealing with the feed file, only set out-of-stock products as hidden
+			if ( Products::product_should_be_deleted( $woo_product->woo_product ) ) {
+				$product_data['visibility'] = \WC_Facebookcommerce_Integration::FB_SHOP_PRODUCT_HIDDEN;
+			}
+
 			return $product_data['retailer_id'] . ',' .
-			static::format_string_for_feed( $product_data['name'] ) . ',' .
-			static::format_string_for_feed( $product_data['description'] ) . ',' .
-			$product_data['image_url'] . ',' .
-			$product_data['url'] . ',' .
-			static::format_string_for_feed( $product_data['category'] ) . ',' .
-			static::format_string_for_feed( $product_data['brand'] ) . ',' .
+			static::format_string_for_feed( static::get_value_from_product_data( $product_data, 'name' ) ) . ',' .
+			static::format_string_for_feed( static::get_value_from_product_data( $product_data, 'description' ) ) . ',' .
+			static::get_value_from_product_data( $product_data, 'image_url' ) . ',' .
+			static::get_value_from_product_data( $product_data, 'url' ) . ',' .
+			static::format_string_for_feed( static::get_value_from_product_data( $product_data, 'category' ) ) . ',' .
+			static::format_string_for_feed( static::get_value_from_product_data( $product_data, 'brand' ) ) . ',' .
 			static::format_price_for_feed(
-				$product_data['price'],
-				$product_data['currency']
+				static::get_value_from_product_data( $product_data, 'price', 0 ),
+				static::get_value_from_product_data( $product_data, 'currency' )
 			) . ',' .
-			$product_data['availability'] . ',' .
+			static::get_value_from_product_data( $product_data, 'availability' ) . ',' .
 			$item_group_id . ',' .
-			$product_data['checkout_url'] . ',' .
-			static::format_additional_image_url(
-				$product_data['additional_image_urls']
-			) . ',' .
-			$product_data['sale_price_start_date'] . '/' .
-			$product_data['sale_price_end_date'] . ',' .
+			static::get_value_from_product_data( $product_data, 'checkout_url' ) . ',' .
+			static::format_additional_image_url( static::get_value_from_product_data( $product_data, 'additional_image_urls' ) ) . ',' .
+			static::get_value_from_product_data( $product_data, 'sale_price_start_date' ) . '/' .
+			static::get_value_from_product_data( $product_data, 'sale_price_end_date' ) . ',' .
 			static::format_price_for_feed(
-				$product_data['sale_price'],
-				$product_data['currency']
+				static::get_value_from_product_data( $product_data, 'sale_price', 0 ),
+				static::get_value_from_product_data( $product_data, 'currency' )
 			) . ',' .
 			'new' . ',' .
-			$product_data['visibility'] . ',' .
-			$product_data['default_product'] . ',' .
-			$product_data['variant'] . PHP_EOL;
+			static::get_value_from_product_data( $product_data, 'visibility' ) . ',' .
+			static::get_value_from_product_data( $product_data, 'gender' ) . ',' .
+			static::get_value_from_product_data( $product_data, 'color' ) . ',' .
+			static::get_value_from_product_data( $product_data, 'size' ) . ',' .
+			static::get_value_from_product_data( $product_data, 'pattern' ) . ',' .
+			static::get_value_from_product_data( $product_data, 'google_product_category' ) . ',' .
+			static::get_value_from_product_data( $product_data, 'default_product' ) . ',' .
+			static::get_value_from_product_data( $product_data, 'variant' ) . PHP_EOL;
 		}
 
 
@@ -845,6 +834,24 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 
 
 		/**
+		 * Gets the value from the product data.
+		 *
+		 * This method is used to avoid PHP undefined index notices.
+		 *
+		 * @since 2.1.0
+		 *
+		 * @param array  $product_data the product data retrieved from a Woo product passed by reference
+		 * @param string $index the data index
+		 * @param mixed  $return_if_not_set the value to be returned if product data has no index (default to '')
+		 * @return mixed|string the data value or an empty string
+		 */
+		private static function get_value_from_product_data( &$product_data, $index, $return_if_not_set = '' ) {
+
+			return isset( $product_data[ $index ] ) ? $product_data[ $index ] : $return_if_not_set;
+		}
+
+
+		/**
 		 * Gets the status of the configured feed upload.
 		 *
 		 * The status indicator is one of 'in progress', 'complete', or 'error'.
@@ -873,7 +880,7 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 
 				$upload_status = 'complete';
 
-			} else if ( 200 === (int) wp_remote_retrieve_response_code( $result ) ) {
+			} elseif ( 200 === (int) wp_remote_retrieve_response_code( $result ) ) {
 
 				$upload_status = 'in progress';
 			}
@@ -889,7 +896,13 @@ if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) :
 			WC_Facebookcommerce_Utils::log( $msg );
 		}
 
+		/**
+		 * @deprecated in favor of WC_Facebookcommerce_Utils::get_all_product_ids_for_sync() due to duplicate functionality
+		 */
 		public function get_product_wpid() {
+
+			wc_deprecated_function( __METHOD__, '2.4.0', '\\WC_Facebookcommerce_Utils::get_all_product_ids_for_sync()' );
+
 			$post_ids = WC_Facebookcommerce_Utils::get_wp_posts(
 				null,
 				null,

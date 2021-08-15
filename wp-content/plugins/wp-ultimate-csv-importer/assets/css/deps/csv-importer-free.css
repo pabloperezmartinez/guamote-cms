@@ -5,9 +5,6 @@ SCSS Version: 2.0
 Last modified: 12.06.2019
 Author: Mohamed Fariz
 ----------------------------------------------------------*/
-@import url("https://fonts.googleapis.com/css?family=Roboto:400,500,700");
-@import url("https://fonts.googleapis.com/css?family=Poppins:400,500,600,700");
-
 @font-face {
   font-family: "csvimporter";
   src: url("../fonts/csvimporter.eot?f4xnj1");
@@ -3733,6 +3730,36 @@ Author: Mohamed Fariz
 .wp-ultimate-csv-importer .csv-importer-panel.pro-tag {
   border-radius: 6px;
 }
+
+.wp-ultimate-csv-importer .file-processing-tag {
+  position: relative;
+}
+
+.wp-ultimate-csv-importer .file-processing-tag::before {
+  content: "FOR RECORDS ABOVE 1000 CHOOSE ITERATIVE FILE PROCESSING";
+  position: absolute;
+  z-index: 1000;
+  color: white;
+  right: 240px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 3px 8px;
+  border-radius: 11px;
+  font-weight: 600;
+  background: #e04b4a;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.wp-ultimate-csv-importer .file-processing-tag.active::before {
+  background: white;
+  color: #e04b4a;
+}
+
+.wp-ultimate-csv-importer .csv-importer-panel.file-processing-tag {
+  border-radius: 6px;
+}
+
 
 .wp-ultimate-csv-importer.rtl .csv-importer-panel .export-section .form-group input[type=radio]+label {
   padding-right: 40px;

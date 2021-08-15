@@ -87,12 +87,6 @@ class Security {
 		else{
 			$result['PDO'] = 'No';
 		}
-		if(in_array('curl', $loader_extensions)) {
-			$result['curl'] = 'Yes';
-		}
-		else{
-			$result['curl'] = 'No';
-		}
 		if(ini_get('file_uploads') == 1){
 			$result['file_uploads'] = 'On';
 		}

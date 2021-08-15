@@ -32,7 +32,7 @@ class Sync {
 	const ACTION_DELETE = 'DELETE';
 
 	/** @var array the array of requests to schedule for sync */
-	protected $requests = [];
+	protected $requests = array();
 
 
 	/**
@@ -53,7 +53,11 @@ class Sync {
 	 */
 	public function add_hooks() {
 
-		add_action( 'shutdown', [ $this, 'schedule_sync' ] );
+		add_action( 'shutdown', array( $this, 'schedule_sync' ) );
+
+		// stock update actions
+		add_action( 'woocommerce_product_set_stock', array( $this, 'handle_stock_update' ) );
+		add_action( 'woocommerce_variation_set_stock', array( $this, 'handle_stock_update' ) );
 	}
 
 
@@ -70,59 +74,13 @@ class Sync {
 	 * @since 2.0.0
 	 */
 	public function create_or_update_all_products() {
+		$profiling_logger = facebook_for_woocommerce()->get_profiling_logger();
+		$profiling_logger->start( 'create_or_update_all_products' );
 
-		$product_ids        = [];
-		$parent_product_ids = [];
+		// Queue up these IDs for sync. they will only be included in the final requests if they should be synced.
+		$this->create_or_update_products( \WC_Facebookcommerce_Utils::get_all_product_ids_for_sync() );
 
-		// loop through all published products and product variations to get their IDs
-		$args = [
-			'fields'         => 'id=>parent',
-			'post_status'    => 'publish',
-			'post_type'      => [ 'product', 'product_variation' ],
-			'posts_per_page' => -1,
-		];
-
-		foreach ( get_posts( $args ) as $post_id => $parent_id ) {
-
-			if ( 'product_variation' === get_post_type( $post_id ) ) {
-
-				// keep track of all parents to remove them from the list of products to sync
-				$parent_product_ids[] = $parent_id;
-
-				// include variations with published parents only
-				if ( 'publish' === get_post_status( $parent_id ) ) {
-					$product_ids[] = $post_id;
-				}
-
-			} else {
-
-				$product_ids[] = $post_id;
-			}
-		}
-
-		// remove parent products because those can't be represented as Product Items
-		$product_ids = array_diff( $product_ids, $parent_product_ids );
-
-		// make sure the product should be synced and add it to the sync queue
-		foreach ( $product_ids as $product_id ) {
-
-			$woo_product = new \WC_Facebook_Product( $product_id );
-
-			if ( $woo_product->is_hidden() ) {
-				continue;
-			}
-
-			if ( get_option( 'woocommerce_hide_out_of_stock_items' ) === 'yes' && ! $woo_product->is_in_stock() ) {
-				continue;
-			}
-
-			// skip if not enabled for sync
-			if ( $woo_product->woo_product instanceof \WC_Product && ! Products::product_should_be_synced( $woo_product->woo_product ) ) {
-				continue;
-			}
-
-			$this->create_or_update_products( [ $product_id ] );
-		}
+		$profiling_logger->stop( 'create_or_update_all_products' );
 	}
 
 
@@ -157,6 +115,30 @@ class Sync {
 
 
 	/**
+	 * Adds the products with stock changes to the requests array to be updated.
+	 *
+	 * @since 2.1.0
+	 *
+	 * @param \WC_Product $product product object
+	 */
+	public function handle_stock_update( \WC_Product $product ) {
+
+		// bail if not connected
+		if ( ! facebook_for_woocommerce()->get_connection_handler()->is_connected() ) {
+			return;
+		}
+
+		// bail if admin and not AJAX
+		if ( is_admin() && ! is_ajax() ) {
+			return;
+		}
+
+		// add the product to the list of products to be updated
+		$this->create_or_update_products( array( $product->get_id() ) );
+	}
+
+
+	/**
 	 * Creates a background job to sync the products in the requests array.
 	 *
 	 * @since 2.0.0
@@ -168,7 +150,7 @@ class Sync {
 		if ( ! empty( $this->requests ) ) {
 
 			$job_handler = facebook_for_woocommerce()->get_products_sync_background_handler();
-			$job         = $job_handler->create_job( [ 'requests' => $this->requests ] );
+			$job         = $job_handler->create_job( array( 'requests' => $this->requests ) );
 
 			$job_handler->dispatch();
 
@@ -200,9 +182,11 @@ class Sync {
 	 */
 	public static function is_sync_in_progress() {
 
-		$jobs = facebook_for_woocommerce()->get_products_sync_background_handler()->get_jobs( [
-			'status' => 'processing',
-		] );
+		$jobs = facebook_for_woocommerce()->get_products_sync_background_handler()->get_jobs(
+			array(
+				'status' => 'processing',
+			)
+		);
 
 		return ! empty( $jobs );
 	}

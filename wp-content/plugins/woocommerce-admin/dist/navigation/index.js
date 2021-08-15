@@ -82,703 +82,73 @@ this["wc"] = this["wc"] || {}; this["wc"]["navigation"] =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 711);
+/******/ 	return __webpack_require__(__webpack_require__.s = 465);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 106:
-/***/ (function(module, exports, __webpack_require__) {
-
-var arrayLikeToArray = __webpack_require__(73);
-
-function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) return arrayLikeToArray(arr);
-}
-
-module.exports = _arrayWithoutHoles;
-
-/***/ }),
-
-/***/ 107:
+/***/ 0:
 /***/ (function(module, exports) {
 
-function _iterableToArray(iter) {
-  if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
-}
-
-module.exports = _iterableToArray;
+(function() { module.exports = window["wp"]["element"]; }());
 
 /***/ }),
 
-/***/ 108:
+/***/ 14:
 /***/ (function(module, exports) {
 
-function _nonIterableSpread() {
-  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-}
-
-module.exports = _nonIterableSpread;
+(function() { module.exports = window["wp"]["url"]; }());
 
 /***/ }),
 
-/***/ 129:
+/***/ 23:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return _extends; });
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+
+/***/ }),
+
+/***/ 3:
+/***/ (function(module, exports) {
+
+(function() { module.exports = window["lodash"]; }());
+
+/***/ }),
+
+/***/ 30:
+/***/ (function(module, exports) {
+
+(function() { module.exports = window["wp"]["hooks"]; }());
+
+/***/ }),
+
+/***/ 32:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(75);
-var formats = __webpack_require__(91);
-var has = Object.prototype.hasOwnProperty;
-
-var arrayPrefixGenerators = {
-    brackets: function brackets(prefix) {
-        return prefix + '[]';
-    },
-    comma: 'comma',
-    indices: function indices(prefix, key) {
-        return prefix + '[' + key + ']';
-    },
-    repeat: function repeat(prefix) {
-        return prefix;
-    }
-};
-
-var isArray = Array.isArray;
-var push = Array.prototype.push;
-var pushToArray = function (arr, valueOrArray) {
-    push.apply(arr, isArray(valueOrArray) ? valueOrArray : [valueOrArray]);
-};
-
-var toISO = Date.prototype.toISOString;
-
-var defaultFormat = formats['default'];
-var defaults = {
-    addQueryPrefix: false,
-    allowDots: false,
-    charset: 'utf-8',
-    charsetSentinel: false,
-    delimiter: '&',
-    encode: true,
-    encoder: utils.encode,
-    encodeValuesOnly: false,
-    format: defaultFormat,
-    formatter: formats.formatters[defaultFormat],
-    // deprecated
-    indices: false,
-    serializeDate: function serializeDate(date) {
-        return toISO.call(date);
-    },
-    skipNulls: false,
-    strictNullHandling: false
-};
-
-var isNonNullishPrimitive = function isNonNullishPrimitive(v) {
-    return typeof v === 'string'
-        || typeof v === 'number'
-        || typeof v === 'boolean'
-        || typeof v === 'symbol'
-        || typeof v === 'bigint';
-};
-
-var stringify = function stringify(
-    object,
-    prefix,
-    generateArrayPrefix,
-    strictNullHandling,
-    skipNulls,
-    encoder,
-    filter,
-    sort,
-    allowDots,
-    serializeDate,
-    formatter,
-    encodeValuesOnly,
-    charset
-) {
-    var obj = object;
-    if (typeof filter === 'function') {
-        obj = filter(prefix, obj);
-    } else if (obj instanceof Date) {
-        obj = serializeDate(obj);
-    } else if (generateArrayPrefix === 'comma' && isArray(obj)) {
-        obj = obj.join(',');
-    }
-
-    if (obj === null) {
-        if (strictNullHandling) {
-            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset, 'key') : prefix;
-        }
-
-        obj = '';
-    }
-
-    if (isNonNullishPrimitive(obj) || utils.isBuffer(obj)) {
-        if (encoder) {
-            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder, charset, 'key');
-            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder, charset, 'value'))];
-        }
-        return [formatter(prefix) + '=' + formatter(String(obj))];
-    }
-
-    var values = [];
-
-    if (typeof obj === 'undefined') {
-        return values;
-    }
-
-    var objKeys;
-    if (isArray(filter)) {
-        objKeys = filter;
-    } else {
-        var keys = Object.keys(obj);
-        objKeys = sort ? keys.sort(sort) : keys;
-    }
-
-    for (var i = 0; i < objKeys.length; ++i) {
-        var key = objKeys[i];
-
-        if (skipNulls && obj[key] === null) {
-            continue;
-        }
-
-        if (isArray(obj)) {
-            pushToArray(values, stringify(
-                obj[key],
-                typeof generateArrayPrefix === 'function' ? generateArrayPrefix(prefix, key) : prefix,
-                generateArrayPrefix,
-                strictNullHandling,
-                skipNulls,
-                encoder,
-                filter,
-                sort,
-                allowDots,
-                serializeDate,
-                formatter,
-                encodeValuesOnly,
-                charset
-            ));
-        } else {
-            pushToArray(values, stringify(
-                obj[key],
-                prefix + (allowDots ? '.' + key : '[' + key + ']'),
-                generateArrayPrefix,
-                strictNullHandling,
-                skipNulls,
-                encoder,
-                filter,
-                sort,
-                allowDots,
-                serializeDate,
-                formatter,
-                encodeValuesOnly,
-                charset
-            ));
-        }
-    }
-
-    return values;
-};
-
-var normalizeStringifyOptions = function normalizeStringifyOptions(opts) {
-    if (!opts) {
-        return defaults;
-    }
-
-    if (opts.encoder !== null && opts.encoder !== undefined && typeof opts.encoder !== 'function') {
-        throw new TypeError('Encoder has to be a function.');
-    }
-
-    var charset = opts.charset || defaults.charset;
-    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
-        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
-    }
-
-    var format = formats['default'];
-    if (typeof opts.format !== 'undefined') {
-        if (!has.call(formats.formatters, opts.format)) {
-            throw new TypeError('Unknown format option provided.');
-        }
-        format = opts.format;
-    }
-    var formatter = formats.formatters[format];
-
-    var filter = defaults.filter;
-    if (typeof opts.filter === 'function' || isArray(opts.filter)) {
-        filter = opts.filter;
-    }
-
-    return {
-        addQueryPrefix: typeof opts.addQueryPrefix === 'boolean' ? opts.addQueryPrefix : defaults.addQueryPrefix,
-        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
-        charset: charset,
-        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
-        delimiter: typeof opts.delimiter === 'undefined' ? defaults.delimiter : opts.delimiter,
-        encode: typeof opts.encode === 'boolean' ? opts.encode : defaults.encode,
-        encoder: typeof opts.encoder === 'function' ? opts.encoder : defaults.encoder,
-        encodeValuesOnly: typeof opts.encodeValuesOnly === 'boolean' ? opts.encodeValuesOnly : defaults.encodeValuesOnly,
-        filter: filter,
-        formatter: formatter,
-        serializeDate: typeof opts.serializeDate === 'function' ? opts.serializeDate : defaults.serializeDate,
-        skipNulls: typeof opts.skipNulls === 'boolean' ? opts.skipNulls : defaults.skipNulls,
-        sort: typeof opts.sort === 'function' ? opts.sort : null,
-        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
-    };
-};
-
-module.exports = function (object, opts) {
-    var obj = object;
-    var options = normalizeStringifyOptions(opts);
-
-    var objKeys;
-    var filter;
-
-    if (typeof options.filter === 'function') {
-        filter = options.filter;
-        obj = filter('', obj);
-    } else if (isArray(options.filter)) {
-        filter = options.filter;
-        objKeys = filter;
-    }
-
-    var keys = [];
-
-    if (typeof obj !== 'object' || obj === null) {
-        return '';
-    }
-
-    var arrayFormat;
-    if (opts && opts.arrayFormat in arrayPrefixGenerators) {
-        arrayFormat = opts.arrayFormat;
-    } else if (opts && 'indices' in opts) {
-        arrayFormat = opts.indices ? 'indices' : 'repeat';
-    } else {
-        arrayFormat = 'indices';
-    }
-
-    var generateArrayPrefix = arrayPrefixGenerators[arrayFormat];
-
-    if (!objKeys) {
-        objKeys = Object.keys(obj);
-    }
-
-    if (options.sort) {
-        objKeys.sort(options.sort);
-    }
-
-    for (var i = 0; i < objKeys.length; ++i) {
-        var key = objKeys[i];
-
-        if (options.skipNulls && obj[key] === null) {
-            continue;
-        }
-        pushToArray(keys, stringify(
-            obj[key],
-            key,
-            generateArrayPrefix,
-            options.strictNullHandling,
-            options.skipNulls,
-            options.encode ? options.encoder : null,
-            options.filter,
-            options.sort,
-            options.allowDots,
-            options.serializeDate,
-            options.formatter,
-            options.encodeValuesOnly,
-            options.charset
-        ));
-    }
-
-    var joined = keys.join(options.delimiter);
-    var prefix = options.addQueryPrefix === true ? '?' : '';
-
-    if (options.charsetSentinel) {
-        if (options.charset === 'iso-8859-1') {
-            // encodeURIComponent('&#10003;'), the "numeric entity" representation of a checkmark
-            prefix += 'utf8=%26%2310003%3B&';
-        } else {
-            // encodeURIComponent('✓')
-            prefix += 'utf8=%E2%9C%93&';
-        }
-    }
-
-    return joined.length > 0 ? prefix + joined : '';
-};
-
-
-/***/ }),
-
-/***/ 130:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(75);
-
-var has = Object.prototype.hasOwnProperty;
-var isArray = Array.isArray;
-
-var defaults = {
-    allowDots: false,
-    allowPrototypes: false,
-    arrayLimit: 20,
-    charset: 'utf-8',
-    charsetSentinel: false,
-    comma: false,
-    decoder: utils.decode,
-    delimiter: '&',
-    depth: 5,
-    ignoreQueryPrefix: false,
-    interpretNumericEntities: false,
-    parameterLimit: 1000,
-    parseArrays: true,
-    plainObjects: false,
-    strictNullHandling: false
-};
-
-var interpretNumericEntities = function (str) {
-    return str.replace(/&#(\d+);/g, function ($0, numberStr) {
-        return String.fromCharCode(parseInt(numberStr, 10));
-    });
-};
-
-var parseArrayValue = function (val, options) {
-    if (val && typeof val === 'string' && options.comma && val.indexOf(',') > -1) {
-        return val.split(',');
-    }
-
-    return val;
-};
-
-var maybeMap = function maybeMap(val, fn) {
-    if (isArray(val)) {
-        var mapped = [];
-        for (var i = 0; i < val.length; i += 1) {
-            mapped.push(fn(val[i]));
-        }
-        return mapped;
-    }
-    return fn(val);
-};
-
-// This is what browsers will submit when the ✓ character occurs in an
-// application/x-www-form-urlencoded body and the encoding of the page containing
-// the form is iso-8859-1, or when the submitted form has an accept-charset
-// attribute of iso-8859-1. Presumably also with other charsets that do not contain
-// the ✓ character, such as us-ascii.
-var isoSentinel = 'utf8=%26%2310003%3B'; // encodeURIComponent('&#10003;')
-
-// These are the percent-encoded utf-8 octets representing a checkmark, indicating that the request actually is utf-8 encoded.
-var charsetSentinel = 'utf8=%E2%9C%93'; // encodeURIComponent('✓')
-
-var parseValues = function parseQueryStringValues(str, options) {
-    var obj = {};
-    var cleanStr = options.ignoreQueryPrefix ? str.replace(/^\?/, '') : str;
-    var limit = options.parameterLimit === Infinity ? undefined : options.parameterLimit;
-    var parts = cleanStr.split(options.delimiter, limit);
-    var skipIndex = -1; // Keep track of where the utf8 sentinel was found
-    var i;
-
-    var charset = options.charset;
-    if (options.charsetSentinel) {
-        for (i = 0; i < parts.length; ++i) {
-            if (parts[i].indexOf('utf8=') === 0) {
-                if (parts[i] === charsetSentinel) {
-                    charset = 'utf-8';
-                } else if (parts[i] === isoSentinel) {
-                    charset = 'iso-8859-1';
-                }
-                skipIndex = i;
-                i = parts.length; // The eslint settings do not allow break;
-            }
-        }
-    }
-
-    for (i = 0; i < parts.length; ++i) {
-        if (i === skipIndex) {
-            continue;
-        }
-        var part = parts[i];
-
-        var bracketEqualsPos = part.indexOf(']=');
-        var pos = bracketEqualsPos === -1 ? part.indexOf('=') : bracketEqualsPos + 1;
-
-        var key, val;
-        if (pos === -1) {
-            key = options.decoder(part, defaults.decoder, charset, 'key');
-            val = options.strictNullHandling ? null : '';
-        } else {
-            key = options.decoder(part.slice(0, pos), defaults.decoder, charset, 'key');
-            val = maybeMap(
-                parseArrayValue(part.slice(pos + 1), options),
-                function (encodedVal) {
-                    return options.decoder(encodedVal, defaults.decoder, charset, 'value');
-                }
-            );
-        }
-
-        if (val && options.interpretNumericEntities && charset === 'iso-8859-1') {
-            val = interpretNumericEntities(val);
-        }
-
-        if (part.indexOf('[]=') > -1) {
-            val = isArray(val) ? [val] : val;
-        }
-
-        if (has.call(obj, key)) {
-            obj[key] = utils.combine(obj[key], val);
-        } else {
-            obj[key] = val;
-        }
-    }
-
-    return obj;
-};
-
-var parseObject = function (chain, val, options, valuesParsed) {
-    var leaf = valuesParsed ? val : parseArrayValue(val, options);
-
-    for (var i = chain.length - 1; i >= 0; --i) {
-        var obj;
-        var root = chain[i];
-
-        if (root === '[]' && options.parseArrays) {
-            obj = [].concat(leaf);
-        } else {
-            obj = options.plainObjects ? Object.create(null) : {};
-            var cleanRoot = root.charAt(0) === '[' && root.charAt(root.length - 1) === ']' ? root.slice(1, -1) : root;
-            var index = parseInt(cleanRoot, 10);
-            if (!options.parseArrays && cleanRoot === '') {
-                obj = { 0: leaf };
-            } else if (
-                !isNaN(index)
-                && root !== cleanRoot
-                && String(index) === cleanRoot
-                && index >= 0
-                && (options.parseArrays && index <= options.arrayLimit)
-            ) {
-                obj = [];
-                obj[index] = leaf;
-            } else {
-                obj[cleanRoot] = leaf;
-            }
-        }
-
-        leaf = obj; // eslint-disable-line no-param-reassign
-    }
-
-    return leaf;
-};
-
-var parseKeys = function parseQueryStringKeys(givenKey, val, options, valuesParsed) {
-    if (!givenKey) {
-        return;
-    }
-
-    // Transform dot notation to bracket notation
-    var key = options.allowDots ? givenKey.replace(/\.([^.[]+)/g, '[$1]') : givenKey;
-
-    // The regex chunks
-
-    var brackets = /(\[[^[\]]*])/;
-    var child = /(\[[^[\]]*])/g;
-
-    // Get the parent
-
-    var segment = options.depth > 0 && brackets.exec(key);
-    var parent = segment ? key.slice(0, segment.index) : key;
-
-    // Stash the parent if it exists
-
-    var keys = [];
-    if (parent) {
-        // If we aren't using plain objects, optionally prefix keys that would overwrite object prototype properties
-        if (!options.plainObjects && has.call(Object.prototype, parent)) {
-            if (!options.allowPrototypes) {
-                return;
-            }
-        }
-
-        keys.push(parent);
-    }
-
-    // Loop through children appending to the array until we hit depth
-
-    var i = 0;
-    while (options.depth > 0 && (segment = child.exec(key)) !== null && i < options.depth) {
-        i += 1;
-        if (!options.plainObjects && has.call(Object.prototype, segment[1].slice(1, -1))) {
-            if (!options.allowPrototypes) {
-                return;
-            }
-        }
-        keys.push(segment[1]);
-    }
-
-    // If there's a remainder, just add whatever is left
-
-    if (segment) {
-        keys.push('[' + key.slice(segment.index) + ']');
-    }
-
-    return parseObject(keys, val, options, valuesParsed);
-};
-
-var normalizeParseOptions = function normalizeParseOptions(opts) {
-    if (!opts) {
-        return defaults;
-    }
-
-    if (opts.decoder !== null && opts.decoder !== undefined && typeof opts.decoder !== 'function') {
-        throw new TypeError('Decoder has to be a function.');
-    }
-
-    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
-        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
-    }
-    var charset = typeof opts.charset === 'undefined' ? defaults.charset : opts.charset;
-
-    return {
-        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
-        allowPrototypes: typeof opts.allowPrototypes === 'boolean' ? opts.allowPrototypes : defaults.allowPrototypes,
-        arrayLimit: typeof opts.arrayLimit === 'number' ? opts.arrayLimit : defaults.arrayLimit,
-        charset: charset,
-        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
-        comma: typeof opts.comma === 'boolean' ? opts.comma : defaults.comma,
-        decoder: typeof opts.decoder === 'function' ? opts.decoder : defaults.decoder,
-        delimiter: typeof opts.delimiter === 'string' || utils.isRegExp(opts.delimiter) ? opts.delimiter : defaults.delimiter,
-        // eslint-disable-next-line no-implicit-coercion, no-extra-parens
-        depth: (typeof opts.depth === 'number' || opts.depth === false) ? +opts.depth : defaults.depth,
-        ignoreQueryPrefix: opts.ignoreQueryPrefix === true,
-        interpretNumericEntities: typeof opts.interpretNumericEntities === 'boolean' ? opts.interpretNumericEntities : defaults.interpretNumericEntities,
-        parameterLimit: typeof opts.parameterLimit === 'number' ? opts.parameterLimit : defaults.parameterLimit,
-        parseArrays: opts.parseArrays !== false,
-        plainObjects: typeof opts.plainObjects === 'boolean' ? opts.plainObjects : defaults.plainObjects,
-        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
-    };
-};
-
-module.exports = function (str, opts) {
-    var options = normalizeParseOptions(opts);
-
-    if (str === '' || str === null || typeof str === 'undefined') {
-        return options.plainObjects ? Object.create(null) : {};
-    }
-
-    var tempObj = typeof str === 'string' ? parseValues(str, options) : str;
-    var obj = options.plainObjects ? Object.create(null) : {};
-
-    // Iterate over the keys and setup the new object
-
-    var keys = Object.keys(tempObj);
-    for (var i = 0; i < keys.length; ++i) {
-        var key = keys[i];
-        var newObj = parseKeys(key, tempObj[key], options, typeof str === 'string');
-        obj = utils.merge(obj, newObj, options);
-    }
-
-    return utils.compact(obj);
-};
-
-
-/***/ }),
-
-/***/ 2:
-/***/ (function(module, exports) {
-
-(function() { module.exports = this["lodash"]; }());
-
-/***/ }),
-
-/***/ 25:
-/***/ (function(module, exports, __webpack_require__) {
-
-var arrayWithoutHoles = __webpack_require__(106);
-
-var iterableToArray = __webpack_require__(107);
-
-var unsupportedIterableToArray = __webpack_require__(77);
-
-var nonIterableSpread = __webpack_require__(108);
-
-function _toConsumableArray(arr) {
-  return arrayWithoutHoles(arr) || iterableToArray(arr) || unsupportedIterableToArray(arr) || nonIterableSpread();
-}
-
-module.exports = _toConsumableArray;
-
-/***/ }),
-
-/***/ 34:
-/***/ (function(module, exports) {
-
-(function() { module.exports = this["wp"]["url"]; }());
-
-/***/ }),
-
-/***/ 39:
-/***/ (function(module, exports) {
-
-function _typeof(obj) {
-  "@babel/helpers - typeof";
-
-  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-    module.exports = _typeof = function _typeof(obj) {
-      return typeof obj;
-    };
-  } else {
-    module.exports = _typeof = function _typeof(obj) {
-      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    };
-  }
-
-  return _typeof(obj);
-}
-
-module.exports = _typeof;
-
-/***/ }),
-
-/***/ 44:
-/***/ (function(module, exports) {
-
-(function() { module.exports = this["wp"]["hooks"]; }());
-
-/***/ }),
-
-/***/ 5:
-/***/ (function(module, exports) {
-
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
-
-module.exports = _defineProperty;
-
-/***/ }),
-
-/***/ 67:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var stringify = __webpack_require__(129);
-var parse = __webpack_require__(130);
-var formats = __webpack_require__(91);
+var stringify = __webpack_require__(67);
+var parse = __webpack_require__(68);
+var formats = __webpack_require__(39);
 
 module.exports = {
     formats: formats,
@@ -789,7 +159,66 @@ module.exports = {
 
 /***/ }),
 
-/***/ 711:
+/***/ 39:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var replace = String.prototype.replace;
+var percentTwenties = /%20/g;
+
+var Format = {
+    RFC1738: 'RFC1738',
+    RFC3986: 'RFC3986'
+};
+
+module.exports = {
+    'default': Format.RFC3986,
+    formatters: {
+        RFC1738: function (value) {
+            return replace.call(value, percentTwenties, '+');
+        },
+        RFC3986: function (value) {
+            return String(value);
+        }
+    },
+    RFC1738: Format.RFC1738,
+    RFC3986: Format.RFC3986
+};
+
+
+/***/ }),
+
+/***/ 4:
+/***/ (function(module, exports) {
+
+(function() { module.exports = window["wp"]["components"]; }());
+
+/***/ }),
+
+/***/ 41:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+var isProduction = "production" === 'production';
+var prefix = 'Invariant failed';
+function invariant(condition, message) {
+    if (condition) {
+        return;
+    }
+    if (isProduction) {
+        throw new Error(prefix);
+    }
+    throw new Error(prefix + ": " + (message || ''));
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (invariant);
+
+
+/***/ }),
+
+/***/ 465:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -803,83 +232,49 @@ __webpack_require__.d(__webpack_exports__, "getActiveFiltersFromQuery", function
 __webpack_require__.d(__webpack_exports__, "getDefaultOptionValue", function() { return /* reexport */ getDefaultOptionValue; });
 __webpack_require__.d(__webpack_exports__, "getQueryFromActiveFilters", function() { return /* reexport */ getQueryFromActiveFilters; });
 __webpack_require__.d(__webpack_exports__, "getUrlKey", function() { return /* reexport */ getUrlKey; });
-__webpack_require__.d(__webpack_exports__, "getPath", function() { return /* binding */ build_module_getPath; });
-__webpack_require__.d(__webpack_exports__, "getPersistedQuery", function() { return /* binding */ build_module_getPersistedQuery; });
+__webpack_require__.d(__webpack_exports__, "getPath", function() { return /* binding */ getPath; });
+__webpack_require__.d(__webpack_exports__, "getPersistedQuery", function() { return /* binding */ getPersistedQuery; });
+__webpack_require__.d(__webpack_exports__, "getQueryExcludedScreens", function() { return /* binding */ getQueryExcludedScreens; });
+__webpack_require__.d(__webpack_exports__, "pathIsExcluded", function() { return /* binding */ pathIsExcluded; });
+__webpack_require__.d(__webpack_exports__, "getScreenFromPath", function() { return /* binding */ getScreenFromPath; });
 __webpack_require__.d(__webpack_exports__, "getIdsFromQuery", function() { return /* binding */ getIdsFromQuery; });
 __webpack_require__.d(__webpack_exports__, "getSearchWords", function() { return /* binding */ getSearchWords; });
 __webpack_require__.d(__webpack_exports__, "getNewPath", function() { return /* binding */ getNewPath; });
 __webpack_require__.d(__webpack_exports__, "getQuery", function() { return /* binding */ getQuery; });
 __webpack_require__.d(__webpack_exports__, "onQueryChange", function() { return /* binding */ onQueryChange; });
 __webpack_require__.d(__webpack_exports__, "updateQueryString", function() { return /* binding */ updateQueryString; });
+__webpack_require__.d(__webpack_exports__, "addHistoryListener", function() { return /* binding */ addHistoryListener; });
+__webpack_require__.d(__webpack_exports__, "WooNavigationItem", function() { return /* binding */ WooNavigationItem; });
 
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/defineProperty.js
-var defineProperty = __webpack_require__(5);
-var defineProperty_default = /*#__PURE__*/__webpack_require__.n(defineProperty);
+// EXTERNAL MODULE: external ["wp","element"]
+var external_wp_element_ = __webpack_require__(0);
 
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/typeof.js
-var helpers_typeof = __webpack_require__(39);
-var typeof_default = /*#__PURE__*/__webpack_require__.n(helpers_typeof);
-
-// EXTERNAL MODULE: external {"this":["wp","url"]}
-var external_this_wp_url_ = __webpack_require__(34);
+// EXTERNAL MODULE: external ["wp","url"]
+var external_wp_url_ = __webpack_require__(14);
 
 // EXTERNAL MODULE: ./node_modules/qs/lib/index.js
-var lib = __webpack_require__(67);
+var lib = __webpack_require__(32);
 
 // EXTERNAL MODULE: external "lodash"
-var external_lodash_ = __webpack_require__(2);
+var external_lodash_ = __webpack_require__(3);
 
-// EXTERNAL MODULE: external {"this":["wp","hooks"]}
-var external_this_wp_hooks_ = __webpack_require__(44);
+// EXTERNAL MODULE: external ["wp","hooks"]
+var external_wp_hooks_ = __webpack_require__(30);
+
+// EXTERNAL MODULE: external ["wp","components"]
+var external_wp_components_ = __webpack_require__(4);
 
 // EXTERNAL MODULE: ./node_modules/history/esm/history.js + 2 modules
-var esm_history = __webpack_require__(96);
+var esm_history = __webpack_require__(51);
 
 // CONCATENATED MODULE: ./packages/navigation/build-module/history.js
-
-
-function ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function _objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
 /**
  * External dependencies
  */
 
-
-
  // See https://github.com/ReactTraining/react-router/blob/master/FAQ.md#how-do-i-access-the-history-object-outside-of-components
 
-var _history;
+let _history;
 /**
  * Recreate `history` to coerce React Router into accepting path arguments found in query
  * parameter `path`, allowing a url hash to be avoided. Since hash portions of the url are
@@ -895,8 +290,8 @@ var _history;
 
 function getHistory() {
   if (!_history) {
-    var path = document.location.pathname;
-    var browserHistory = Object(esm_history["a" /* createBrowserHistory */])({
+    const path = document.location.pathname;
+    const browserHistory = Object(esm_history["a" /* createBrowserHistory */])({
       basename: path.substring(0, path.lastIndexOf('/'))
     });
     _history = {
@@ -909,70 +304,30 @@ function getHistory() {
       },
 
       get location() {
-        var location = browserHistory.location;
-        var query = Object(lib["parse"])(location.search.substring(1));
-        var pathname = query.path || '/';
-        return _objectSpread(_objectSpread({}, location), {}, {
-          pathname: pathname
-        });
+        const {
+          location
+        } = browserHistory;
+        const query = Object(lib["parse"])(location.search.substring(1));
+        const pathname = query.path || '/';
+        return { ...location,
+          pathname
+        };
       },
 
-      createHref: function createHref() {
-        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
-        }
+      createHref: (...args) => browserHistory.createHref.apply(browserHistory, args),
+      push: (...args) => browserHistory.push.apply(browserHistory, args),
+      replace: (...args) => browserHistory.replace.apply(browserHistory, args),
+      go: (...args) => browserHistory.go.apply(browserHistory, args),
+      goBack: (...args) => browserHistory.goBack.apply(browserHistory, args),
+      goForward: (...args) => browserHistory.goForward.apply(browserHistory, args),
+      block: (...args) => browserHistory.block.apply(browserHistory, args),
 
-        return browserHistory.createHref.apply(browserHistory, args);
-      },
-      push: function push() {
-        for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          args[_key2] = arguments[_key2];
-        }
-
-        return browserHistory.push.apply(browserHistory, args);
-      },
-      replace: function replace() {
-        for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-          args[_key3] = arguments[_key3];
-        }
-
-        return browserHistory.replace.apply(browserHistory, args);
-      },
-      go: function go() {
-        for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-          args[_key4] = arguments[_key4];
-        }
-
-        return browserHistory.go.apply(browserHistory, args);
-      },
-      goBack: function goBack() {
-        for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-          args[_key5] = arguments[_key5];
-        }
-
-        return browserHistory.goBack.apply(browserHistory, args);
-      },
-      goForward: function goForward() {
-        for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-          args[_key6] = arguments[_key6];
-        }
-
-        return browserHistory.goForward.apply(browserHistory, args);
-      },
-      block: function block() {
-        for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-          args[_key7] = arguments[_key7];
-        }
-
-        return browserHistory.block.apply(browserHistory, args);
-      },
-      listen: function listen(listener) {
-        var _this = this;
-
-        return browserHistory.listen(function () {
-          listener(_this.location, _this.action);
+      listen(listener) {
+        return browserHistory.listen(() => {
+          listener(this.location, this.action);
         });
       }
+
     };
   }
 
@@ -980,52 +335,10 @@ function getHistory() {
 }
 
 
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/toConsumableArray.js
-var toConsumableArray = __webpack_require__(25);
-var toConsumableArray_default = /*#__PURE__*/__webpack_require__.n(toConsumableArray);
-
 // CONCATENATED MODULE: ./packages/navigation/build-module/filters.js
-
-
-
-function filters_ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function filters_objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      filters_ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      filters_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
 /**
  * External dependencies
  */
-
-
 
 /**
  * Collapse an array of filter values with subFilters into a 1-dimensional array.
@@ -1035,14 +348,14 @@ function filters_objectSpread(target) {
  */
 
 function flattenFilters(filters) {
-  var allFilters = [];
-  filters.forEach(function (f) {
+  const allFilters = [];
+  filters.forEach(f => {
     if (!f.subFilters) {
       allFilters.push(f);
     } else {
       allFilters.push(Object(external_lodash_["omit"])(f, 'subFilters'));
-      var subFilters = flattenFilters(f.subFilters);
-      allFilters.push.apply(allFilters, toConsumableArray_default()(subFilters));
+      const subFilters = flattenFilters(f.subFilters);
+      allFilters.push(...subFilters);
     }
   });
   return allFilters;
@@ -1061,39 +374,62 @@ function flattenFilters(filters) {
  *
  * @param {Object} query - query oject
  * @param {Object} config - config object
- * @return {activeFilters[]} - array of activeFilters
+ * @return {Array} - array of activeFilters
  */
 
 function getActiveFiltersFromQuery(query, config) {
-  return Object(external_lodash_["compact"])(Object.keys(config).map(function (configKey) {
-    var filter = config[configKey];
+  return Object.keys(config).reduce((activeFilters, configKey) => {
+    const filter = config[configKey];
 
     if (filter.rules) {
-      var match = Object(external_lodash_["find"])(filter.rules, function (rule) {
-        return query.hasOwnProperty(getUrlKey(configKey, rule.value));
-      });
+      // Get all rules found in the query string.
+      const matches = filter.rules.filter(rule => query.hasOwnProperty(getUrlKey(configKey, rule.value)));
 
-      if (match) {
-        var value = query[getUrlKey(configKey, match.value)];
-        return {
-          key: configKey,
-          rule: match.value,
-          value: value
-        };
+      if (matches.length) {
+        if (filter.allowMultiple) {
+          // If rules were found in the query string, and this filter supports
+          // multiple instances, add all matches to the active filters array.
+          matches.forEach(match => {
+            const value = query[getUrlKey(configKey, match.value)];
+            value.forEach(filterValue => {
+              activeFilters.push({
+                key: configKey,
+                rule: match.value,
+                value: filterValue
+              });
+            });
+          });
+        } else {
+          // If the filter is a single instance, just process the first rule match.
+          const value = query[getUrlKey(configKey, matches[0].value)];
+          activeFilters.push({
+            key: configKey,
+            rule: matches[0].value,
+            value
+          });
+        }
       }
-
-      return null;
+    } else if (query[configKey]) {
+      // If the filter doesn't have rules, but allows multiples.
+      if (filter.allowMultiple) {
+        const value = query[configKey];
+        value.forEach(filterValue => {
+          activeFilters.push({
+            key: configKey,
+            value: filterValue
+          });
+        });
+      } else {
+        // Filter with no rules and only one instance.
+        activeFilters.push({
+          key: configKey,
+          value: query[configKey]
+        });
+      }
     }
 
-    if (query[configKey]) {
-      return {
-        key: configKey,
-        value: query[configKey]
-      };
-    }
-
-    return null;
-  }));
+    return activeFilters;
+  }, []);
 }
 /**
  * Get the default option's value from the configuration object for a given filter. The first
@@ -1105,16 +441,18 @@ function getActiveFiltersFromQuery(query, config) {
  */
 
 function getDefaultOptionValue(config, options) {
-  var defaultOption = config.input.defaultOption;
+  const {
+    defaultOption
+  } = config.input;
 
   if (config.input.defaultOption) {
-    var option = Object(external_lodash_["find"])(options, {
+    const option = Object(external_lodash_["find"])(options, {
       value: defaultOption
     });
 
     if (!option) {
       /* eslint-disable no-console */
-      console.warn("invalid defaultOption ".concat(defaultOption, " supplied to ").concat(config.labels.add));
+      console.warn(`invalid defaultOption ${defaultOption} supplied to ${config.labels.add}`);
       /* eslint-enable */
 
       return undefined;
@@ -1126,40 +464,45 @@ function getDefaultOptionValue(config, options) {
   return Object(external_lodash_["get"])(options, [0, 'value']);
 }
 /**
- * @typedef {Object} activeFilters
- * @property
- */
-
-/**
  * Given activeFilters, create a new query object to update the url. Use previousFilters to
  * Remove unused params.
  *
- * @param {activeFilters[]} activeFilters - activeFilters shown in the UI
+ * @param {Array} activeFilters - Array of activeFilters shown in the UI
  * @param {Object} query - the current url query object
  * @param {Object} config - config object
  * @return {Object} - query object representing the new parameters
  */
 
 function getQueryFromActiveFilters(activeFilters, query, config) {
-  var previousFilters = getActiveFiltersFromQuery(query, config);
-  var previousData = previousFilters.reduce(function (data, filter) {
+  const previousFilters = getActiveFiltersFromQuery(query, config);
+  const previousData = previousFilters.reduce((data, filter) => {
     data[getUrlKey(filter.key, filter.rule)] = undefined;
     return data;
   }, {});
-  var nextData = activeFilters.reduce(function (data, filter) {
-    if (filter.rule === 'between' && (!Array.isArray(filter.value) || filter.value.some(function (value) {
-      return !value;
-    }))) {
+  const nextData = activeFilters.reduce((data, filter) => {
+    if (filter.rule === 'between' && (!Array.isArray(filter.value) || filter.value.some(value => !value))) {
       return data;
     }
 
     if (filter.value) {
-      data[getUrlKey(filter.key, filter.rule)] = filter.value;
+      const urlKey = getUrlKey(filter.key, filter.rule);
+
+      if (config[filter.key] && config[filter.key].allowMultiple) {
+        if (!data.hasOwnProperty(urlKey)) {
+          data[urlKey] = [];
+        }
+
+        data[urlKey].push(filter.value);
+      } else {
+        data[urlKey] = filter.value;
+      }
     }
 
     return data;
   }, {});
-  return filters_objectSpread(filters_objectSpread({}, previousData), nextData);
+  return { ...previousData,
+    ...nextData
+  };
 }
 /**
  * Get the url query key from the filter key and rule.
@@ -1171,48 +514,12 @@ function getQueryFromActiveFilters(activeFilters, query, config) {
 
 function getUrlKey(key, rule) {
   if (rule && rule.length) {
-    return "".concat(key, "_").concat(rule);
+    return `${key}_${rule}`;
   }
 
   return key;
 }
 // CONCATENATED MODULE: ./packages/navigation/build-module/index.js
-
-
-
-function build_module_ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function build_module_objectSpread(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      build_module_ownKeys(Object(source), true).forEach(function (key) {
-        defineProperty_default()(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      build_module_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
 /**
  * External dependencies
  */
@@ -1233,15 +540,14 @@ function build_module_objectSpread(target) {
  // Export all filter utilities
 
 
+const TIME_EXCLUDED_SCREENS_FILTER = 'woocommerce_admin_time_excluded_screens';
 /**
  * Get the current path from history.
  *
  * @return {string}  Current path.
  */
 
-var build_module_getPath = function getPath() {
-  return getHistory().location.pathname;
-};
+const getPath = () => getHistory().location.pathname;
 /**
  * Gets query parameters that should persist between screens or updates
  * to reports, such as filtering.
@@ -1250,23 +556,46 @@ var build_module_getPath = function getPath() {
  * @return {Object} Object containing the persisted queries.
  */
 
-var build_module_getPersistedQuery = function getPersistedQuery() {
-  var query = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : getQuery();
-  var params = Object(external_this_wp_hooks_["applyFilters"])('woocommerce_admin_persisted_queries', ['period', 'compare', 'before', 'after', 'interval', 'type']);
+const getPersistedQuery = (query = getQuery()) => {
+  const params = Object(external_wp_hooks_["applyFilters"])('woocommerce_admin_persisted_queries', ['period', 'compare', 'before', 'after', 'interval', 'type']);
   return Object(external_lodash_["pick"])(query, params);
+};
+/**
+ * Get array of screens that should ignore persisted queries
+ *
+ * @return {Array} Array containing list of screens
+ */
+
+const getQueryExcludedScreens = () => Object(external_wp_hooks_["applyFilters"])(TIME_EXCLUDED_SCREENS_FILTER, ['stock', 'settings', 'customers', 'homescreen']);
+/**
+ * Given a path, return whether it is an excluded screen
+ *
+ * @param {Object} path Path to check
+ *
+ * @return {boolean} Boolean representing whether path is excluded
+ */
+
+const pathIsExcluded = path => getQueryExcludedScreens().includes(getScreenFromPath(path));
+/**
+ * Retrieve a string 'name' representing the current screen
+ *
+ * @param {Object} path Path to resolve, default to current
+ * @return {string} Screen name
+ */
+
+const getScreenFromPath = (path = getPath()) => {
+  return path === '/' ? 'homescreen' : path.replace('/analytics', '').replace('/', '');
 };
 /**
  * Get an array of IDs from a comma-separated query parameter.
  *
- * @param {string} queryString string value extracted from URL.
- * @return {Array} List of IDs converted to numbers.
+ * @param {string} [queryString=''] string value extracted from URL.
+ * @return {Array<number>} List of IDs converted to an array of unique integers.
  */
 
-function getIdsFromQuery() {
-  var queryString = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-  return Object(external_lodash_["uniq"])(queryString.split(',').map(function (id) {
-    return parseInt(id, 10);
-  }).filter(Boolean));
+function getIdsFromQuery(queryString = '') {
+  return [...new Set( // Return only unique ids.
+  queryString.split(',').map(id => parseInt(id, 10)).filter(id => !isNaN(id)))];
 }
 /**
  * Get an array of searched words given a query.
@@ -1275,14 +604,14 @@ function getIdsFromQuery() {
  * @return {Array} List of search words.
  */
 
-function getSearchWords() {
-  var query = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : getQuery();
-
-  if (typeof_default()(query) !== 'object') {
+function getSearchWords(query = getQuery()) {
+  if (typeof query !== 'object') {
     throw new Error('Invalid parameter passed to getSearchWords, it expects an object or no parameters.');
   }
 
-  var search = query.search;
+  const {
+    search
+  } = query;
 
   if (!search) {
     return [];
@@ -1292,9 +621,7 @@ function getSearchWords() {
     throw new Error("Invalid 'search' type. getSearchWords expects query's 'search' property to be a string.");
   }
 
-  return search.split(',').map(function (searchWord) {
-    return searchWord.replace('%2C', ',');
-  });
+  return search.split(',').map(searchWord => searchWord.replace('%2C', ','));
 }
 /**
  * Return a URL with set query parameters.
@@ -1302,22 +629,22 @@ function getSearchWords() {
  * @param {Object} query object of params to be updated.
  * @param {string} path Relative path (defaults to current path).
  * @param {Object} currentQuery object of current query params (defaults to current querystring).
+ * @param {string} page Page key (defaults to "wc-admin")
  * @return {string}  Updated URL merging query params into existing params.
  */
 
-function getNewPath(query) {
-  var path = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : build_module_getPath();
-  var currentQuery = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : getQuery();
-
-  var args = build_module_objectSpread(build_module_objectSpread({
-    page: 'wc-admin'
-  }, currentQuery), query);
+function getNewPath(query, path = getPath(), currentQuery = getQuery(), page = 'wc-admin') {
+  const args = {
+    page,
+    ...currentQuery,
+    ...query
+  };
 
   if (path !== '/') {
     args.path = path;
   }
 
-  return Object(external_this_wp_url_["addQueryArgs"])('admin.php', args);
+  return Object(external_wp_url_["addQueryArgs"])('admin.php', args);
 }
 /**
  * Get the current query string, parsed into an object, from history.
@@ -1326,7 +653,7 @@ function getNewPath(query) {
  */
 
 function getQuery() {
-  var search = getHistory().location.search;
+  const search = getHistory().location.search;
 
   if (search.length) {
     return Object(lib["parse"])(search.substring(1)) || {};
@@ -1343,30 +670,25 @@ function getQuery() {
  * @return {Function} A callback which will update `param` to the passed value when called.
  */
 
-function onQueryChange(param) {
-  var path = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : build_module_getPath();
-  var query = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : getQuery();
-
+function onQueryChange(param, path = getPath(), query = getQuery()) {
   switch (param) {
     case 'sort':
-      return function (key, dir) {
-        return updateQueryString({
-          orderby: key,
-          order: dir
-        }, path, query);
-      };
+      return (key, dir) => updateQueryString({
+        orderby: key,
+        order: dir
+      }, path, query);
 
     case 'compare':
-      return function (key, queryParam, ids) {
-        var _updateQueryString;
-
-        return updateQueryString((_updateQueryString = {}, defineProperty_default()(_updateQueryString, queryParam, "compare-".concat(key)), defineProperty_default()(_updateQueryString, key, ids), defineProperty_default()(_updateQueryString, "search", undefined), _updateQueryString), path, query);
-      };
+      return (key, queryParam, ids) => updateQueryString({
+        [queryParam]: `compare-${key}`,
+        [key]: ids,
+        search: undefined
+      }, path, query);
 
     default:
-      return function (value) {
-        return updateQueryString(defineProperty_default()({}, param, value), path, query);
-      };
+      return value => updateQueryString({
+        [param]: value
+      }, path, query);
   }
 }
 /**
@@ -1375,39 +697,99 @@ function onQueryChange(param) {
  * @param {Object} query object of params to be updated.
  * @param {string} path Relative path (defaults to current path).
  * @param {Object} currentQuery object of current query params (defaults to current querystring).
+ * @param {string} page Page key (defaults to "wc-admin")
  */
 
-function updateQueryString(query) {
-  var path = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : build_module_getPath();
-  var currentQuery = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : getQuery();
-  var newPath = getNewPath(query, path, currentQuery);
+function updateQueryString(query, path = getPath(), currentQuery = getQuery(), page = 'wc-admin') {
+  const newPath = getNewPath(query, path, currentQuery, page);
   getHistory().push(newPath);
 }
+/**
+ * Adds a listener that runs on history change.
+ *
+ * @param {Function} listener Listener to add on history change.
+ * @return {Function} Function to remove listeners.
+ */
 
-/***/ }),
+const addHistoryListener = listener => {
+  // Monkey patch pushState to allow trigger the pushstate event listener.
+  if (window.wcNavigation && !window.wcNavigation.historyPatched) {
+    (history => {
+      /* global CustomEvent */
+      const pushState = history.pushState;
+      const replaceState = history.replaceState;
 
-/***/ 73:
-/***/ (function(module, exports) {
+      history.pushState = function (state) {
+        const pushStateEvent = new CustomEvent('pushstate', {
+          state
+        });
+        window.dispatchEvent(pushStateEvent);
+        return pushState.apply(history, arguments);
+      };
 
-function _arrayLikeToArray(arr, len) {
-  if (len == null || len > arr.length) len = arr.length;
+      history.replaceState = function (state) {
+        const replaceStateEvent = new CustomEvent('replacestate', {
+          state
+        });
+        window.dispatchEvent(replaceStateEvent);
+        return replaceState.apply(history, arguments);
+      };
 
-  for (var i = 0, arr2 = new Array(len); i < len; i++) {
-    arr2[i] = arr[i];
+      window.wcNavigation.historyPatched = true;
+    })(window.history);
   }
 
-  return arr2;
-}
+  window.addEventListener('popstate', listener);
+  window.addEventListener('pushstate', listener);
+  window.addEventListener('replacestate', listener);
+  return () => {
+    window.removeEventListener('popstate', listener);
+    window.removeEventListener('pushstate', listener);
+    window.removeEventListener('replacestate', listener);
+  };
+};
+/**
+ * Create a Fill for extensions to add client facing custom Navigation Items.
+ *
+ * @slotFill WooNavigationItem
+ * @example
+ * const MyExtenstionNavItem = () => (
+ * 	<WooNavigationItem item="my-extension">My Extension</WooNavigationItem>
+ * );
+ *
+ * registerPlugin( 'my-extension', {
+ * 	render: MyExtenstionNavItem,
+ * 	scope: 'woocommerce-admin',
+ * } );
+ * @param {Object} param0
+ * @param {Array} param0.children - Node children.
+ * @param {string} param0.item - Navigation item slug.
+ */
 
-module.exports = _arrayLikeToArray;
+const WooNavigationItem = ({
+  children,
+  item
+}) => {
+  return Object(external_wp_element_["createElement"])(external_wp_components_["Fill"], {
+    name: 'woocommerce_navigation_' + item
+  }, children);
+};
+
+WooNavigationItem.Slot = ({
+  name
+}) => Object(external_wp_element_["createElement"])(external_wp_components_["Slot"], {
+  name: 'woocommerce_navigation_' + name
+});
 
 /***/ }),
 
-/***/ 75:
+/***/ 48:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+
+var formats = __webpack_require__(39);
 
 var has = Object.prototype.hasOwnProperty;
 var isArray = Array.isArray;
@@ -1529,7 +911,7 @@ var decode = function (str, decoder, charset) {
     }
 };
 
-var encode = function encode(str, defaultEncoder, charset) {
+var encode = function encode(str, defaultEncoder, charset, kind, format) {
     // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
     // It has been adapted here for stricter adherence to RFC 3986
     if (str.length === 0) {
@@ -1561,6 +943,7 @@ var encode = function encode(str, defaultEncoder, charset) {
             || (c >= 0x30 && c <= 0x39) // 0-9
             || (c >= 0x41 && c <= 0x5A) // a-z
             || (c >= 0x61 && c <= 0x7A) // A-Z
+            || (format === formats.RFC1738 && (c === 0x28 || c === 0x29)) // ( )
         ) {
             out += string.charAt(i);
             continue;
@@ -1632,6 +1015,17 @@ var combine = function combine(a, b) {
     return [].concat(a, b);
 };
 
+var maybeMap = function maybeMap(val, fn) {
+    if (isArray(val)) {
+        var mapped = [];
+        for (var i = 0; i < val.length; i += 1) {
+            mapped.push(fn(val[i]));
+        }
+        return mapped;
+    }
+    return fn(val);
+};
+
 module.exports = {
     arrayToObject: arrayToObject,
     assign: assign,
@@ -1641,111 +1035,14 @@ module.exports = {
     encode: encode,
     isBuffer: isBuffer,
     isRegExp: isRegExp,
+    maybeMap: maybeMap,
     merge: merge
 };
 
 
 /***/ }),
 
-/***/ 77:
-/***/ (function(module, exports, __webpack_require__) {
-
-var arrayLikeToArray = __webpack_require__(73);
-
-function _unsupportedIterableToArray(o, minLen) {
-  if (!o) return;
-  if (typeof o === "string") return arrayLikeToArray(o, minLen);
-  var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return arrayLikeToArray(o, minLen);
-}
-
-module.exports = _unsupportedIterableToArray;
-
-/***/ }),
-
-/***/ 8:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return _extends; });
-function _extends() {
-  _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends.apply(this, arguments);
-}
-
-/***/ }),
-
-/***/ 80:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-var isProduction = "production" === 'production';
-var prefix = 'Invariant failed';
-function invariant(condition, message) {
-    if (condition) {
-        return;
-    }
-    if (isProduction) {
-        throw new Error(prefix);
-    }
-    throw new Error(prefix + ": " + (message || ''));
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (invariant);
-
-
-/***/ }),
-
-/***/ 91:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var replace = String.prototype.replace;
-var percentTwenties = /%20/g;
-
-var util = __webpack_require__(75);
-
-var Format = {
-    RFC1738: 'RFC1738',
-    RFC3986: 'RFC3986'
-};
-
-module.exports = util.assign(
-    {
-        'default': Format.RFC3986,
-        formatters: {
-            RFC1738: function (value) {
-                return replace.call(value, percentTwenties, '+');
-            },
-            RFC3986: function (value) {
-                return String(value);
-            }
-        }
-    },
-    Format
-);
-
-
-/***/ }),
-
-/***/ 96:
+/***/ 51:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1760,7 +1057,7 @@ __webpack_require__.d(__webpack_exports__, "d", function() { return /* binding *
 // UNUSED EXPORTS: createHashHistory, parsePath
 
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/extends.js
-var esm_extends = __webpack_require__(8);
+var esm_extends = __webpack_require__(23);
 
 // CONCATENATED MODULE: ./node_modules/resolve-pathname/esm/resolve-pathname.js
 function isAbsolute(pathname) {
@@ -1878,7 +1175,7 @@ function valueEqual(a, b) {
 /* harmony default export */ var value_equal = (valueEqual);
 
 // EXTERNAL MODULE: ./node_modules/tiny-invariant/dist/tiny-invariant.esm.js
-var tiny_invariant_esm = __webpack_require__(80);
+var tiny_invariant_esm = __webpack_require__(41);
 
 // CONCATENATED MODULE: ./node_modules/history/esm/history.js
 
@@ -2800,6 +2097,557 @@ function createMemoryHistory(props) {
 }
 
 
+
+
+/***/ }),
+
+/***/ 67:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(48);
+var formats = __webpack_require__(39);
+var has = Object.prototype.hasOwnProperty;
+
+var arrayPrefixGenerators = {
+    brackets: function brackets(prefix) {
+        return prefix + '[]';
+    },
+    comma: 'comma',
+    indices: function indices(prefix, key) {
+        return prefix + '[' + key + ']';
+    },
+    repeat: function repeat(prefix) {
+        return prefix;
+    }
+};
+
+var isArray = Array.isArray;
+var push = Array.prototype.push;
+var pushToArray = function (arr, valueOrArray) {
+    push.apply(arr, isArray(valueOrArray) ? valueOrArray : [valueOrArray]);
+};
+
+var toISO = Date.prototype.toISOString;
+
+var defaultFormat = formats['default'];
+var defaults = {
+    addQueryPrefix: false,
+    allowDots: false,
+    charset: 'utf-8',
+    charsetSentinel: false,
+    delimiter: '&',
+    encode: true,
+    encoder: utils.encode,
+    encodeValuesOnly: false,
+    format: defaultFormat,
+    formatter: formats.formatters[defaultFormat],
+    // deprecated
+    indices: false,
+    serializeDate: function serializeDate(date) {
+        return toISO.call(date);
+    },
+    skipNulls: false,
+    strictNullHandling: false
+};
+
+var isNonNullishPrimitive = function isNonNullishPrimitive(v) {
+    return typeof v === 'string'
+        || typeof v === 'number'
+        || typeof v === 'boolean'
+        || typeof v === 'symbol'
+        || typeof v === 'bigint';
+};
+
+var stringify = function stringify(
+    object,
+    prefix,
+    generateArrayPrefix,
+    strictNullHandling,
+    skipNulls,
+    encoder,
+    filter,
+    sort,
+    allowDots,
+    serializeDate,
+    format,
+    formatter,
+    encodeValuesOnly,
+    charset
+) {
+    var obj = object;
+    if (typeof filter === 'function') {
+        obj = filter(prefix, obj);
+    } else if (obj instanceof Date) {
+        obj = serializeDate(obj);
+    } else if (generateArrayPrefix === 'comma' && isArray(obj)) {
+        obj = utils.maybeMap(obj, function (value) {
+            if (value instanceof Date) {
+                return serializeDate(value);
+            }
+            return value;
+        });
+    }
+
+    if (obj === null) {
+        if (strictNullHandling) {
+            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset, 'key', format) : prefix;
+        }
+
+        obj = '';
+    }
+
+    if (isNonNullishPrimitive(obj) || utils.isBuffer(obj)) {
+        if (encoder) {
+            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder, charset, 'key', format);
+            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder, charset, 'value', format))];
+        }
+        return [formatter(prefix) + '=' + formatter(String(obj))];
+    }
+
+    var values = [];
+
+    if (typeof obj === 'undefined') {
+        return values;
+    }
+
+    var objKeys;
+    if (generateArrayPrefix === 'comma' && isArray(obj)) {
+        // we need to join elements in
+        objKeys = [{ value: obj.length > 0 ? obj.join(',') || null : undefined }];
+    } else if (isArray(filter)) {
+        objKeys = filter;
+    } else {
+        var keys = Object.keys(obj);
+        objKeys = sort ? keys.sort(sort) : keys;
+    }
+
+    for (var i = 0; i < objKeys.length; ++i) {
+        var key = objKeys[i];
+        var value = typeof key === 'object' && key.value !== undefined ? key.value : obj[key];
+
+        if (skipNulls && value === null) {
+            continue;
+        }
+
+        var keyPrefix = isArray(obj)
+            ? typeof generateArrayPrefix === 'function' ? generateArrayPrefix(prefix, key) : prefix
+            : prefix + (allowDots ? '.' + key : '[' + key + ']');
+
+        pushToArray(values, stringify(
+            value,
+            keyPrefix,
+            generateArrayPrefix,
+            strictNullHandling,
+            skipNulls,
+            encoder,
+            filter,
+            sort,
+            allowDots,
+            serializeDate,
+            format,
+            formatter,
+            encodeValuesOnly,
+            charset
+        ));
+    }
+
+    return values;
+};
+
+var normalizeStringifyOptions = function normalizeStringifyOptions(opts) {
+    if (!opts) {
+        return defaults;
+    }
+
+    if (opts.encoder !== null && opts.encoder !== undefined && typeof opts.encoder !== 'function') {
+        throw new TypeError('Encoder has to be a function.');
+    }
+
+    var charset = opts.charset || defaults.charset;
+    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
+        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
+    }
+
+    var format = formats['default'];
+    if (typeof opts.format !== 'undefined') {
+        if (!has.call(formats.formatters, opts.format)) {
+            throw new TypeError('Unknown format option provided.');
+        }
+        format = opts.format;
+    }
+    var formatter = formats.formatters[format];
+
+    var filter = defaults.filter;
+    if (typeof opts.filter === 'function' || isArray(opts.filter)) {
+        filter = opts.filter;
+    }
+
+    return {
+        addQueryPrefix: typeof opts.addQueryPrefix === 'boolean' ? opts.addQueryPrefix : defaults.addQueryPrefix,
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
+        charset: charset,
+        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
+        delimiter: typeof opts.delimiter === 'undefined' ? defaults.delimiter : opts.delimiter,
+        encode: typeof opts.encode === 'boolean' ? opts.encode : defaults.encode,
+        encoder: typeof opts.encoder === 'function' ? opts.encoder : defaults.encoder,
+        encodeValuesOnly: typeof opts.encodeValuesOnly === 'boolean' ? opts.encodeValuesOnly : defaults.encodeValuesOnly,
+        filter: filter,
+        format: format,
+        formatter: formatter,
+        serializeDate: typeof opts.serializeDate === 'function' ? opts.serializeDate : defaults.serializeDate,
+        skipNulls: typeof opts.skipNulls === 'boolean' ? opts.skipNulls : defaults.skipNulls,
+        sort: typeof opts.sort === 'function' ? opts.sort : null,
+        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
+    };
+};
+
+module.exports = function (object, opts) {
+    var obj = object;
+    var options = normalizeStringifyOptions(opts);
+
+    var objKeys;
+    var filter;
+
+    if (typeof options.filter === 'function') {
+        filter = options.filter;
+        obj = filter('', obj);
+    } else if (isArray(options.filter)) {
+        filter = options.filter;
+        objKeys = filter;
+    }
+
+    var keys = [];
+
+    if (typeof obj !== 'object' || obj === null) {
+        return '';
+    }
+
+    var arrayFormat;
+    if (opts && opts.arrayFormat in arrayPrefixGenerators) {
+        arrayFormat = opts.arrayFormat;
+    } else if (opts && 'indices' in opts) {
+        arrayFormat = opts.indices ? 'indices' : 'repeat';
+    } else {
+        arrayFormat = 'indices';
+    }
+
+    var generateArrayPrefix = arrayPrefixGenerators[arrayFormat];
+
+    if (!objKeys) {
+        objKeys = Object.keys(obj);
+    }
+
+    if (options.sort) {
+        objKeys.sort(options.sort);
+    }
+
+    for (var i = 0; i < objKeys.length; ++i) {
+        var key = objKeys[i];
+
+        if (options.skipNulls && obj[key] === null) {
+            continue;
+        }
+        pushToArray(keys, stringify(
+            obj[key],
+            key,
+            generateArrayPrefix,
+            options.strictNullHandling,
+            options.skipNulls,
+            options.encode ? options.encoder : null,
+            options.filter,
+            options.sort,
+            options.allowDots,
+            options.serializeDate,
+            options.format,
+            options.formatter,
+            options.encodeValuesOnly,
+            options.charset
+        ));
+    }
+
+    var joined = keys.join(options.delimiter);
+    var prefix = options.addQueryPrefix === true ? '?' : '';
+
+    if (options.charsetSentinel) {
+        if (options.charset === 'iso-8859-1') {
+            // encodeURIComponent('&#10003;'), the "numeric entity" representation of a checkmark
+            prefix += 'utf8=%26%2310003%3B&';
+        } else {
+            // encodeURIComponent('✓')
+            prefix += 'utf8=%E2%9C%93&';
+        }
+    }
+
+    return joined.length > 0 ? prefix + joined : '';
+};
+
+
+/***/ }),
+
+/***/ 68:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(48);
+
+var has = Object.prototype.hasOwnProperty;
+var isArray = Array.isArray;
+
+var defaults = {
+    allowDots: false,
+    allowPrototypes: false,
+    arrayLimit: 20,
+    charset: 'utf-8',
+    charsetSentinel: false,
+    comma: false,
+    decoder: utils.decode,
+    delimiter: '&',
+    depth: 5,
+    ignoreQueryPrefix: false,
+    interpretNumericEntities: false,
+    parameterLimit: 1000,
+    parseArrays: true,
+    plainObjects: false,
+    strictNullHandling: false
+};
+
+var interpretNumericEntities = function (str) {
+    return str.replace(/&#(\d+);/g, function ($0, numberStr) {
+        return String.fromCharCode(parseInt(numberStr, 10));
+    });
+};
+
+var parseArrayValue = function (val, options) {
+    if (val && typeof val === 'string' && options.comma && val.indexOf(',') > -1) {
+        return val.split(',');
+    }
+
+    return val;
+};
+
+// This is what browsers will submit when the ✓ character occurs in an
+// application/x-www-form-urlencoded body and the encoding of the page containing
+// the form is iso-8859-1, or when the submitted form has an accept-charset
+// attribute of iso-8859-1. Presumably also with other charsets that do not contain
+// the ✓ character, such as us-ascii.
+var isoSentinel = 'utf8=%26%2310003%3B'; // encodeURIComponent('&#10003;')
+
+// These are the percent-encoded utf-8 octets representing a checkmark, indicating that the request actually is utf-8 encoded.
+var charsetSentinel = 'utf8=%E2%9C%93'; // encodeURIComponent('✓')
+
+var parseValues = function parseQueryStringValues(str, options) {
+    var obj = {};
+    var cleanStr = options.ignoreQueryPrefix ? str.replace(/^\?/, '') : str;
+    var limit = options.parameterLimit === Infinity ? undefined : options.parameterLimit;
+    var parts = cleanStr.split(options.delimiter, limit);
+    var skipIndex = -1; // Keep track of where the utf8 sentinel was found
+    var i;
+
+    var charset = options.charset;
+    if (options.charsetSentinel) {
+        for (i = 0; i < parts.length; ++i) {
+            if (parts[i].indexOf('utf8=') === 0) {
+                if (parts[i] === charsetSentinel) {
+                    charset = 'utf-8';
+                } else if (parts[i] === isoSentinel) {
+                    charset = 'iso-8859-1';
+                }
+                skipIndex = i;
+                i = parts.length; // The eslint settings do not allow break;
+            }
+        }
+    }
+
+    for (i = 0; i < parts.length; ++i) {
+        if (i === skipIndex) {
+            continue;
+        }
+        var part = parts[i];
+
+        var bracketEqualsPos = part.indexOf(']=');
+        var pos = bracketEqualsPos === -1 ? part.indexOf('=') : bracketEqualsPos + 1;
+
+        var key, val;
+        if (pos === -1) {
+            key = options.decoder(part, defaults.decoder, charset, 'key');
+            val = options.strictNullHandling ? null : '';
+        } else {
+            key = options.decoder(part.slice(0, pos), defaults.decoder, charset, 'key');
+            val = utils.maybeMap(
+                parseArrayValue(part.slice(pos + 1), options),
+                function (encodedVal) {
+                    return options.decoder(encodedVal, defaults.decoder, charset, 'value');
+                }
+            );
+        }
+
+        if (val && options.interpretNumericEntities && charset === 'iso-8859-1') {
+            val = interpretNumericEntities(val);
+        }
+
+        if (part.indexOf('[]=') > -1) {
+            val = isArray(val) ? [val] : val;
+        }
+
+        if (has.call(obj, key)) {
+            obj[key] = utils.combine(obj[key], val);
+        } else {
+            obj[key] = val;
+        }
+    }
+
+    return obj;
+};
+
+var parseObject = function (chain, val, options, valuesParsed) {
+    var leaf = valuesParsed ? val : parseArrayValue(val, options);
+
+    for (var i = chain.length - 1; i >= 0; --i) {
+        var obj;
+        var root = chain[i];
+
+        if (root === '[]' && options.parseArrays) {
+            obj = [].concat(leaf);
+        } else {
+            obj = options.plainObjects ? Object.create(null) : {};
+            var cleanRoot = root.charAt(0) === '[' && root.charAt(root.length - 1) === ']' ? root.slice(1, -1) : root;
+            var index = parseInt(cleanRoot, 10);
+            if (!options.parseArrays && cleanRoot === '') {
+                obj = { 0: leaf };
+            } else if (
+                !isNaN(index)
+                && root !== cleanRoot
+                && String(index) === cleanRoot
+                && index >= 0
+                && (options.parseArrays && index <= options.arrayLimit)
+            ) {
+                obj = [];
+                obj[index] = leaf;
+            } else {
+                obj[cleanRoot] = leaf;
+            }
+        }
+
+        leaf = obj;
+    }
+
+    return leaf;
+};
+
+var parseKeys = function parseQueryStringKeys(givenKey, val, options, valuesParsed) {
+    if (!givenKey) {
+        return;
+    }
+
+    // Transform dot notation to bracket notation
+    var key = options.allowDots ? givenKey.replace(/\.([^.[]+)/g, '[$1]') : givenKey;
+
+    // The regex chunks
+
+    var brackets = /(\[[^[\]]*])/;
+    var child = /(\[[^[\]]*])/g;
+
+    // Get the parent
+
+    var segment = options.depth > 0 && brackets.exec(key);
+    var parent = segment ? key.slice(0, segment.index) : key;
+
+    // Stash the parent if it exists
+
+    var keys = [];
+    if (parent) {
+        // If we aren't using plain objects, optionally prefix keys that would overwrite object prototype properties
+        if (!options.plainObjects && has.call(Object.prototype, parent)) {
+            if (!options.allowPrototypes) {
+                return;
+            }
+        }
+
+        keys.push(parent);
+    }
+
+    // Loop through children appending to the array until we hit depth
+
+    var i = 0;
+    while (options.depth > 0 && (segment = child.exec(key)) !== null && i < options.depth) {
+        i += 1;
+        if (!options.plainObjects && has.call(Object.prototype, segment[1].slice(1, -1))) {
+            if (!options.allowPrototypes) {
+                return;
+            }
+        }
+        keys.push(segment[1]);
+    }
+
+    // If there's a remainder, just add whatever is left
+
+    if (segment) {
+        keys.push('[' + key.slice(segment.index) + ']');
+    }
+
+    return parseObject(keys, val, options, valuesParsed);
+};
+
+var normalizeParseOptions = function normalizeParseOptions(opts) {
+    if (!opts) {
+        return defaults;
+    }
+
+    if (opts.decoder !== null && opts.decoder !== undefined && typeof opts.decoder !== 'function') {
+        throw new TypeError('Decoder has to be a function.');
+    }
+
+    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
+        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
+    }
+    var charset = typeof opts.charset === 'undefined' ? defaults.charset : opts.charset;
+
+    return {
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
+        allowPrototypes: typeof opts.allowPrototypes === 'boolean' ? opts.allowPrototypes : defaults.allowPrototypes,
+        arrayLimit: typeof opts.arrayLimit === 'number' ? opts.arrayLimit : defaults.arrayLimit,
+        charset: charset,
+        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
+        comma: typeof opts.comma === 'boolean' ? opts.comma : defaults.comma,
+        decoder: typeof opts.decoder === 'function' ? opts.decoder : defaults.decoder,
+        delimiter: typeof opts.delimiter === 'string' || utils.isRegExp(opts.delimiter) ? opts.delimiter : defaults.delimiter,
+        // eslint-disable-next-line no-implicit-coercion, no-extra-parens
+        depth: (typeof opts.depth === 'number' || opts.depth === false) ? +opts.depth : defaults.depth,
+        ignoreQueryPrefix: opts.ignoreQueryPrefix === true,
+        interpretNumericEntities: typeof opts.interpretNumericEntities === 'boolean' ? opts.interpretNumericEntities : defaults.interpretNumericEntities,
+        parameterLimit: typeof opts.parameterLimit === 'number' ? opts.parameterLimit : defaults.parameterLimit,
+        parseArrays: opts.parseArrays !== false,
+        plainObjects: typeof opts.plainObjects === 'boolean' ? opts.plainObjects : defaults.plainObjects,
+        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
+    };
+};
+
+module.exports = function (str, opts) {
+    var options = normalizeParseOptions(opts);
+
+    if (str === '' || str === null || typeof str === 'undefined') {
+        return options.plainObjects ? Object.create(null) : {};
+    }
+
+    var tempObj = typeof str === 'string' ? parseValues(str, options) : str;
+    var obj = options.plainObjects ? Object.create(null) : {};
+
+    // Iterate over the keys and setup the new object
+
+    var keys = Object.keys(tempObj);
+    for (var i = 0; i < keys.length; ++i) {
+        var key = keys[i];
+        var newObj = parseKeys(key, tempObj[key], options, typeof str === 'string');
+        obj = utils.merge(obj, newObj, options);
+    }
+
+    return utils.compact(obj);
+};
 
 
 /***/ })

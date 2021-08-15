@@ -3,12 +3,12 @@ Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
 Tags: update woocommerce, import variation products, import woocommerce, woocommerce csv, products import, import coupons
 Requires at least: 5.0
-Tested up to: 5.5.1
-Stable tag: 1.5.8
-Version: 1.5.8
+Tested up to: 5.8
+Stable tag: 1.6.3
+Version: 1.6.3
 Requires PHP: 5.2.4
 Author: smackcoders
-Author URI: http://profiles.wordpress.org/smackcoders/
+Author URI: https://profiles.wordpress.org/smackcoders/
 License: GPLv2 or later
 
 Complete WooCommerce Product Import Suite add-on with 5 major add-on support
@@ -83,7 +83,7 @@ To know more about the premium bundled version, visit [WordPress Lead Form Data 
 
 = Helpful links =
 
-Try the demo [WP Ultimate CSV Importer PRO](http://demo.smackcoders.com/wp-ultimate-csv-importer/wp-admin) plugin to import all WooCommerce products along with WooCommerce add-ons. 
+Try the demo [WP Ultimate CSV Importer PRO](https://demo.smackcoders.com/wp-ultimate-csv-importer/wp-admin) plugin to import all WooCommerce products along with WooCommerce add-ons. 
 
 For technical support and feature request, visit <a href="https://www.smackcoders.com/support.html"> Smackcoders support </a> or <a href="mailto:support@smackcoders.com">mail us</a>.
 
@@ -116,6 +116,25 @@ The import button will be enabled only after uploading the CSV file to be import
 4. Log section with Admin and Web view.
 
 == Changelog ==
+= 1.6.3 =
+* Added: Import support for Polylang for WooCommerce plugin.
+* Added: WordPress 5.8 compatibility
+
+= 1.6.2 =
+* Added: WordPress 5.7.2 compatibility
+* Fixed: Woocommerce regular price issue.
+
+= 1.6.1 = 
+* Added: WordPress 5.7 compatibility
+* Fixed: WooCommerce visibility import supports both id and value.
+
+= 1.6 =
+* Added: WordPress 5.6 compatibility
+* Added: PHP 8 compatibility
+
+= 1.5.9 =
+* Added: Extended import support for WooCommerce Product Bundle Fields.
+
 = 1.5.8 =
 * Added: Support for Variation Swatcher for WooCommerce Plugin.
 * Checked: Compatibility for WordPress 5.5.1
@@ -185,6 +204,21 @@ Added: Latest woocommerce version 3.6.5 support
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+= 1.6.3 = 
+* Upgrade now for latest changes
+
+= 1.6.2 = 
+* Upgrade now for latest changes
+
+= 1.6.1 = 
+* Upgrade now for latest changes
+
+= 1.6 = 
+* Upgrade now for latest changes
+
+= 1.5.9 = 
+* Upgrade now for latest changes
+
 = 1.5.8 = 
 * Upgrade now for latest changes
 

@@ -71,6 +71,8 @@ class LangIT {
 		'CustomFieldSuite' => 'Suite Field personalizzata',
 		'AllInOneSeoFields' => 'Tutto in uno Seo Fields',
 		'YoastSeoFields' => 'Yoast Seo Fields',
+		'RankMathFields'=>'Rank Math Fields',
+        'RankMathProFields'=>'Rank Math Pro Fields',
 		'BillingAndShippingInformation' => 'Informazioni di fatturazione e spedizione',
 		'CustomFieldsWPMemberFields' => 'Campi dei campi WP dei campi personalizzati',
 		'CustomFieldsMemberFields' => 'Campi membri campi personalizzati',
@@ -78,6 +80,14 @@ class LangIT {
 		'WPECommerceCustomFields' => 'Campi personalizzati di commercio elettronico WP',
 		'EventsManagerFields' => 'Campi del gestore eventi',
 		'CMB2CustomFields' => 'Campi personalizzati CMB2',
+		'JetEngineFields' => 'Campi  Jet Engine',
+		'JetEngineRFFields' => 'Campi ripetitori  Jet Engine',
+		'JetEngineCPTFields' => 'Campi CPT Jet Engine',
+		'JetEngineCPTRFFields' => 'Campi ripetitori CPT Jet Engine',
+		'JetEngineTaxonomyFields' => 'Campi della tassonomia dei motori a reazione',
+		'JetEngineTaxonomyRFFields' => 'Campi ripetitori della tassonomia dei motori a reazione',
+		'JetEngineRelationsFields' => 'Campi delle relazioni del motore a reazione',
+
 		'CourseSettingsFields' => 'Campi delle impostazioni del corso',
 		'CurriculumSettingsFields' => 'Campi delle impostazioni del curriculum',
 		'QuizSettingsFields' => 'Campi impostazioni quiz',
@@ -121,6 +131,7 @@ class LangIT {
 		'SetimageAltText' => 'Imposta immagine Alt Text',
 		'SetimageDescription' => "Imposta la descrizione dell'immagine",
 		'Changeimagefilenameto' => 'Cambia il nome del file immagine in',
+		'polylangfields'=>'Campi delle impostazioni di Polylang',
 		'ImportconfigurationSection' => 'Importa sezione di configurazione',
 		'EnablesafeprestateRollback' => 'Abilita il rollback di prestature sicuro',
 		'Backupbeforeimport' => "Backup prima dell'importazione",
@@ -297,7 +308,7 @@ class LangIT {
 		'SelectTimeZone' => 'Seleziona TimeZone',
 		'ScheduleExport' => 'Pianifica esportazione',
 		'DataExported' => 'Dati esportati',
-
+		'FilePath' => 'Percorso del file',
 
         );
 		return $response;

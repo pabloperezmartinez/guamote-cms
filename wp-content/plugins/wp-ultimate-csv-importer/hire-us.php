@@ -17,10 +17,10 @@ if ( !defined( 'ABSPATH' ) ) {
   <h4>Highlights of working with us!</h4>
     <ul style="font:italic;font-size:22px;">
     
-				 	<li>Leading Agency with 9+ years of experience</li>				 	
-				 	<li>Quick ticket support, quick solution</li>
-				 	<li>Improve your online presence to drive revenue</li>
-				 	<li>Quick solution via call, email & live chat</li>
+				 	<li><i class="fa fa-check" aria-hidden="true" style="font-size: 14px;color: #00a699;position:absolute;left: -10px;"></i>Leading Agency with 9+ years of experience</li>				 	
+				 	<li><i class="fa fa-check" aria-hidden="true" style="font-size: 14px;color: #00a699;position:absolute;left: -10px;"></i>Quick ticket support, quick solution</li>
+				 	<li><i class="fa fa-check" aria-hidden="true" style="font-size: 14px;color: #00a699;position:absolute;left: -10px;"></i>Improve your online presence to drive revenue</li>
+				 	<li><i class="fa fa-check" aria-hidden="true" style="font-size: 14px;color: #00a699;position:absolute;left: -10px;"></i>Quick solution via call, email & live chat</li>
 	    </ul>
 		
 	</div>	
@@ -52,15 +52,7 @@ list-style: none;
 padding: 10px 30px;
 position: relative;
 }
-.highlighter ul li::before{
-  position: absolute;
-width: 30px;
-height: 30px;
-left: -10px;
-content: "\f00c";
-font: normal normal normal 14px/1 FontAwesome;
-color: #00a699;
-}
+
 .intro{
   width:100%;
   height:30px;
@@ -288,8 +280,6 @@ h3{
 }
 
 	</style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
 <body>
   <div id="container">
    
