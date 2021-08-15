@@ -19,8 +19,8 @@ services:
     domainname: venganza-analogo.test
     container_name: venganza-analogo.test
     build:
-            context: ./
-            dockerfile: Dockerfile
+      context: ./
+      dockerfile: Dockerfile
     ports:
       - "80:80"
     links:
