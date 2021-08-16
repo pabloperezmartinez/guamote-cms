@@ -114,7 +114,7 @@
                         <div class="ui action input">
                             <input id="search_input" name="s" type="text" placeholder="Buscar..."
                                    data-content="Ingresa lo que quieres encontrar en nuestra tienda">
-                            <button id="search_button" class="ui orange icon button" type="submit">
+                            <button id="search_button" class="ui blue icon button" type="submit">
                                 <i class="search icon"></i>
                             </button>
                         </div>

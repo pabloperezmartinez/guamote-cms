@@ -131,3 +131,24 @@ function new_loop_shop_per_page($cols)
     $cols = 9;
     return $cols;
 }
+
+
+/**
+ * Add custom metadata to search
+ */
+function woo_custom_search( $query ) {
+    if( ! is_admin() && $query->is_main_query() ) {
+        if ( $query->is_search() ) { 
+            $meta_query = $query->get( 'meta_query' );
+            $meta_query[] = array(
+                'key'       => 'artist_name',
+                'value'     => $query->query['s'],
+                'compare'   => 'LIKE'  
+            );
+            $query->set( 'meta_query', $meta_query );
+    
+        }
+    }
+}
+    
+add_action( 'pre_get_posts' , 'woo_custom_search' );
