@@ -168,8 +168,8 @@ class LogManager {
 		global $wpdb;
        
         $response = [];
-        $filename = $_POST['filename'];
-        $revision = $_POST['revision'];
+        $filename = sanitize_file_name($_POST['filename']);
+        $revision = sanitize_text_field($_POST['revision']);
 
         $upload = wp_upload_dir();
         $upload_dir = $upload['baseurl'];

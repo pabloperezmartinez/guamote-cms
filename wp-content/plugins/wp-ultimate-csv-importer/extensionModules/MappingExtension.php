@@ -31,9 +31,10 @@ class MappingExtension{
 		if (MappingExtension::$instance == null) {
 			MappingExtension::$instance = new MappingExtension;
 			MappingExtension::$validatefile = new ValidateFile;
+	
 			foreach(get_declared_classes() as $class){
 				if(is_subclass_of($class, 'Smackcoders\FCSV\ExtensionHandler')){ 
-					array_push(MappingExtension::$extension ,$class::getInstance() );	
+					array_push(MappingExtension::$extension ,$class::getInstance() );
 				}
 			}
 			return MappingExtension::$instance;
@@ -48,9 +49,9 @@ class MappingExtension{
 	 */
 	public function mapping_field_function(){
 
-		$import_type = $_POST['Types'];
-		$hash_key = $_POST['HashKey'];
-		$mode = $_POST['Mode'];
+		$import_type = sanitize_text_field($_POST['Types']);
+		$hash_key = sanitize_key($_POST['HashKey']);
+		$mode = sanitize_text_field($_POST['Mode']);
 		global $wpdb;
 
 		$response = [];
@@ -60,8 +61,9 @@ class MappingExtension{
 		$table_name = $wpdb->prefix."smackcsv_file_events";
 		$fields = $wpdb->get_results("UPDATE $table_name SET mode ='$mode' WHERE hash_key = '$hash_key'");
 
-		$get_result = $wpdb->get_results("SELECT file_name FROM $table_name WHERE hash_key = '$hash_key' ");
+		$get_result = $wpdb->get_results("SELECT file_name, total_rows FROM $table_name WHERE hash_key = '$hash_key' ");
 		$filename = $get_result[0]->file_name;
+		$total_rows = $get_result[0]->total_rows;
 		$file_extension = pathinfo($filename, PATHINFO_EXTENSION);
 		if(empty($file_extension)){
 			$file_extension = 'xml';
@@ -97,6 +99,7 @@ class MappingExtension{
 
 					$value = $this->mapping_fields($import_type);
 					$response['fields'] = $value;
+					$response['total_records'] = (int)$total_rows;
 					echo wp_json_encode($response);
 					wp_die();  			
 				}	
@@ -136,6 +139,7 @@ class MappingExtension{
 			$value = $this->mapping_fields($import_type);
 
 			$response['fields'] = $value;
+			$response['total_records'] = (int)$total_rows;
 			echo wp_json_encode($response);
 			wp_die();  			
 		}
@@ -156,7 +160,7 @@ class MappingExtension{
 	 * @return array - mapping fields
 	 */
 	public function get_export_fields(){
-		$import_type = $_POST['Types'];
+		$import_type = sanitize_text_field($_POST['Types']);
 		$response = [];
 
 		$value = $this->mapping_fields($import_type);
@@ -172,16 +176,18 @@ class MappingExtension{
 	 * @return array - mapping fields
 	 */
 	public function get_fields($module){ 
+		
 		$import_type = $module;
 		$response = [];
-		$value = $this->mapping_fields($import_type);	
+		$value = $this->mapping_fields($import_type,'Export');
 		$response['fields'] = $value;
 		return $response;
 	}
 
-	public function mapping_fields($import_type){
+	public function mapping_fields($import_type,$process_type = null){
 		$support_instance = [];
 		$value = [];
+		//SmackCSV::getInstance();
 		for($i = 0 ; $i < count(MappingExtension::$extension) ; $i++){
 			$extension_instance = MappingExtension::$extension[$i];
 			if($extension_instance->extensionSupportedImportType($import_type)){
@@ -190,7 +196,7 @@ class MappingExtension{
 		}		
 		for($i = 0 ;$i < count($support_instance) ; $i++){	
 			$supporting_instance = $support_instance[$i];
-			$fields = $supporting_instance->processExtension($import_type);
+			$fields = $supporting_instance->processExtension($import_type,$process_type);
 			array_push($value , $fields);			
 		}
 		return $value;

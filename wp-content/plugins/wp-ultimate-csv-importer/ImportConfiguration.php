@@ -27,8 +27,9 @@ class ImportConfiguration {
     }
 
     public function get_update_fields(){
-	$import_type = $_POST['Types'];	
-        $mode = $_POST['Mode'];
+	$import_type = sanitize_text_field($_POST['Types']);	
+		$mode = sanitize_text_field($_POST['Mode']);
+		$hash_key = sanitize_key($_POST['HashKey']);
         $response = [];
 		$taxonomies = get_taxonomies(); 
 		if($mode == 'Update') {
@@ -74,7 +75,12 @@ class ImportConfiguration {
 				$fields = array( 'ID', 'post_title', 'post_name' );
 		    }
 		}
-		
+		global $wpdb;
+		$file_table_name = $wpdb->prefix ."smackcsv_file_events";
+		$get_id = $wpdb->get_results( "SELECT id , mode ,file_name , total_rows FROM $file_table_name WHERE `hash_key` = '$hash_key'");
+		$total_rows = $get_id[0]->total_rows;
+
+		$response['total_records'] = $total_rows;
         $response['update_fields'] = $fields;
         echo wp_json_encode($response);
         wp_die();

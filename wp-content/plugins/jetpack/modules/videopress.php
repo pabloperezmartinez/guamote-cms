@@ -9,7 +9,7 @@
  * Module Tags: Photos and Videos
  * Feature: Writing
  * Additional Search Queries: video, videos, videopress, video gallery, video player, videoplayer, mobile video, vimeo, youtube, html5 video, stream
- * Plans: business, premium
+ * Plans: business, premium, security, complete
  */
 
 include_once dirname( __FILE__ ) . '/videopress/shortcode.php';
@@ -18,6 +18,8 @@ include_once dirname( __FILE__ ) . '/videopress/class.videopress-scheduler.php';
 include_once dirname( __FILE__ ) . '/videopress/class.videopress-xmlrpc.php';
 include_once dirname( __FILE__ ) . '/videopress/class.videopress-cli.php';
 include_once dirname( __FILE__ ) . '/videopress/class.jetpack-videopress.php';
+
+require_once __DIR__ . '/videopress/class-videopress-attachment-metadata.php';
 
 if ( is_admin() ) {
 	include_once dirname( __FILE__ ) . '/videopress/editor-media-view.php';

@@ -655,6 +655,13 @@ body .ui.inverted:not(.dimmer)::-webkit-scrollbar-thumb:hover {
 /*******************************
         Global Overrides
 *******************************/
+
+.floating-right {
+  position: fixed;
+  z-index: 10;
+  right: 20px;
+  bottom: 20px;
+}
 /*!
  * # Fomantic-UI - Button
  * http://github.com/fomantic/Fomantic-UI/

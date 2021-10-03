@@ -23,7 +23,7 @@ class CoreFieldsImport {
 		return CoreFieldsImport::$core_instance;
 	}
 
-	function set_core_values($header_array ,$value_array , $map , $type , $mode , $line_number , $check , $hash_key){
+	function set_core_values($header_array ,$value_array , $map , $type , $mode , $line_number , $check , $hash_key, $unmatched_row){
 		global $wpdb;
 		global $uci_woocomm_instance;
 		global $userimp_class;
@@ -43,7 +43,7 @@ class CoreFieldsImport {
 			$type = 'Taxonomies';
 endif;
 		}
-
+		$post_id = isset($result['ID']) ? $result['ID'] :'';
 		if(($type == 'WooCommerce Product') || ($type == 'Categories') || ($type == 'Tags') || ($type == 'Taxonomies') || ($type == 'Comments') || ($type == 'Users') || ($type == 'Customer Reviews') || ($type == 'lp_order') || ($type == 'nav_menu_item') || ($type == 'widgets')){
 
 			$comments_instance = CommentsImport::getInstance();
@@ -54,7 +54,7 @@ endif;
 			$post_values = $helpers_instance->get_header_values($map , $header_array , $value_array);
 
 			if($type == 'WooCommerce Product'){
-				$result = $uci_woocomm_instance->woocommerce_product_import($post_values , $mode , $check , $hash_key , $line_number);
+				$result = $uci_woocomm_instance->woocommerce_product_import($post_values , $mode , $check , $hash_key , $line_number, $unmatched_row);
 			}
 
 			if($type == 'Users'){
@@ -77,14 +77,25 @@ endif;
 			}
 
 			$last_import_id = isset($result['ID']) ? $result['ID'] : '';
-			$post_id = $result['ID'];
+			$post_id = isset($result['ID']) ? $result['ID'] :'';
 
 			$helpers_instance->get_post_ids($post_id ,$hash_key);
 
 			if(isset($post_values['featured_image'])) {	
-				if ( preg_match_all( '/\b[-A-Z0-9+&@#\/%=~_|$?!:,.]*[A-Z0-9+&@#\/%=~_|$]/i', $post_values['featured_image'], $matchedlist, PREG_PATTERN_ORDER ) ) {	
+				if (strpos($post_values['featured_image'], '|') !== false) {
+					$featured_img = explode('|', $post_values['featured_image']);
+					$featured_image=$featured_img[0];					
+				}
+				else if (strpos($post_values['featured_image'], ',') !== false) {
+					$feature_img = explode(',', $post_values['featured_image']);
+					$featured_image=$feature_img[0];
+				}
+				else{
+					$featured_image=$post_values['featured_image'];
+				}
+				if ( preg_match_all( '/\b[-A-Z0-9+&@#\/%=~_|$?!:,.]*[A-Z0-9+&@#\/%=~_|$]/i', $featured_image, $matchedlist, PREG_PATTERN_ORDER ) ) {	
 					$image_type = 'Featured';		
-					$attach_id = CoreFieldsImport::$media_instance->media_handling( $post_values['featured_image'] , $post_id ,$post_values,$type,$image_type,$hash_key,$header_array,$value_array);	
+					$attach_id = CoreFieldsImport::$media_instance->media_handling( $featured_image , $post_id ,$post_values,$type,$image_type,$hash_key,$header_array,$value_array);	
 				}
 			}	
 
@@ -116,7 +127,9 @@ endif;
 		else{
 
 			$post_values = [];
-
+			$get_result = null;
+			$post_values['post_content'] = '';
+			
 			foreach($map as $key => $value){
 				$csv_value= trim($map[$key]);
 				$extension_object = new ExtensionHandler;
@@ -139,10 +152,9 @@ endif;
 
 						}
 
-						$math = 'MATH(';
+						$math = 'MATH';
 						if (strpos($csv_element, $math) !== false) {	
-							$equation = str_replace('MATH(', '', $csv_element);
-							$equation = str_replace(')', '', $equation);
+							$equation = str_replace('MATH', '', $csv_element);
 							$csv_element = $helpers_instance->evalmath($equation);
 						}
 
@@ -174,7 +186,8 @@ endif;
 								$post_values[$wp_element] = $csv_element;
 								$post_values['post_type'] = $import_as;
 								$post_values = $this->import_core_fields($post_values);
-								if(!is_numeric($post_values['post_parent'])&&!empty($post_values['post_parent'])){
+								//if(!is_numeric($post_values['post_parent'])&&!empty($post_values['post_parent'])){
+								if( (isset($post_values['post_parent'])) && (!is_numeric($post_values['post_parent'])) && (!empty($post_values['post_parent']))){
 									$p_type=$post_values['post_type'];
 									$parent_title=$post_values['post_parent'];
 									$parent_id = $wpdb->get_var( "SELECT ID FROM $wpdb->posts WHERE post_title = '$parent_title' and post_status !='trash' and post_type='$p_type'" );
@@ -257,34 +270,53 @@ endif;
 					}
 					
 					if($post_values['post_status']!='delete'){
-						$post_id = wp_insert_post($post_values);
+						if(is_plugin_active('multilanguage/multilanguage.php')) {
+							$post_id = $this->multiLang($post_values);
+						}
+						else{
+							$post_id = wp_insert_post($post_values);
+						}
+
+						if(!empty($post_values['wp_page_template']) && $type == 'Pages'){
+							update_post_meta($post_id, '_wp_page_template', $post_values['wp_page_template']);
+						}
+					}
+
+					if($unmatched_row == 'true'){
+						global $wpdb;
+						$post_entries_table = $wpdb->prefix ."ultimate_post_entries";
+						$file_table_name = $wpdb->prefix."smackcsv_file_events";
+						$get_id  = $wpdb->get_results( "SELECT file_name  FROM $file_table_name WHERE `hash_key` = '$hash_key'");	
+						$file_name = $get_id[0]->file_name;
+						$wpdb->get_results("INSERT INTO $post_entries_table (`ID`,`type`, `file_name`,`status`) VALUES ( '{$post_id}','{$type}', '{$file_name}','Inserted')");
 					}
 
 					if(isset($post_values['post_format'])){
-						if($post_values['post_format'] == 'post-format-video' ){
-							$format = 'video';
-						}
-						else{
-							$format=trim($post_values['post_format'],"post-format-");
-						}
+						$format=str_replace("post-format-","",$post_values['post_format']);
 						set_post_format($post_id ,$format );
 					}
-					
+
+					if(is_plugin_active('post-expirator/post-expirator.php')) {
+						$this->postExpirator($post_id,$post_values);
+					}
+
 					$fields = $wpdb->get_results("UPDATE $log_table_name SET created = $created_count WHERE hash_key = '$hash_key'");
 					if(preg_match("/<img/", $post_values['post_content'])) {
 				
 						$shortcode_table = $wpdb->prefix . "ultimate_csv_importer_shortcode_manager";
-						foreach ($orig_img_src as $img => $img_val){
-							$shortcode  = $shortcode_img[$img][$img];
-							$wpdb->get_results("INSERT INTO $shortcode_table (image_shortcode , original_image , post_id,hash_key) VALUES ( '{$shortcode}', '{$img_val}', $post_id  ,'{$hash_key}')");
-						}
+						 foreach ($orig_img_src as $img => $img_val){
+						 	$shortcode  = $shortcode_img[$img][$img];
+						 }
+						 $wpdb->get_results("INSERT INTO $shortcode_table (image_shortcode , original_image , post_id,hash_key) VALUES ( '{$shortcode}', '{$img_val}', $post_id  ,'{$hash_key}')");
 						$doc = new \DOMDocument();
 						$searchNode = $doc->getElementsByTagName( "img" );
+						
 						if ( ! empty( $searchNode ) ) {
 							foreach ( $searchNode as $searchNode ) {
 								$orig_img_src = $searchNode->getAttribute( 'src' ); 
 							}
 						}			
+						
 						$media_dir = wp_get_upload_dir();
 						$names = $media_dir['url'];
 					}
@@ -310,14 +342,19 @@ endif;
 					wp_update_post($post_values);
 
 					if(isset($post_values['post_format'])){
-						if($post_values['post_format'] == 'post-format-video' ){
-							$format = 'video';
-						}
-						else{
-							$format=trim($post_values['post_format'],"post-format-");
-						}
+						$format=str_replace("post-format-","",$post_values['post_format']);
 						set_post_format($post_id , $format);
 					}	
+
+					if($unmatched_row == 'true'){
+						global $wpdb;
+						$post_entries_table = $wpdb->prefix ."ultimate_post_entries";
+						$file_table_name = $wpdb->prefix."smackcsv_file_events";
+						$get_id  = $wpdb->get_results( "SELECT file_name  FROM $file_table_name WHERE `hash_key` = '$hash_key'");	
+						$file_name = $get_id[0]->file_name;
+						$wpdb->get_results("INSERT INTO $post_entries_table (`ID`,`type`, `file_name`,`status`) VALUES ( '{$post_id}','{$type}', '{$file_name}','Updated')");
+					}
+
 					$fields = $wpdb->get_results("UPDATE $log_table_name SET updated = $updated_count WHERE hash_key = '$hash_key'");
 					$this->detailed_log[$line_number]['Message'] = 'Updated' . $post_values['post_type'] . ' ID: ' . $post_id . ', ' . $post_values['specific_author'];
 				}else{
@@ -325,12 +362,7 @@ endif;
 					unset($post_values['ID']);
 					$post_id = wp_insert_post($post_values);
 					if(isset($post_values['post_format'])){
-						if($post_values['post_format'] == 'post-format-video' ){
-							$format = 'video';
-						}
-						else{
-							$format=trim($post_values['post_format'],"post-format-");
-						}
+						$format=str_replace("post-format-","",$post_values['post_format']);
 						set_post_format($post_id , $format);
 					}
 					$fields = $wpdb->get_results("UPDATE $log_table_name SET created = $created_count WHERE hash_key = '$hash_key'");
@@ -363,14 +395,67 @@ endif;
 			}
 
 			if(isset($post_values['featured_image'])) {
-				if ( preg_match_all( '/\b[-A-Z0-9+&@#\/%=~_|$?!:,.]*[A-Z0-9+&@#\/%=~_|$]/i', $post_values['featured_image'], $matchedlist, PREG_PATTERN_ORDER ) ) {	
+				if (strpos($post_values['featured_image'], '|') !== false) {
+					$featured_img = explode('|', $post_values['featured_image']);
+					$featured_image=$featured_img[0];					
+				}
+				else if (strpos($post_values['featured_image'], ',') !== false) {
+					$feature_img = explode(',', $post_values['featured_image']);
+					$featured_image=$feature_img[0];
+				}
+				else{
+					$featured_image=$post_values['featured_image'];
+				}
+
+				if ( preg_match_all( '/\b[-A-Z0-9+&@#\/%=~_|$?!:,.]*[A-Z0-9+&@#\/%=~_|$]/i', $featured_image, $matchedlist, PREG_PATTERN_ORDER ) ) {	
 					$image_type = 'Featured';		
-					$attach_id = CoreFieldsImport::$media_instance->media_handling( $post_values['featured_image'] , $post_id ,$post_values,$type,$image_type,$hash_key,$header_array,$value_array);	
+					$attach_id = CoreFieldsImport::$media_instance->media_handling( $featured_image , $post_id ,$post_values,$type,$image_type,$hash_key,$header_array,$value_array);	
 				}
 			}
 
 			return $post_id;
 		}
+	}
+
+	public function multiLang($post_values){
+		global $wpdb;
+		if (strpos($post_values['post_title'], '|') !== false) {
+			$exploded_title = explode('|', $post_values['post_title']);
+			$post_values['post_title'] = $exploded_title[0];
+			$lang_title = $exploded_title[1];
+
+		}
+		if (strpos($post_values['post_content'], '|') !== false) {
+			$exploded_content = explode('|', $post_values['post_content']);
+			$post_values['post_content'] = $exploded_content[0];
+			$lang_content = $exploded_content[1];
+		}
+		if (strpos($post_values['post_excerpt'], '|') !== false) {
+			$exploded_excerpt = explode('|', $post_values['post_excerpt']);
+			$post_values['post_excerpt'] = $exploded_excerpt[0];
+			$lang_excerpt = $exploded_excerpt[1];
+		}
+		$lang_code = $post_values['lang_code'];
+		$post_id = wp_insert_post($post_values);
+		$wpdb->get_results("INSERT INTO {$wpdb->prefix}mltlngg_translate (post_ID , post_content , post_excerpt, post_title,`language`) VALUES ( $post_id, '{$lang_content}', '{$lang_excerpt}' , '{$lang_title}', '{$lang_code}')");
+		return $post_id;
+	}
+
+	public function postExpirator($post_id,$post_values){
+		if(!empty($post_values['post_expirator_status'])){
+			$post_values['post_expirator_status'] = array('expireType' => $post_values['post_expirator_status'],'id' => $post_id);
+		}
+		else{
+			$post_values['post_expirator_status'] = array('expireType' => 'draft' ,'id' => $post_id);
+		}
+
+		if(!empty($post_values['post_expirator'])){
+			update_post_meta($post_id, '_expiration-date-status', 'saved');
+			$estimate_date = $post_values['post_expirator'];
+			$estimator_date = get_gmt_from_date("$estimate_date",'U');
+			update_post_meta($post_id, '_expiration-date', $estimator_date);
+			update_post_meta($post_id, '_expiration-date-options', $post_values['post_expirator_status']);			
+		}	
 	}
 
 	function image_handling($id){
@@ -379,7 +464,6 @@ endif;
 		$get_result =  $wpdb->get_results("SELECT post_content FROM {$wpdb->prefix}posts where ID = $id",ARRAY_A);   	
 		$post_values['post_content']=htmlspecialchars_decode($get_result[0]['post_content']);
 		$get_result =  $wpdb->get_results("SELECT original_image FROM {$wpdb->prefix}ultimate_csv_importer_shortcode_manager where post_id = $id",ARRAY_A);   
-
 		foreach($get_result as $result){
 			$orig_img_src[] = $result['original_image'];
 		}	
@@ -395,7 +479,6 @@ endif;
 		foreach($orig_img_src as $src){
 			$attach_id[] = CoreFieldsImport::$media_instance->media_handling($src , $id ,$post_values,'',$image_type,'');	
 		}
-		
 		if(is_array($attach_id)){
 			foreach($attach_id as $att_key => $att_val){
 				$get_guid[] = $wpdb->get_results("SELECT `guid` FROM {$wpdb->prefix}posts WHERE post_type = 'attachment' and ID =  $att_val ",ARRAY_A);

@@ -1,9 +1,6 @@
-<?php
-/**
- * WP Ultimate CSV Importer plugin file.
- *
- * Copyright (C) 2010-2020, Smackcoders Inc - info@smackcoders.com
- */
+<?php 
+ 
+// wp-csv-hooks.php
  
 namespace Smackcoders\FCSV;
 
@@ -21,6 +18,10 @@ $plugin_ajax_hooks = [
     'send_login_credentials_to_users',
     'get_options',
     'support_mail',
+    'get_service_provider',
+    'get_bucket_details',
+    'get_storage_settings',
+    'storage_settings_details',
     'send_subscribe_email',
     'parse_data',
     'total_records',
@@ -37,6 +38,7 @@ $plugin_ajax_hooks = [
     'download_log',
     'get_desktop',
     'get_ftp_url',
+    'get_csv_url',
     'get_parse_xml',
     'LineChart',
     'PieChart',
@@ -69,8 +71,8 @@ $plugin_ajax_hooks = [
     'active_addons',
     'getfields',
     'listuploads',
+    'install_plugins',
+    'activate_addon',
+    'DeactivateMail',
+    'get_ftp_details',
 ];  
-
-
-
-

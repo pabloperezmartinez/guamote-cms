@@ -37,6 +37,7 @@ class ExtensionHandler{
 		}
 	}
 	public function convert_fields_to_array($get_value){
+		$fields_getting = null;
 		foreach($get_value as $values){
 			foreach($values as $in_values){
 				$fields_getting[]=$in_values;
@@ -46,6 +47,7 @@ class ExtensionHandler{
 	}
 
 	public function convert_static_fields_to_array($static_value){
+		$static_fields_getting = null;
 		if (is_array($static_value) || is_object($static_value)){
 			foreach($static_value as $key=>$values){
 				$static_fields_getting[] = array('label' => $key,
@@ -197,6 +199,7 @@ endif;
 					// Read the data from a single line
 
 					$trimmed_info = array_map('trim', $data);
+				
 					array_push($info , $trimmed_info);
 
 					if($line_number == 0){
@@ -205,7 +208,6 @@ endif;
 					}
 					else{
 						$values = $info[$line_number];
-
 					}
 					$line_number ++;		
 				}	

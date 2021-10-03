@@ -162,6 +162,7 @@ class LearnPressImport
             
             foreach ($course_setting_array as $course_key => $course_value) {
                 update_post_meta($post_id, $course_key, $course_value);
+
             }
 		}
 
@@ -233,7 +234,8 @@ class LearnPressImport
         
         foreach ($quiz_meta_array as $quiz_key => $quiz_value) {
             update_post_meta($quiz_post_id, $quiz_key, $quiz_value);
-        }
+
+          }
 
         if(isset($post_values['question_title'])){
             $get_question_titles = explode(',', $post_values['question_title']);
@@ -291,6 +293,7 @@ class LearnPressImport
 
         foreach ($question_meta_array as $question_key => $question_value) {
             update_post_meta($question_post_id, $question_key, $question_value);
+
         }
 
         if(isset($post_values['quiz_id'])){
@@ -370,7 +373,8 @@ class LearnPressImport
 
         foreach($order_meta_array as $order_key => $order_value){
             update_post_meta($order_id, $order_key, $order_value);
-        }
+
+     }
 
         if(isset($post_values['item_id'])){
 

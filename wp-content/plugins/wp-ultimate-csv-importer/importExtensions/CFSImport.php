@@ -92,7 +92,8 @@ class CFSImport {
 			foreach($darray as $mkey => $mval){
 				$metaid = update_post_meta($pID, $mkey, $mval);
 				$this->insert_cfs_values($cfs_data,$pID,$metaid,$mkey);
-			}
+
+				}
 		}
 
 	}

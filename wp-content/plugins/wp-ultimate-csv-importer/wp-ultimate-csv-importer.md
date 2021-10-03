@@ -1,13 +1,13 @@
 # Import and Export WordPress Data as CSV or XML
 
 Contributors: smackcoders, smacksupport
-Requires at least: 4.5
-Tested up to: 5.3.2
-Stable tag: 6.1.1
-Version: 6.1.1
+Requires at least: 5.0
+Tested up to: 5.5.1
+Stable tag: 6.2.2
+Version: 6.2.2
 Requires PHP: 5.2.4
 Author: smackcoders
-Author URI: http://profiles.wordpress.org/smackcoders/
+Author URI: https://profiles.wordpress.org/smackcoders/
 Donate link: https://www.paypal.me/smackcoders
 Tags: csv, xml, csv import, xml import, csv importer, xml importer, import, import csv, import xml, import seo, import woocommerce, acf, excel, spreadsheet, pods, types
 License: GPLv2 or later
@@ -136,6 +136,25 @@ Reviews – WP Customer Reviews
 
 [For samples and tutorials, visit our blog](https://www.smackcoders.com/blog.html?utm_source=wp.org&utm_medium=plugin&utm_campaign=readme)
 
+## Translations
+
+Many thanks to the generous efforts of our translators:
+
+- French (fr_FR) -- [the French translation team](https://translate.wordpress.org/locale/fr/default/wp-plugins/wp-ultimate-csv-importer)
+- Italian (it_IT) -- [the Italian translation team](https://translate.wordpress.org/locale/it/default/wp-plugins/wp-ultimate-csv-importer)
+- Spanish (es_ES) -- [the Spanish translation team](https://translate.wordpress.org/locale/es/default/wp-plugins/wp-ultimate-csv-importer)
+- German (de_DE) -- [the German translation team](https://translate.wordpress.org/locale/de/default/wp-plugins/wp-ultimate-csv-importer)
+- Japanese (ja) -- [the Japanese translation team](https://translate.wordpress.org/locale/ja/default/wp-plugins/wp-ultimate-csv-importer)
+- Russian (ru_RU) -- [the Russian translation team](https://translate.wordpress.org/locale/ru/default/wp-plugins/wp-ultimate-csv-importer)
+- Dutch (nl_NL) -- [the Dutch translation team](https://translate.wordpress.org/locale/nl/default/wp-plugins/wp-ultimate-csv-importer)
+- Turkish (tr_TR) -- [the Turkish translation team](https://translate.wordpress.org/locale/tr/default/wp-plugins/wp-ultimate-csv-importer)
+- English (en_CA) -- [the English (Canadian) translation team](https://translate.wordpress.org/locale/en-ca/default/wp-plugins/wp-ultimate-csv-importer)
+- English (en_GB) -- [the English (British) translation team](https://translate.wordpress.org/locale/en-gb/default/wp-plugins/wp-ultimate-csv-importer)
+- English (en_ZA) -- [the English (South African) translation team](https://translate.wordpress.org/locale/en-za/default/wp-plugins/wp-ultimate-csv-importer)
+- French (fr_BE) -- [the French (Belgium) translation team](https://translate.wordpress.org/locale/fr-be/default/wp-plugins/wp-ultimate-csv-importer)
+
+If you'd like to help out by translating this plugin, please [sign up for an account and dig in](https://translate.wordpress.org/projects/wp-plugins/wp-ultimate-csv-importer).
+
 ## Screenshots
 
 1. Dashboard view of the importer.
@@ -186,6 +205,57 @@ Reviews – WP Customer Reviews
 [youtube https://www.youtube.com/watch?v=8P8xtRY3bCM&feature=youtu.be]
 
 ## Changelog
+
+### 6.2.1
+
+- Added: Compatibility for WordPress 5.6
+- Added: Delete items not present in the csv/xml file.
+
+### 6.2
+
+- Added: Simple Mode Import Method.
+- Added: Import Support for WooCommerce Product Bundle Fields.
+
+### 6.1.9
+
+- Added: Language Compatibility for French,Italian,German,Spanish,Japanese,Russian,Dutch,Turkish,English (Canadian),English (British),English (South African).
+
+### 6.1.8
+
+- Added: Compatibility for WordPress 5.5.1
+- Added: Import Support for Variation Swatcher for WooCommerce Plugin.
+
+### 6.1.7
+
+- Added: Import Support for WC Product Bundle Meta Fields.
+
+### 6.1.6
+
+- Added: Mandatory import fields for posts,pages,custom posts and categories.
+- Added: Recommended addon setup page.
+- Fixed: single row xml import.
+- Fixed: Page template import.
+
+### 6.1.5
+
+- Added: Import Support for Multi Language plugin (Posts,Pages and Custom Posts).
+- Added: Post Expirator Support for Posts,Pages and Custom Posts.
+
+### 6.1.4
+
+- Added: Support for Widgets import.(Posts,Pages,Comments,Categories and Archives).
+- Added: Seperate Media Handling Section.
+- Fixed: CSV Headers with whitespace issue.
+
+### 6.1.3
+
+- Fixed: BBPress Import issues.
+- Added: Support for navigation menus.
+
+### 6.1.2
+
+- Added: Import Support for BBPress Plugin:(Topic,Reply,Forum)
+- Fixed: is_plugin_active check condition.
 
 ### 6.1.1
 
@@ -796,6 +866,46 @@ Reviews – WP Customer Reviews
 - Initial release version. Tested and found works well without any issues.
 
 ## Upgrade Notice
+
+### 6.2.1
+
+- Added: Upgrade now for latest updates.
+
+### 6.2
+
+- Added: Upgrade now for latest updates.
+
+### 6.1.9
+
+- Added: Upgrade now for latest updates.
+
+### 6.1.8
+
+- Added: Upgrade now for latest updates.
+
+### 6.1.7
+
+- Added: Upgrade now for latest updates.
+
+### 6.1.6
+
+- Added: Upgrade now for latest updates.
+
+### 6.1.5
+
+- Added: Upgrade now for latest updates.
+
+### 6.1.4
+
+- Added: Upgrade now for latest updates.
+
+### 6.1.3
+
+- Added: Upgrade now for latest updates.
+
+### 6.1.2
+
+- Added: Upgrade now for latest updates.
 
 ### 6.1.1
 

@@ -8,7 +8,7 @@
 namespace Smackcoders\SMWC;
 
 if ( ! defined( 'ABSPATH' ) )
-exit; // Exit if accessed directly
+	exit; // Exit if accessed directly
 
 require_once('ImportHelpers.php');
 
@@ -32,667 +32,857 @@ class WooCommerceMetaImport extends ImportHelpers{
 		$metaData = array();
 		$order_item = array();
 		foreach ($data_array as $ekey => $eval) {
+			
 			switch ($ekey) {
-				case 'stock_qty' :
-					$metaData['_stock'] = $data_array[$ekey];
-					break;
-				case 'visibility' :
-					//Product visibility is taxonomy based instead of meta based in woocommerce 3.0.0 
-					$plugininfo = get_plugin_data( WP_PLUGIN_DIR .'/'.'woocommerce/woocommerce.php');
-					$versionOfWoocom = $plugininfo['Version'];
-					$visibility = '';
-					if ($data_array[$ekey] == 1) {
-						$visibility = 'visible';
-					}
-					if ($data_array[$ekey] == 2) {
-						$visibility = 'catalog';
-					}
-					if ($data_array[$ekey] == 3) {
-						$visibility = 'search';
-					}
-					if ($data_array[$ekey] == 4) {
-						$visibility = 'hidden';
-					}
-					if(empty($data_array[$ekey])){
-						$visibility = 'visible';
-					}
-					if($versionOfWoocom >= 3){
-						if ($product = wc_get_product($pID)) {
-							$product->set_catalog_visibility($visibility);
-							$product->save();
-						}
-					}
-					else
-						$metaData['_visibility'] = $visibility;
-					break;
-				case 'stock_status' :
-					$stock_status = '';
-					if ($data_array[$ekey] == 1) {
-						$stock_status = 'instock';
-					}
-					if ($data_array[$ekey] == 2) {
-						$stock_status = 'outofstock';
-					}
-					$metaData['_stock_status'] = $stock_status;
-					break;
-				case 'downloadable' :
-					$metaData['_downloadable'] = $data_array[$ekey];
-					break;
-				case 'virtual' :
-					$metaData['_virtual'] = $data_array[$ekey];
-					break;
-				case 'product_image_gallery' :
-					$get_all_gallery_images = explode('|', $data_array[$ekey]);
-					$gallery_image_ids = '';
-					foreach($get_all_gallery_images as $gallery_image) {
-						if(is_numeric($gallery_image)) {
-							$gallery_image_ids .= $gallery_image . ',';
-						} else {
-							$attachmentId = WooCommerceMetaImport::$media_instance->media_handling($gallery_image, $pID, $data_array,'','','',$header_array ,$value_array);
-							$gallery_image_ids .= $attachmentId . ',';
-						}
-					}
-					$product_image_gallery[$ekey] = $gallery_image_ids;
-					break;
-				case 'regular_price' :
-					$metaData['_regular_price'] = $data_array[$ekey];
-					break;
-				case 'sale_price' :
-					$metaData['_sale_price'] = $data_array[$ekey];
-					$metaData['_price'] = $data_array[$ekey];
-					break;
-				case 'tax_status' :
-					$tax_status = '';
-					if ($data_array[$ekey] == 1) {
-						$tax_status = 'taxable';
-					}
-					if ($data_array[$ekey] == 2) {
-						$tax_status = 'shipping';
-					}
-					if ($data_array[$ekey] == 3) {
-						$tax_status = 'none';
-					}
-					$metaData['_tax_status'] = $tax_status;
-					break;
-				case 'tax_class' :
-					$tax_class = '';
-					if ($data_array[$ekey] == 1) {
-						$tax_class = '';
-					}
-					if ($data_array[$ekey] == 2) {
-						$tax_class = 'reduced-rate';
-					}
-					if ($data_array[$ekey] == 3) {
-						$tax_class = 'zero-rate';
-					}
-					$metaData['_tax_class'] = $tax_class;
-					break;
-				case 'purchase_note' :
-					$metaData['_purchase_note'] = $data_array[$ekey];
-					break;
-				case 'featured_product' :
+			case 'stock_qty' :
+				$metaData['_stock'] = $data_array[$ekey];
+				break;
+			case 'visibility' :
+				//Product visibility is taxonomy based instead of meta based in woocommerce 3.0.0 
+				$plugininfo = get_plugin_data( WP_PLUGIN_DIR .'/'.'woocommerce/woocommerce.php');
+				$versionOfWoocom = $plugininfo['Version'];
+				$visibility = '';
+				if ($data_array[$ekey] == 1 || $data_array[$ekey] == 'visible') {
+					$visibility = 'visible';
+				}
+				if ($data_array[$ekey] == 2 || $data_array[$ekey] == 'catalog' ) {
+					$visibility = 'catalog';
+				}
+				if ($data_array[$ekey] == 3 || $data_array[$ekey] == 'search') {
+					$visibility = 'search';
+				}
+				if ($data_array[$ekey] == 4 || $data_array[$ekey] == 'hidden' ) {
+					$visibility = 'hidden';
+				}
+				else{
+					$visibility = 'visible';
+				}
+				if($versionOfWoocom >= 3){
 					if ($product = wc_get_product($pID)) {
-						$product->set_featured( $data_array[$ekey] );
+						$product->set_catalog_visibility($visibility);
 						$product->save();
 					}
-					break;
-
-				case 'variation_description':
-					$metaData['_variation_description'] = $data_array[$ekey];
-					break;
-				case 'weight' :
-					$metaData['_weight'] = $data_array[$ekey];
-					break;
-				case 'length' :
-					$metaData['_length'] = $data_array[$ekey];
-					break;
-				case 'width' :
-					$metaData['_width'] = $data_array[$ekey];
-					break;
-				case 'height' :
-					$metaData['_height'] = $data_array[$ekey];
-					break;
-				case 'product_attribute_name' :
-					$attribute_names[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_attribute_value' :
-					$attribute_values[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_attribute_visible' :
-					$attribute_visible[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_attribute_variation' :
-					$attribute_variation[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_attribute_position' :
-					$attribute_position[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_attribute_taxonomy' :
-					$attribute_taxonomy[$ekey] = $data_array[$ekey];
-					break;
-				case 'sale_price_dates_from' :
-					$metaData['_sale_price_dates_from'] = $data_array[$ekey];
-					break;
-				case 'sale_price_dates_to' :
-					$metaData['_sale_price_dates_to'] = $data_array[$ekey];
-					break;
-				case 'backorders' :
-					$backorders = '';
-					if ($data_array[$ekey] == 1) {
-						$backorders = 'no';
-					}
-					if ($data_array[$ekey] == 2) {
-						$backorders = 'notify';
-					}
-					if ($data_array[$ekey] == 3) {
-						$backorders = 'yes';
-					}
-					$metaData['_backorders'] = $backorders;
-					break;
-				case 'manage_stock' :
-					$metaData['_manage_stock'] = $data_array[$ekey];
-					break;
-				case 'low_stock_threshold' :
-					$metaData['_low_stock_amount'] = $data_array[$ekey];
-					break;
-				case 'file_paths' :
-					$metaData['_file_paths'] = $data_array[$ekey];
-					break;
-				case 'download_limit' :
-					$metaData['_download_limit'] = $data_array[$ekey];
-					break;
-				case 'comment_status' :
-					$status = $data_array[$ekey];
-					$wpdb->get_results("UPDATE {$wpdb->prefix}posts SET comment_status = '$status' WHERE id = '$pID' ");
-					break;
-				case 'menu_order' :
-					$menu_order = $data_array[$ekey];
-					$wpdb->get_results("UPDATE {$wpdb->prefix}posts SET menu_order = '$menu_order' WHERE id = '$pID' ");
-					break;
-
-				case 'download_expiry' :
-					$metaData['_download_expiry'] = $data_array[$ekey];
-					break;
-				case 'download_type' :
-					$metaData['_download_type'] = $data_array[$ekey];
-					break;
-				case 'product_url' :
-					$metaData['_product_url'] = $data_array[$ekey];
-					break;
-				case 'button_text' :
-					$metaData['_button_text'] = $data_array[$ekey];
-					break;
-				case 'product_type' :
-
-					$product_type = 'simple';
-					if ($data_array[$ekey] == 1) {
-						$product_type = 'simple';
-					}
-					if ($data_array[$ekey] == 2) {
-						$product_type = 'grouped';
-					}
-					if ($data_array[$ekey] == 3) {
-						$product_type = 'external';
-					}
-					if ($data_array[$ekey] == 4) {
-						$product_type = 'variable';
-					}
-					if ($data_array[$ekey] == 5) {
-						$product_type = 'subscription';
-					}
-					if ($data_array[$ekey] == 6) {
-						$product_type = 'variable-subscription';
-					}
-					$core_instance->detailed_log[$line_number]['Type of Product'] = $product_type;
-					wp_set_object_terms($pID, $product_type, 'product_type');
-					break;
-				case 'product_shipping_class' :
-				case 'variation_shipping_class' :
-					$class_name = $data_array[$ekey];
-					$class = $wpdb->get_results("SELECT term_id FROM {$wpdb->prefix}terms where name = '{$class_name}' ");
-					$class_id = $class[0]->term_id;
-					
-					if ($product = wc_get_product($pID)) {
-						$product->set_shipping_class_id($class_id);
-						$product->save();
-					}
-					break;
-				case 'sold_individually' :
-					$metaData['_sold_individually'] = $data_array[$ekey];
-					break;
-				case 'default_attributes' :
-					if ($data_array[$ekey]) {
-						$dattribute = explode(',',$data_array[$ekey]);
-						foreach($dattribute as $dattrkey){
-							$def_attribute = explode('|',$dattrkey);
-							$def_attr_label = $def_attribute[0];
-							$attri_name = $wpdb->get_results( "SELECT attribute_name FROM {$wpdb->prefix}woocommerce_attribute_taxonomies where attribute_label = '$def_attr_label' ");
-							$def_attribute_lower = 'pa_' . $attri_name[0]->attribute_name;
-							$defAttribute[$def_attribute_lower] = $def_attribute[1];
-						}
-					}
-					break;
-				case 'custom_attributes' :
-					if ($data_array[$ekey]) {
-						$cusattribute = explode(',',$data_array[$ekey]);
-						foreach($cusattribute as $cusattrkey){
-							$cus_attribute = explode('|',$cusattrkey);
-
-							$cus_attribute_label = $cus_attribute[0];
-							$attri_name = $wpdb->get_results( "SELECT attribute_name FROM {$wpdb->prefix}woocommerce_attribute_taxonomies where attribute_label = '$cus_attribute_label' ");
-							$cus_attribute_lower = 'pa_' . $attri_name[0]->attribute_name;
-							$cusAttribute[$cus_attribute_lower] = $cus_attribute[1];
-						}
-					}
-					break;
-				case 'product_tag' :
-					$tags[$ekey] = $data_array[$ekey];
-					$core_instance->detailed_log[$line_number]['Tags'] = $data_array[$ekey];
-					break;
-				case 'product_category' :
-					$categories[$ekey] = $data_array[$ekey];
-					$core_instance->detailed_log[$line_number]['Categories'] = $data_array[$ekey];
-					break;
-				case 'downloadable_files' :
-					$downloadable_files = '';
-					if ($data_array[$ekey]) {
-						$exp_key = array();
-						$exploded_file_data = explode('|', $data_array[$ekey]);
-						foreach($exploded_file_data as $file_datas){
-							$exploded_separate = explode(',', $file_datas);
-							$convert_value = $exploded_separate[1];
-							$file_name = hash_hmac('md5', "$convert_value" , 'secret');
-
-							$exp_key[$file_name]['id'] = $file_name;
-							$exp_key[$file_name]['name'] = $exploded_separate[0];
-							$exp_key[$file_name]['file'] = $exploded_separate[1];
-							$downloadable_files = $exp_key;
-						}
-					}
-					$metaData['_downloadable_files'] = $downloadable_files;
-					break;
-				case 'crosssell_ids' :
-					$crosssellids = '';
-					if ($data_array[$ekey]) {
-						$exploded_crosssell_ids = explode(',', $data_array[$ekey]);
-						$crosssellids = $exploded_crosssell_ids;
-					}
-					$metaData['_crosssell_ids'] = $crosssellids;
-					break;
-				case 'upsell_ids' :
-					$upcellids = '';
-					if ($data_array[$ekey]) {
-						$exploded_upsell_ids = explode(',', $data_array[$ekey]);
-						$upcellids = $exploded_upsell_ids;
-					}
-					$metaData['_upsell_ids'] = $upcellids;
-					break;
-				case 'sku' :
-					$metaData['_sku'] = $data_array[$ekey];
-					$core_instance->detailed_log[$line_number]['SKU'] = $data_array[$ekey];
-					break;
-				case 'variation_sku' :
-					$metaData['_sku'] = $data_array[$ekey];
-					$core_instance->detailed_log[$line_number]['SKU'] = $data_array[$ekey];
-					break;
-				case 'thumbnail_id' :
-					if (is_numeric($data_array[$ekey])) {
-						$metaData['_thumbnail_id'] = $data_array[$ekey];
-					}else{
-#TODO thumbnail need to add
-					}
-					break;
-					//WooCommerce Chained Products Fields
-				case 'chained_product_detail' :
-					$arr = array();
-					$cpid_key = '';
-					if ($data_array[$ekey]) {
-						$chainedid = explode('|', $data_array[$ekey]);
-						foreach ($chainedid as $unitid ) {
-							$cpid = explode(',', $unitid);
-							$id = $cpid[0];
-							$query_result = $wpdb->get_results($wpdb->prepare("select post_title from $wpdb->posts where ID = %d",$id));
-							$product_name = $query_result[0]->post_title;
-							if(isset($product_name) && $product_name != '' ) {
-								$cpid_key[$cpid[0]]['unit'] = $cpid[1];
-								$cpid_key[$cpid[0]]['product_name'] = $product_name;
-							}
-							$arr[] = $cpid[0];
-						}
-						$chained_product_detail = $cpid_key;
+				}
+				else
+					$metaData['_visibility'] = $visibility;
+				break;
+			case 'stock_status' :
+				$stock_status = '';
+				if ($data_array[$ekey] == 1) {
+					$stock_status = 'instock';
+				}
+				if ($data_array[$ekey] == 2) {
+					$stock_status = 'outofstock';
+				}
+				$metaData['_stock_status'] = $stock_status;
+				break;
+			case 'downloadable' :
+				$metaData['_downloadable'] = $data_array[$ekey];
+				break;
+			case 'virtual' :
+				$metaData['_virtual'] = $data_array[$ekey];
+				break;
+			case 'product_image_gallery' :
+				$get_all_gallery_images = explode('|', $data_array[$ekey]);
+				$gallery_image_ids = '';
+				foreach($get_all_gallery_images as $gallery_image) {
+					if(is_numeric($gallery_image)) {
+						$gallery_image_ids .= $gallery_image . ',';
 					} else {
-						$chained_product_detail = '';
+						$attachmentId = WooCommerceMetaImport::$media_instance->media_handling($gallery_image, $pID, $data_array,'','','',$header_array ,$value_array);
+						$gallery_image_ids .= $attachmentId . ',';
 					}
-					$metaData['_chained_product_detail'] = $chained_product_detail;
-					$metaData['_chained_product_ids'] = $arr;
-					break;
-				case 'chained_product_manage_stock' :
-					$metaData['_chained_product_manage_stock'] = $data_array[$ekey];
-					break;
-					//WooCommerce Product Retailers Fields
-				case 'wc_product_retailers_retailer_only_purchase' :
-					$metaData['_wc_product_retailers_retailer_only_purchase'] = $data_array[$ekey];
-					break;
-				case 'wc_product_retailers_use_buttons' :
-					$metaData['_wc_product_retailers_use_buttons'] = $data_array[$ekey];
-					break;
-				case 'wc_product_retailers_product_button_text' :
-					$metaData['_wc_product_retailers_product_button_text'] = $data_array[$ekey];
-					break;
-				case 'wc_product_retailers_catalog_button_text' :
-					$metaData['_wc_product_retailers_catalog_button_text'] = $data_array[$ekey];
-					break;
-				case 'wc_product_retailers_id' :
-					$retailer_id[$ekey] = $data_array[$ekey];
-					break;
-				case 'wc_product_retailers_price' :
-					$retailer_price[$ekey] = $data_array[$ekey];
-					break;
-				case 'wc_product_retailers_url' :
-					$retailer_url[$ekey] = $data_array[$ekey];
-					break;
-					//WooCommerce Product Add-ons Fields
-				case 'product_addons_exclude_global' :
-					$metaData['_product_addons_exclude_global'] = $data_array[$ekey];
-					break;
-				case 'product_addons_group_name' :
-					$product_addons[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_addons_group_description' :
-					$product_addons[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_addons_type' :
-					$product_addons[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_addons_position' :
-					$product_addons[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_addons_required' :
-					$product_addons[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_addons_label_name' :
-					$product_addons[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_addons_price' :
-					$product_addons[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_addons_minimum' :
-					$product_addons[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_addons_maximum' :
-					$product_addons[$ekey] = $data_array[$ekey];
-					break;
-					//WooCommerce Warranty Requests Fields
-				case 'warranty_label' :
-					$metaData['_warranty_label'] = $data_array[$ekey];
-					break;
-				case 'warranty_type' :
-					$warranty[$ekey] = $data_array[$ekey];
-					break;
-				case 'warranty_length' :
-					$warranty[$ekey] = $data_array[$ekey];
-					break;
-				case 'warranty_value' :
-					$warranty[$ekey] = $data_array[$ekey];
-					break;
-				case 'warranty_duration' :
-					$warranty[$ekey] = $data_array[$ekey];
-					break;
-				case 'warranty_addons_amount' :
-					$warranty[$ekey] = $data_array[$ekey];
-					break;
-				case 'warranty_addons_value' :
-					$warranty[$ekey] = $data_array[$ekey];
-					break;
-				case 'warranty_addons_duration' :
-					$warranty[$ekey] = $data_array[$ekey];
-					break;
-				case 'no_warranty_option' :
-					$warranty[$ekey] = $data_array[$ekey];
-					break;
-					//WooCommerce Pre-Orders Fields
-				case 'preorders_enabled' :
-					$metaData['_wc_pre_orders_enabled'] = $data_array[$ekey];
-					break;
-				case 'preorders_availability_datetime' :
-					if ($data_array[$ekey]) {
-						$datetime_value = strtotime($data_array[$ekey]);
+				}
+				$product_image_gallery[$ekey] = $gallery_image_ids;
+				break;
+			case 'regular_price' :
+				$metaData['_regular_price'] = $data_array[$ekey];
+				if(empty($metaData['_sale_price'])){
+					$metaData['_price']=$metaData['_regular_price'];
+				}
+				break;
+			case 'sale_price' :
+				$metaData['_sale_price'] = $data_array[$ekey];
+				if(empty($metaData['_sale_price'])){
+					$metaData['_price']=$metaData['_regular_price'];
+				}
+				else{
+					$metaData['_price'] = $data_array[$ekey];
+				}
+				break;
+			case 'pb_regular_price' :
+				$metaData['_wc_pb_base_regular_price'] = $data_array[$ekey];
+				break;
+
+			case 'pb_sale_price' :
+				$metaData['_wc_pb_base_sale_price'] = $data_array[$ekey];
+				break;
+
+			case 'tax_status' :
+				$tax_status = '';
+				if ($data_array[$ekey] == 1) {
+					$tax_status = 'taxable';
+				}
+				if ($data_array[$ekey] == 2) {
+					$tax_status = 'shipping';
+				}
+				if ($data_array[$ekey] == 3) {
+					$tax_status = 'none';
+				}
+				$metaData['_tax_status'] = $tax_status;
+				break;
+			case 'tax_class' :
+				$tax_class = '';
+				if ($data_array[$ekey] == 1) {
+					$tax_class = '';
+				}
+				if ($data_array[$ekey] == 2) {
+					$tax_class = 'reduced-rate';
+				}
+				if ($data_array[$ekey] == 3) {
+					$tax_class = 'zero-rate';
+				}
+				$metaData['_tax_class'] = $tax_class;
+				break;
+			case 'purchase_note' :
+				$metaData['_purchase_note'] = $data_array[$ekey];
+				break;
+			case 'featured_product' :
+				if ($product = wc_get_product($pID)) {
+					$product->set_featured( $data_array[$ekey] );
+					$product->save();
+				}
+				break;
+
+			case 'product_bundle_items':
+				if ($data_array[$ekey]) {
+					$bundle_product_ids = explode('|', $data_array[$ekey]);
+					$bundle_product_table = $wpdb->prefix . 'woocommerce_bundled_items'; 
+					foreach($bundle_product_ids as $product_id){
+						if(is_numeric($product_id)){
+							$product_id = $product_id;
+						}
+						else{
+							$product_id = $wpdb->get_var("SELECT ID FROM {$wpdb->prefix}posts WHERE post_type = 'product' AND post_title = '$product_id' ");
+						}
+						$wpdb->insert($bundle_product_table, array('product_id' => $product_id, 'bundle_id' => $pID));
 					}
-					else {
-						$datetime_value = '';
+					break;
+				}	
+			break;
+			case 'layout' :
+				$layout_status = '';
+				if ($data_array[$ekey] == 'Standard') {
+					$layout_status = 'default';
+				}
+				if ($data_array[$ekey] == 'Tabular') {
+					$layout_status = 'tabular';
+				}
+				if ($data_array[$ekey] == 'Grid') {
+					$layout_status = 'grid';
+				}
+				$metaData['_wc_pb_layout_style'] = $layout_status;
+				break;
+
+			case 'form_location' :
+				$form_location_status = '';
+				if ($data_array[$ekey] == 'Default') {
+					$form_location_status = 'default';
+				}
+				if ($data_array[$ekey] == 'Before Tabs') {
+					$form_location_status = 'after_summary';
+				}
+				
+				$metaData['_wc_pb_add_to_cart_form_location'] = $form_location_status;
+				break;
+			
+			case 'item_grouping' :
+				$item_grouping_status = '';
+				if ($data_array[$ekey] == 'Grouped') {
+					$item_grouping_status = 'parent';
+				}
+				if ($data_array[$ekey] == 'Flat') {
+					$item_grouping_status = 'noindent';
+				}
+				if ($data_array[$ekey] == 'None') {
+					$item_grouping_status = 'none';
+				}
+				$metaData['_wc_pb_group_mode'] = $item_grouping_status;
+				break;
+				
+			case 'edit_in_cart' :
+				$edit_cart_status = '';
+				if ($data_array[$ekey] == 'Yes') {
+					$edit_cart_status = 'yes';
+				}
+				if ($data_array[$ekey] == 'No') {
+					$edit_cart_status = 'no';
+				}
+				
+				$metaData['_wc_pb_edit_in_cart'] = $edit_cart_status;
+				break;
+
+			case 'optional':
+			case 'priced_individually' :
+			case 'override_title' :
+			case 'override_description' :
+			case 'hide_thumbnail' :
+				if ($data_array[$ekey]) {
+					$bundle_product_ids = explode('|', $data_array[$ekey]);
+					$bundle_product_table = $wpdb->prefix . 'woocommerce_bundled_itemmeta'; 
+					
+					$bundle_meta = $wpdb->prepare("SELECT bundled_item_id FROM {$wpdb->prefix}woocommerce_bundled_items where bundle_id = %d", $pID);
+					$bundle_meta_result = $wpdb->get_results($bundle_meta);
+					
+					for($i = 0; $i < count($bundle_meta_result); $i++){
+						$bundle_meta_id = $bundle_meta_result[$i]->bundled_item_id;
+						$bundle_meta_value = $bundle_product_ids[$i];
+						if ($bundle_meta_value == 'Yes') {
+							$bundle_meta_values = 'yes';
+						}
+						if ($bundle_meta_value == 'No') {
+							$bundle_meta_values = 'no';
+						}
+						$wpdb->insert($bundle_product_table, array('bundled_item_id' => $bundle_meta_id ,'meta_key' => $ekey,'meta_value' => $bundle_meta_values));
 					}
-					$metaData['_wc_pre_orders_availability_datetime'] = $datetime_value;
 					break;
-				case 'preorders_fee' :
-					$metaData['_wc_pre_orders_fee'] = $data_array[$ekey];
-					break;
-				case 'preorders_when_to_charge' :
-					$metaData['_wc_pre_orders_when_to_charge'] = $data_array[$ekey];
-					break;
-					//woocommerce_coupons starting
-				case 'discount_type' :
-					$metaData['discount_type'] = $data_array[$ekey];
-					break;
-				case 'coupon_amount' :
-					$metaData['coupon_amount'] = $data_array[$ekey];
-					break;
-				case 'individual_use' :
-					$metaData['individual_use'] = $data_array[$ekey];
-					break;
-				case 'exclude_product_ids' :
-					$metaData['exclude_product_ids'] = $data_array[$ekey];
-					break;
-				case 'product_ids' :
-					$metaData['product_ids'] = $data_array[$ekey];
-					break;
-				case 'usage_limit' :
-					$metaData['usage_limit'] = $data_array[$ekey];
-					break;
-				case 'usage_limit_per_user' :
-					$metaData['usage_limit_per_user'] = $data_array[$ekey];
-					break;
-				case 'limit_usage_to_x_items' :
-					$metaData['limit_usage_to_x_items'] = $data_array[$ekey];
-					break;
-				case 'expiry_date' :
-					$metaData['date_expires'] = strtotime($data_array[$ekey]);
-					break;
-				case 'free_shipping' :
-					$metaData['free_shipping'] = $data_array[$ekey];
-					break;
-				case 'exclude_sale_items' :
-					$metaData['exclude_sale_items'] = $data_array[$ekey];
-					break;
-				case 'minimum_amount' :
-					$metaData['minimum_amount'] = $data_array[$ekey];
-					break;
-				case 'maximum_amount' :
-					$metaData['maximum_amount'] = $data_array[$ekey];
-					break;
-				case 'customer_email' :
-					$customer_email[$ekey] = $data_array[$ekey];
-					break;
-				case 'exclude_product_categories' :
-					$exclude_product[$ekey] = $data_array[$ekey];
-					break;
-				case 'product_categories' :
-					$product_cate[$ekey] = $data_array[$ekey];
-					break;
-					//woocommerce_orders starting
-				case 'payment_method_title' :
-					$metaData['_payment_method_title'] = $data_array[$ekey];
-					break;
-				case 'payment_method' :
-					$metaData['_payment_method'] = $data_array[$ekey];
-					break;
-				case 'transaction_id' :
-					$metaData['_transaction_id'] = $data_array[$ekey];
-					break;
-				case 'billing_first_name' :
-					$metaData['_billing_first_name'] = $data_array[$ekey];
-					break;
-				case 'billing_last_name' :
-					$metaData['_billing_last_name'] = $data_array[$ekey];
-					break;
-				case 'billing_company' :
-					$metaData['_billing_company'] = $data_array[$ekey];
-					break;
-				case 'billing_address_1' :
-					$metaData['_billing_address_1'] = $data_array[$ekey];
-					break;
-				case 'billing_address_2' :
-					$metaData['_billing_address_2'] = $data_array[$ekey];
-					break;
-				case 'billing_city' :
-					$metaData['_billing_city'] = $data_array[$ekey];
-					break;
-				case 'billing_postcode' :
-					$metaData['_billing_postcode'] = $data_array[$ekey];
-					break;
-				case 'billing_state' :
-					$metaData['_billing_state'] = $data_array[$ekey];
-					break;
-				case 'billing_country' :
-					$metaData['_billing_country'] = $data_array[$ekey];
-					break;
-				case 'billing_phone' :
-					$metaData['_billing_phone'] = $data_array[$ekey];
-					break;
-				case 'billing_email' :
-					$metaData['_billing_email'] = $data_array[$ekey];
-					break;
-				case 'shipping_first_name' :
-					$metaData['_shipping_first_name'] = $data_array[$ekey];
-					break;
-				case 'shipping_last_name' :
-					$metaData['_shipping_last_name'] = $data_array[$ekey];
-					break;
-				case 'shipping_company' :
-					$metaData['_shipping_company'] = $data_array[$ekey];
-					break;
-				case 'shipping_address_1' :
-					$metaData['_shipping_address_1'] = $data_array[$ekey];
-					break;
-				case 'shipping_address_2' :
-					$metaData['_shipping_address_2'] = $data_array[$ekey];
-					break;
-				case 'shipping_city' :
-					$metaData['_shipping_city'] = $data_array[$ekey];
-					break;
-				case 'shipping_postcode' :
-					$metaData['_shipping_postcode'] = $data_array[$ekey];
-					break;
-				case 'shipping_state' :
-					$metaData['_shipping_state'] = $data_array[$ekey];
-					break;
-				case 'shipping_country' :
-					$metaData['_shipping_country'] = $data_array[$ekey];
-					break;
-				case 'customer_user' :
-					$metaData['_customer_user'] = $data_array[$ekey];
-					break;
-				case 'order_currency' :
-					$metaData['_order_currency'] = $data_array[$ekey];
-					break;
-				case 'item_name' :
-					$orderItem['order_item_name'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'item_type' :
-					$orderItem['order_item_type'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'item_product_id' :
-					$Item_metaDatas['_product_id'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'item_variation_id' :
-					$Item_metaDatas['_variation_id'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'item_line_subtotal' :
-					$Item_metaDatas['_line_subtotal'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'item_line_subtotal_tax' :
-					$Item_metaDatas['_line_subtotal_tax'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'item_line_total' :
-					$Item_metaDatas['_line_total'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'item_line_tax' :
-					$Item_metaDatas['_line_tax'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'item_line_tax_data' :
-					$Item_metaDatas['_line_tax_data'] = explode('|', $data_array[$ekey]);
-					break;
-				case 'item_tax_class' :
-					$Item_metaDatas['_tax_class'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'item_qty' :
-					$Item_metaDatas['_qty'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'fee_name' :
-					$orderFee['order_item_name'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'fee_type' :
-					$orderFee['order_item_type'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'fee_tax_class' :
-					$Fee_metaDatas['_tax_class'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'fee_line_total' :
-					$Fee_metaDatas['_line_total'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'fee_line_tax' :
-					$Fee_metaDatas['_line_tax'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'fee_line_tax_data' :
-					$Fee_metaDatas['_line_tax_data'] = explode('|', $data_array[$ekey]);
-					break;
-				case 'fee_line_subtotal' :
-					$Fee_metaDatas['_line_subtotal'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'fee_line_subtotal_tax' :
-					$Fee_metaDatas['_line_subtotal_tax'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'shipment_name' :
-					$Shipment_name['order_item_name'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'shipment_method_id' :
-					$Shipment_metaDatas['method_id'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'shipment_cost' :
-					$Shipment_metaDatas['cost'] = explode(',', $data_array[$ekey]);
-					break;
-				case 'shipment_taxes' :
-					$Shipment_metaDatas['taxes'] = explode('|', $data_array[$ekey]);
-					break;
-					//woocommerce_redunds starting
-				case 'refund_amount' :
-					$metaData['_refund_amount'] = $data_array[$ekey];
-					break;
-				case 'order_shipping_tax' :
-					$metaData['_order_shipping_tax'] = $data_array[$ekey];
-					break;
-				case 'order_tax' :
-					$metaData['_order_tax'] = $data_array[$ekey];
-					break;
-				case 'order_shipping' :
-					$metaData['_order_shipping'] = $data_array[$ekey];
-					break;
-				case 'cart_discount' :
-					$metaData['_cart_discount'] = $data_array[$ekey];
-					break;
-				case 'cart_discount_tax' :
-					$metaData['_cart_discount_tax'] = $data_array[$ekey];
-					break;
-				case 'order_total' :
-					$metaData['_order_total'] = $data_array[$ekey];
-					break;
-				default:
-					$metaData[$ekey] = $data_array[$ekey];
-					$metaData['_subscription_payment_sync_date'] = 'a:2:{s:3:"day";i:0;s:5:"month";i:0;}';
-					break;
+				}	
+			break;
+
+			case 'product_details' :
+			case 'cart_checkout' :
+			case 'order_details' :
+
+				if ($data_array[$ekey]) {
+					$bundle_product_ids = explode('|', $data_array[$ekey]);
+					$bundle_product_table = $wpdb->prefix . 'woocommerce_bundled_itemmeta'; 
+					
+					$bundle_meta = $wpdb->prepare("SELECT bundled_item_id FROM {$wpdb->prefix}woocommerce_bundled_items where bundle_id = %d", $pID);
+					$bundle_meta_result = $wpdb->get_results($bundle_meta);
+					
+					for($i = 0; $i < count($bundle_meta_result); $i++){
+						$bundle_meta_id = $bundle_meta_result[$i]->bundled_item_id;
+						$bundle_meta_value = $bundle_product_ids[$i];
+						if ($bundle_meta_value == 'Yes') {
+							$bundle_meta_values = 'visible';
+						}
+						if ($bundle_meta_value == 'No') {
+							$bundle_meta_values = 'hidden';
+						}
+						$wpdb->insert($bundle_product_table, array('bundled_item_id' => $bundle_meta_id ,'meta_key' => $ekey,'meta_value' => $bundle_meta_values));
+					}
+					break;
+				}	
+			break;
+
+			case 'quantity_min' :
+			case 'quantity_max' :
+			case 'discount' :
+			case 'override_title_value' :
+			case 'override_description_value' :
+	
+				if ($data_array[$ekey]) {
+					$bundle_product_ids = explode('|', $data_array[$ekey]);
+					$bundle_product_table = $wpdb->prefix . 'woocommerce_bundled_itemmeta'; 
+					
+					$bundle_meta = $wpdb->prepare("SELECT bundled_item_id FROM {$wpdb->prefix}woocommerce_bundled_items where bundle_id = %d", $pID);
+					$bundle_meta_result = $wpdb->get_results($bundle_meta);
+					
+					for($i = 0; $i < count($bundle_meta_result); $i++){
+						$bundle_meta_id = $bundle_meta_result[$i]->bundled_item_id;
+						$bundle_meta_value = $bundle_product_ids[$i];
+					
+						if($ekey == 'override_title_value'){
+							$ekey = 'title';
+						}
+						elseif($ekey == 'override_description_value'){
+							$ekey = 'description';
+						}
+						
+						$wpdb->insert($bundle_product_table, array('bundled_item_id' => $bundle_meta_id ,'meta_key' => $ekey,'meta_value' => $bundle_meta_value));
+					}
+					break;
+				}	
+			break;
+
+			case 'variation_description':
+				$metaData['_variation_description'] = $data_array[$ekey];
+				break;
+			case 'weight' :
+				$metaData['_weight'] = $data_array[$ekey];
+				break;
+			case 'length' :
+				$metaData['_length'] = $data_array[$ekey];
+				break;
+			case 'width' :
+				$metaData['_width'] = $data_array[$ekey];
+				break;
+			case 'height' :
+				$metaData['_height'] = $data_array[$ekey];
+				break;
+			case 'product_attribute_name' :
+				$attribute_names[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_attribute_type' :
+				$attribute_types[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_attribute_value' :
+				$attribute_values[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_attribute_visible' :
+				$attribute_visible[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_attribute_variation' :
+				$attribute_variation[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_attribute_position' :
+				$attribute_position[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_attribute_taxonomy' :
+				$attribute_taxonomy[$ekey] = $data_array[$ekey];
+				break;
+			case '_wc_pb_bundle_sell_ids' :
+				if ($data_array[$ekey]) {
+					$bundle_pro_ids = [];
+					$bundle_product_names = explode(',', $data_array[$ekey]);
+					foreach($bundle_product_names as $product_name){
+						$bundle_pro_ids[] = $wpdb->get_var("SELECT ID FROM {$wpdb->prefix}posts WHERE post_type = 'product' AND post_title = '$product_name' ");
+					}
+					$metaData['_wc_pb_bundle_sell_ids'] = $bundle_pro_ids;
+					break;
+				}
+			case '_wc_pb_bundle_sells_title' :
+				$metaData['_wc_pb_bundle_sells_title'] = $data_array[$ekey];
+				break;
+			case '_wc_pb_bundle_sells_discount' :
+				$metaData['_wc_pb_bundle_sells_discount'] = $data_array[$ekey];
+				break;
+			case 'sale_price_dates_from' :
+				$metaData['_sale_price_dates_from'] = $data_array[$ekey];
+				break;
+			case 'sale_price_dates_to' :
+				$metaData['_sale_price_dates_to'] = $data_array[$ekey];
+				break;
+			case 'backorders' :
+				$backorders = '';
+				if ($data_array[$ekey] == 1) {
+					$backorders = 'no';
+				}
+				if ($data_array[$ekey] == 2) {
+					$backorders = 'notify';
+				}
+				if ($data_array[$ekey] == 3) {
+					$backorders = 'yes';
+				}
+				$metaData['_backorders'] = $backorders;
+				break;
+			case 'manage_stock' :
+				$metaData['_manage_stock'] = $data_array[$ekey];
+				break;
+			case 'low_stock_threshold' :
+				$metaData['_low_stock_amount'] = $data_array[$ekey];
+				break;
+			case 'file_paths' :
+				$metaData['_file_paths'] = $data_array[$ekey];
+				break;
+			case 'download_limit' :
+				$metaData['_download_limit'] = $data_array[$ekey];
+				break;
+			case 'comment_status' :
+				$status = $data_array[$ekey];
+				$wpdb->get_results("UPDATE {$wpdb->prefix}posts SET comment_status = '$status' WHERE id = '$pID' ");
+				break;
+			case 'menu_order' :
+				$menu_order = $data_array[$ekey];
+				$wpdb->get_results("UPDATE {$wpdb->prefix}posts SET menu_order = '$menu_order' WHERE id = '$pID' ");
+				break;
+
+			case 'download_expiry' :
+				$metaData['_download_expiry'] = $data_array[$ekey];
+				break;
+			case 'download_type' :
+				$metaData['_download_type'] = $data_array[$ekey];
+				break;
+			case 'product_url' :
+				$metaData['_product_url'] = $data_array[$ekey];
+				break;
+			case 'button_text' :
+				$metaData['_button_text'] = $data_array[$ekey];
+				break;
+			case 'product_type' :
+
+				$product_type = 'simple';
+				if ($data_array[$ekey] == 1) {
+					$product_type = 'simple';
+				}
+				if ($data_array[$ekey] == 2) {
+					$product_type = 'grouped';
+				}
+				if ($data_array[$ekey] == 3) {
+					$product_type = 'external';
+				}
+				if ($data_array[$ekey] == 4) {
+					$product_type = 'variable';
+				}
+				if ($data_array[$ekey] == 5) {
+					$product_type = 'subscription';
+				}
+				if ($data_array[$ekey] == 6) {
+					$product_type = 'variable-subscription';
+				}
+				if ($data_array[$ekey] == 7) {
+					$product_type = 'bundle';
+				}
+				$core_instance->detailed_log[$line_number]['Type of Product'] = $product_type;
+				wp_set_object_terms($pID, $product_type, 'product_type');
+				break;
+			case 'product_shipping_class' :
+			case 'variation_shipping_class' :
+				$class_name = $data_array[$ekey];
+				$class = $wpdb->get_results("SELECT term_id FROM {$wpdb->prefix}terms where name = '{$class_name}' ");
+				$class_id = $class[0]->term_id;
+
+				if ($product = wc_get_product($pID)) {
+					$product->set_shipping_class_id($class_id);
+					$product->save();
+				}
+				break;
+			case 'sold_individually' :
+				$metaData['_sold_individually'] = $data_array[$ekey];
+				break;
+			case 'default_attributes' :
+				if ($data_array[$ekey]) {
+					$dattribute = explode(',',$data_array[$ekey]);
+					foreach($dattribute as $dattrkey){
+						$def_attribute = explode('|',$dattrkey);
+						$def_attr_label = $def_attribute[0];
+						$attri_name = $wpdb->get_results( "SELECT attribute_name FROM {$wpdb->prefix}woocommerce_attribute_taxonomies where attribute_label = '$def_attr_label' ");
+						$def_attribute_lower = 'pa_' . $attri_name[0]->attribute_name;
+						$defAttribute[$def_attribute_lower] = $def_attribute[1];
+					}
+				}
+				break;
+			case 'custom_attributes' :
+				if ($data_array[$ekey]) {
+					$cusattribute = explode(',',$data_array[$ekey]);
+					foreach($cusattribute as $cusattrkey){
+						$cus_attribute = explode('|',$cusattrkey);
+
+						$cus_attribute_label = $cus_attribute[0];
+						$attri_name = $wpdb->get_results( "SELECT attribute_name FROM {$wpdb->prefix}woocommerce_attribute_taxonomies where attribute_label = '$cus_attribute_label' ");
+						$cus_attribute_lower = 'pa_' . $attri_name[0]->attribute_name;
+						$cusAttribute[$cus_attribute_lower] = $cus_attribute[1];
+					}
+				}
+				break;
+			case 'product_tag' :
+				$tags[$ekey] = $data_array[$ekey];
+				$core_instance->detailed_log[$line_number]['Tags'] = $data_array[$ekey];
+				break;
+			case 'product_category' :
+				$categories[$ekey] = $data_array[$ekey];
+				$core_instance->detailed_log[$line_number]['Categories'] = $data_array[$ekey];
+				break;
+			case 'downloadable_files' :
+				$downloadable_files = '';
+				if ($data_array[$ekey]) {
+					$exp_key = array();
+					$exploded_file_data = explode('|', $data_array[$ekey]);
+					foreach($exploded_file_data as $file_datas){
+						$exploded_separate = explode(',', $file_datas);
+						$convert_value = $exploded_separate[1];
+						$file_name = hash_hmac('md5', "$convert_value" , 'secret');
+
+						$exp_key[$file_name]['id'] = $file_name;
+						$exp_key[$file_name]['name'] = $exploded_separate[0];
+						$exp_key[$file_name]['file'] = $exploded_separate[1];
+						$downloadable_files = $exp_key;
+					}
+				}
+				$metaData['_downloadable_files'] = $downloadable_files;
+				break;
+			case 'crosssell_ids' :
+				$crosssellids = '';
+				if ($data_array[$ekey]) {
+					$exploded_crosssell_ids = explode(',', $data_array[$ekey]);
+					$crosssellids = $exploded_crosssell_ids;
+				}
+				$metaData['_crosssell_ids'] = $crosssellids;
+				break;
+			case 'upsell_ids' :
+				$upcellids = '';
+				if ($data_array[$ekey]) {
+					$exploded_upsell_ids = explode(',', $data_array[$ekey]);
+					$upcellids = $exploded_upsell_ids;
+				}
+				$metaData['_upsell_ids'] = $upcellids;
+				break;
+			case 'sku' :
+				$metaData['_sku'] = $data_array[$ekey];
+				$core_instance->detailed_log[$line_number]['SKU'] = $data_array[$ekey];
+				break;
+			case 'variation_sku' :
+				$metaData['_sku'] = $data_array[$ekey];
+				$core_instance->detailed_log[$line_number]['SKU'] = $data_array[$ekey];
+				break;
+			case 'thumbnail_id' :
+				if (is_numeric($data_array[$ekey])) {
+					$metaData['_thumbnail_id'] = $data_array[$ekey];
+				}else{
+					#TODO thumbnail need to add
+				}
+				break;
+				//WooCommerce Chained Products Fields
+			case 'chained_product_detail' :
+				$arr = array();
+				$cpid_key = '';
+				if ($data_array[$ekey]) {
+					$chainedid = explode('|', $data_array[$ekey]);
+					foreach ($chainedid as $unitid ) {
+						$cpid = explode(',', $unitid);
+						$id = $cpid[0];
+						$query_result = $wpdb->get_results($wpdb->prepare("select post_title from $wpdb->posts where ID = %d",$id));
+						$product_name = $query_result[0]->post_title;
+						if(isset($product_name) && $product_name != '' ) {
+							$cpid_key[$cpid[0]]['unit'] = $cpid[1];
+							$cpid_key[$cpid[0]]['product_name'] = $product_name;
+						}
+						$arr[] = $cpid[0];
+					}
+					$chained_product_detail = $cpid_key;
+				} else {
+					$chained_product_detail = '';
+				}
+				$metaData['_chained_product_detail'] = $chained_product_detail;
+				$metaData['_chained_product_ids'] = $arr;
+				break;
+			case 'chained_product_manage_stock' :
+				$metaData['_chained_product_manage_stock'] = $data_array[$ekey];
+				break;
+				//WooCommerce Product Retailers Fields
+			case 'wc_product_retailers_retailer_only_purchase' :
+				$metaData['_wc_product_retailers_retailer_only_purchase'] = $data_array[$ekey];
+				break;
+			case 'wc_product_retailers_use_buttons' :
+				$metaData['_wc_product_retailers_use_buttons'] = $data_array[$ekey];
+				break;
+			case 'wc_product_retailers_product_button_text' :
+				$metaData['_wc_product_retailers_product_button_text'] = $data_array[$ekey];
+				break;
+			case 'wc_product_retailers_catalog_button_text' :
+				$metaData['_wc_product_retailers_catalog_button_text'] = $data_array[$ekey];
+				break;
+			case 'wc_product_retailers_id' :
+				$retailer_id[$ekey] = $data_array[$ekey];
+				break;
+			case 'wc_product_retailers_price' :
+				$retailer_price[$ekey] = $data_array[$ekey];
+				break;
+			case 'wc_product_retailers_url' :
+				$retailer_url[$ekey] = $data_array[$ekey];
+				break;
+				//WooCommerce Product Add-ons Fields
+			case 'product_addons_exclude_global' :
+				$metaData['_product_addons_exclude_global'] = $data_array[$ekey];
+				break;
+			case 'product_addons_group_name' :
+				$product_addons[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_addons_group_description' :
+				$product_addons[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_addons_type' :
+				$product_addons[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_addons_position' :
+				$product_addons[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_addons_required' :
+				$product_addons[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_addons_label_name' :
+				$product_addons[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_addons_price' :
+				$product_addons[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_addons_minimum' :
+				$product_addons[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_addons_maximum' :
+				$product_addons[$ekey] = $data_array[$ekey];
+				break;
+				//WooCommerce Warranty Requests Fields
+			case 'warranty_label' :
+				$metaData['_warranty_label'] = $data_array[$ekey];
+				break;
+			case 'warranty_type' :
+				$warranty[$ekey] = $data_array[$ekey];
+				break;
+			case 'warranty_length' :
+				$warranty[$ekey] = $data_array[$ekey];
+				break;
+			case 'warranty_value' :
+				$warranty[$ekey] = $data_array[$ekey];
+				break;
+			case 'warranty_duration' :
+				$warranty[$ekey] = $data_array[$ekey];
+				break;
+			case 'warranty_addons_amount' :
+				$warranty[$ekey] = $data_array[$ekey];
+				break;
+			case 'warranty_addons_value' :
+				$warranty[$ekey] = $data_array[$ekey];
+				break;
+			case 'warranty_addons_duration' :
+				$warranty[$ekey] = $data_array[$ekey];
+				break;
+			case 'no_warranty_option' :
+				$warranty[$ekey] = $data_array[$ekey];
+				break;
+				//WooCommerce Pre-Orders Fields
+			case 'preorders_enabled' :
+				$metaData['_wc_pre_orders_enabled'] = $data_array[$ekey];
+				break;
+			case 'preorders_availability_datetime' :
+				if ($data_array[$ekey]) {
+					$datetime_value = strtotime($data_array[$ekey]);
+				}
+				else {
+					$datetime_value = '';
+				}
+				$metaData['_wc_pre_orders_availability_datetime'] = $datetime_value;
+				break;
+			case 'preorders_fee' :
+				$metaData['_wc_pre_orders_fee'] = $data_array[$ekey];
+				break;
+			case 'preorders_when_to_charge' :
+				$metaData['_wc_pre_orders_when_to_charge'] = $data_array[$ekey];
+				break;
+				//woocommerce_coupons starting
+			case 'discount_type' :
+				$metaData['discount_type'] = $data_array[$ekey];
+				break;
+			case 'coupon_amount' :
+				$metaData['coupon_amount'] = $data_array[$ekey];
+				break;
+			case 'individual_use' :
+				$metaData['individual_use'] = $data_array[$ekey];
+				break;
+			case 'exclude_product_ids' :
+				$metaData['exclude_product_ids'] = $data_array[$ekey];
+				break;
+			case 'product_ids' :
+				$metaData['product_ids'] = $data_array[$ekey];
+				break;
+			case 'usage_limit' :
+				$metaData['usage_limit'] = $data_array[$ekey];
+				break;
+			case 'usage_limit_per_user' :
+				$metaData['usage_limit_per_user'] = $data_array[$ekey];
+				break;
+			case 'limit_usage_to_x_items' :
+				$metaData['limit_usage_to_x_items'] = $data_array[$ekey];
+				break;
+			case 'expiry_date' :
+				$metaData['date_expires'] = strtotime($data_array[$ekey]);
+				break;
+			case 'free_shipping' :
+				$metaData['free_shipping'] = $data_array[$ekey];
+				break;
+			case 'exclude_sale_items' :
+				$metaData['exclude_sale_items'] = $data_array[$ekey];
+				break;
+			case 'minimum_amount' :
+				$metaData['minimum_amount'] = $data_array[$ekey];
+				break;
+			case 'maximum_amount' :
+				$metaData['maximum_amount'] = $data_array[$ekey];
+				break;
+			case 'customer_email' :
+				$customer_email[$ekey] = $data_array[$ekey];
+				break;
+			case 'exclude_product_categories' :
+				$exclude_product[$ekey] = $data_array[$ekey];
+				break;
+			case 'product_categories' :
+				$product_cate[$ekey] = $data_array[$ekey];
+				break;
+				//woocommerce_orders starting
+			case 'payment_method_title' :
+				$metaData['_payment_method_title'] = $data_array[$ekey];
+				break;
+			case 'payment_method' :
+				$metaData['_payment_method'] = $data_array[$ekey];
+				break;
+			case 'transaction_id' :
+				$metaData['_transaction_id'] = $data_array[$ekey];
+				break;
+			case 'billing_first_name' :
+				$metaData['_billing_first_name'] = $data_array[$ekey];
+				break;
+			case 'billing_last_name' :
+				$metaData['_billing_last_name'] = $data_array[$ekey];
+				break;
+			case 'billing_company' :
+				$metaData['_billing_company'] = $data_array[$ekey];
+				break;
+			case 'billing_address_1' :
+				$metaData['_billing_address_1'] = $data_array[$ekey];
+				break;
+			case 'billing_address_2' :
+				$metaData['_billing_address_2'] = $data_array[$ekey];
+				break;
+			case 'billing_city' :
+				$metaData['_billing_city'] = $data_array[$ekey];
+				break;
+			case 'billing_postcode' :
+				$metaData['_billing_postcode'] = $data_array[$ekey];
+				break;
+			case 'billing_state' :
+				$metaData['_billing_state'] = $data_array[$ekey];
+				break;
+			case 'billing_country' :
+				$metaData['_billing_country'] = $data_array[$ekey];
+				break;
+			case 'billing_phone' :
+				$metaData['_billing_phone'] = $data_array[$ekey];
+				break;
+			case 'billing_email' :
+				$metaData['_billing_email'] = $data_array[$ekey];
+				break;
+			case 'shipping_first_name' :
+				$metaData['_shipping_first_name'] = $data_array[$ekey];
+				break;
+			case 'shipping_last_name' :
+				$metaData['_shipping_last_name'] = $data_array[$ekey];
+				break;
+			case 'shipping_company' :
+				$metaData['_shipping_company'] = $data_array[$ekey];
+				break;
+			case 'shipping_address_1' :
+				$metaData['_shipping_address_1'] = $data_array[$ekey];
+				break;
+			case 'shipping_address_2' :
+				$metaData['_shipping_address_2'] = $data_array[$ekey];
+				break;
+			case 'shipping_city' :
+				$metaData['_shipping_city'] = $data_array[$ekey];
+				break;
+			case 'shipping_postcode' :
+				$metaData['_shipping_postcode'] = $data_array[$ekey];
+				break;
+			case 'shipping_state' :
+				$metaData['_shipping_state'] = $data_array[$ekey];
+				break;
+			case 'shipping_country' :
+				$metaData['_shipping_country'] = $data_array[$ekey];
+				break;
+			case 'customer_user' :
+				$metaData['_customer_user'] = $data_array[$ekey];
+				break;
+			case 'order_currency' :
+				$metaData['_order_currency'] = $data_array[$ekey];
+				break;
+			case 'item_name' :
+				$orderItem['order_item_name'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'item_type' :
+				$orderItem['order_item_type'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'item_product_id' :
+				$Item_metaDatas['_product_id'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'item_variation_id' :
+				$Item_metaDatas['_variation_id'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'item_line_subtotal' :
+				$Item_metaDatas['_line_subtotal'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'item_line_subtotal_tax' :
+				$Item_metaDatas['_line_subtotal_tax'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'item_line_total' :
+				$Item_metaDatas['_line_total'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'item_line_tax' :
+				$Item_metaDatas['_line_tax'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'item_line_tax_data' :
+				$Item_metaDatas['_line_tax_data'] = explode('|', $data_array[$ekey]);
+				break;
+			case 'item_tax_class' :
+				$Item_metaDatas['_tax_class'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'item_qty' :
+				$Item_metaDatas['_qty'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'fee_name' :
+				$orderFee['order_item_name'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'fee_type' :
+				$orderFee['order_item_type'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'fee_tax_class' :
+				$Fee_metaDatas['_tax_class'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'fee_line_total' :
+				$Fee_metaDatas['_line_total'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'fee_line_tax' :
+				$Fee_metaDatas['_line_tax'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'fee_line_tax_data' :
+				$Fee_metaDatas['_line_tax_data'] = explode('|', $data_array[$ekey]);
+				break;
+			case 'fee_line_subtotal' :
+				$Fee_metaDatas['_line_subtotal'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'fee_line_subtotal_tax' :
+				$Fee_metaDatas['_line_subtotal_tax'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'shipment_name' :
+				$Shipment_name['order_item_name'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'shipment_method_id' :
+				$Shipment_metaDatas['method_id'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'shipment_cost' :
+				$Shipment_metaDatas['cost'] = explode(',', $data_array[$ekey]);
+				break;
+			case 'shipment_taxes' :
+				$Shipment_metaDatas['taxes'] = explode('|', $data_array[$ekey]);
+				break;
+				//woocommerce_redunds starting
+			case 'refund_amount' :
+				$metaData['_refund_amount'] = $data_array[$ekey];
+				break;
+			case 'order_shipping_tax' :
+				$metaData['_order_shipping_tax'] = $data_array[$ekey];
+				break;
+			case 'order_tax' :
+				$metaData['_order_tax'] = $data_array[$ekey];
+				break;
+			case 'order_shipping' :
+				$metaData['_order_shipping'] = $data_array[$ekey];
+				break;
+			case 'cart_discount' :
+				$metaData['_cart_discount'] = $data_array[$ekey];
+				break;
+			case 'cart_discount_tax' :
+				$metaData['_cart_discount_tax'] = $data_array[$ekey];
+				break;
+			case 'order_total' :
+				$metaData['_order_total'] = $data_array[$ekey];
+				break;
+			default:
+				$metaData[$ekey] = $data_array[$ekey];
+				$metaData['_subscription_payment_sync_date'] = 'a:2:{s:3:"day";i:0;s:5:"month";i:0;}';
+				break;
 			}
 		}
 
-		if(is_array($orderItem)){	
+		if(!empty($orderItem)){	
 			foreach ($orderItem['order_item_name'] as $key => $value) {
 				$value_order_item[$key]['order_item_name'] = $orderItem['order_item_name'][$key];
 				$value_order_item[$key]['order_item_type'] = $orderItem['order_item_type'][$key];
@@ -710,7 +900,7 @@ class WooCommerceMetaImport extends ImportHelpers{
 			}
 		}
 
-		if(is_array($orderFee)){
+		if(!empty($orderFee)){
 			foreach ($orderFee['order_item_name'] as $key => $value) {
 
 				$value_order_fee[$key]['order_item_name'] = $orderFee['order_item_name'][$key];
@@ -729,7 +919,7 @@ class WooCommerceMetaImport extends ImportHelpers{
 			}
 		}
 
-		if(is_array($Shipment_name)){
+		if(!empty($Shipment_name)){
 			foreach ($Shipment_name['order_item_name'] as $key => $value) {
 				$value_shipment[$key]['order_item_name'] = $Shipment_name['order_item_name'][$key];
 				$value_shipment[$key]['order_item_type'] = 'shipping';
@@ -781,7 +971,7 @@ class WooCommerceMetaImport extends ImportHelpers{
 			$exploded_att_names = explode('|', $attribute_names['product_attribute_name']);	
 			foreach ($exploded_att_names as $attr_name) {
 				$attri_name = $wpdb->get_results( "SELECT attribute_name FROM {$wpdb->prefix}woocommerce_attribute_taxonomies where attribute_label = '$attr_name' ");
-				
+
 				if(empty($attri_name)){
 					$attribute['name'][] = $attr_name;
 				}
@@ -801,6 +991,12 @@ class WooCommerceMetaImport extends ImportHelpers{
 			$exploded_att_visible = explode('|', $attribute_visible['product_attribute_visible']);
 			foreach ($exploded_att_visible as $attr_visible) {
 				$attribute['is_visible'][] = $attr_visible;
+			}
+		}
+		if (!empty($attribute_types)) {
+			$exploded_att_type= explode('|', $attribute_types['product_attribute_type']);
+			foreach ($exploded_att_type as $attr_type) {
+				$attribute['type'][] = $attr_type;
 			}
 		}
 		if (!empty($attribute_variation)) {
@@ -1042,6 +1238,9 @@ class WooCommerceMetaImport extends ImportHelpers{
 					if (isset($attribute['name']) && isset($attribute['name'][$att])) {
 						$product_attributes[$attrlabel]['name'] = $attrlabel;
 					}
+					if (isset($attribute['type']) && isset($attribute['type'][$att])) {
+						$product_attributes[$attrlabel]['type'] = $attribute['type'][$att];
+					}
 					if (isset($attribute['value']) && isset($attribute['value'][$att])) {
 						$product_attributes[$attrlabel]['value'] = $attribute['value'][$att];
 					} else {
@@ -1089,12 +1288,12 @@ class WooCommerceMetaImport extends ImportHelpers{
 							else
 								$productID = '';
 
-								if($productID != '') {
-									$explode_attr = explode('|' , $product_attributes[$attrlabel]['value']);
-									$reg_attribute_id = wp_set_object_terms($productID, $explode_attr , $product_attributes[$attrlabel]['name']);
-									$product_attributes[$attrlabel]['value'] = '';
-									update_post_meta($productID, '_product_attributes', $product_attributes);
-								}
+							if($productID != '') {
+								$explode_attr = explode('|' , $product_attributes[$attrlabel]['value']);
+								$reg_attribute_id = wp_set_object_terms($productID, $explode_attr , $product_attributes[$attrlabel]['name']);
+								$product_attributes[$attrlabel]['value'] = '';
+								update_post_meta($productID, '_product_attributes', $product_attributes);
+							}
 						}
 						else{
 							$metaData['_product_attributes'] = $product_attributes;
@@ -1127,38 +1326,73 @@ class WooCommerceMetaImport extends ImportHelpers{
 		//start
 		if (isset($metaData['_product_attributes']) && !empty($metaData['_product_attributes']) && $import_type !== 'WooCommerce Product Variations') {
 			foreach($metaData['_product_attributes'] as $attrKey => $attrVal) {
-					$attrVal['name'] = str_replace( 'pa_' , '' , $attrVal['name']);
-					$get_attributeLabel = $wpdb->get_results( "SELECT attribute_id, attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name = '{$attrVal['name']}'" );                                                         
-	
-					$attrlabel = trim($attrVal['name']);
-                    $attrslug = strtolower($attrlabel);
-                	$attrslug = preg_replace("/[^a-zA-Z0-9._\s]/", "", $attrslug);
-                    $attrslug = preg_replace('/\s/', '-', $attrslug);
-                    $custom_attribute_name = "pa_" . $attrslug;
-                    $attrtype = 'text';
-                    $attrordr = 'menu_order';
-                    $attr_data = $attrVal['value'];
-                    $get_transistent_atrributes = get_option('_transient_wc_attribute_taxonomies');
-                    $get_count_transistent_attr = count($get_transistent_atrributes);
-					$count_transistent_attr = $get_count_transistent_attr + 1;
-					
-                    if(!empty($get_transistent_atrributes)){
-                        foreach($get_transistent_atrributes as $tak => $tav) { 
-    							$new_trans_attr_list[$tak] = new \stdClass();
-                                foreach($tav as $attr_reg_key => $attr_reg_val) {
-                                    $new_trans_attr_list[$tak]->$attr_reg_key = $attr_reg_val;
-                                }
-                        }
-					} 
-					if(empty($get_attributeLabel)){
-					}else {
+				$attrVal['name'] = str_replace( 'pa_' , '' , $attrVal['name']);
+				$get_attributeLabel = $wpdb->get_results( "SELECT attribute_id, attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name = '{$attrVal['name']}'" );                                                         
+
+				$attrlabel = trim($attrVal['name']);
+				$attrslug = strtolower($attrlabel);
+				$attrslug = preg_replace("/[^a-zA-Z0-9._\s]/", "", $attrslug);
+				$attrslug = preg_replace('/\s/', '-', $attrslug);
+				$custom_attribute_name = "pa_" . $attrslug;
+				$attrtypeval = isset($attrVal['type']) ? $attrVal['type'] :'';
+				if(!empty($attrtypeval)){
+					$attrtype = $attrtypeval;
+				}
+				else{
+					$attrtype = 'text';
+				}
+				$attrordr = 'menu_order';
+				$attr_data = $attrVal['value'];
+				$get_transistent_atrributes = get_option('_transient_wc_attribute_taxonomies');
+				$get_count_transistent_attr = count($get_transistent_atrributes);
+				$count_transistent_attr = $get_count_transistent_attr + 1;
+
+				if(!empty($get_transistent_atrributes)){
+					foreach($get_transistent_atrributes as $tak => $tav) { 
+						$new_trans_attr_list[$tak] = new \stdClass();
+						foreach($tav as $attr_reg_key => $attr_reg_val) {
+							$new_trans_attr_list[$tak]->$attr_reg_key = $attr_reg_val;
+						}
+					}
+				} 
+				if(empty($get_attributeLabel)){
+				}else {
+					if (is_plugin_active('variation-swatches-for-woocommerce/variation-swatches-for-woocommerce.php')) {	
 						$attrId = $get_attributeLabel[0]->attribute_id;
 						$custom_attribute_name = 'pa_' . $attrVal['name'];	
-                    	$split_line = explode('|', $attr_data);
+						$split_attr_value = explode('>', $attr_data);
+						$split_line = explode('|', $split_attr_value[0]);
+						$exploded_array = explode('|', $split_attr_value[1]);
+						$meta_attr = array_combine($split_line,$exploded_array);
+						$reg_attribute_id = wp_set_object_terms($pID, $split_line, $custom_attribute_name);		
+						foreach ($meta_attr as $custom_meta => $custom_val){
+							$term_meta_id = $wpdb->get_col($wpdb->prepare("select term_id from {$wpdb->prefix}terms where name = %s",$custom_meta));	
+							$termmetaid = $term_meta_id[0];
+							if(strpos($custom_val, "http://") !== false ){              
+								$attachment_id = $wpdb->get_results("select ID from {$wpdb->prefix}posts where guid= '{$custom_val}'" ,ARRAY_A);	
+								update_term_meta($termmetaid, 'image' , $attachment_id[0]['ID']);
+							}	
+							elseif(strpos($custom_val, "https://") !== false ){
+								$attachment_id = $wpdb->get_results("select ID from {$wpdb->prefix}posts where guid= '{$custom_val}'" ,ARRAY_A);
+								update_term_meta($termmetaid, 'image' , $attachment_id[0]['ID']);
+
+							}		
+							elseif(strpos($custom_val, "#") !== false ){
+								update_term_meta($termmetaid, 'color' , $custom_val);
+							}
+							else{
+								update_term_meta($termmetaid, 'label' , $custom_val);
+							}							
+						}
+					}
+					else{
+						$attrId = $get_attributeLabel[0]->attribute_id;
+						$custom_attribute_name = 'pa_' . $attrVal['name'];	
+						$split_line = explode('|', $attr_data);
 						$reg_attribute_id = wp_set_object_terms($pID, $split_line, $custom_attribute_name);
-							
 						$metaData['_product_attributes'][$attrKey]['value'] = '';
-                    }                
+					}
+				}                
 			}
 		}	
 

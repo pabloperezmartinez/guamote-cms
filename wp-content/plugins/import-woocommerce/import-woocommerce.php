@@ -6,12 +6,12 @@
  *
  * @package   Smackcoders\SMWC
  * @copyright Copyright (C) 2010-2020, Smackcoders Inc - info@smackcoders.com
- * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License, version 3 or higher
+ * @license   https://www.gnu.org/licenses/gpl-3.0.html GNU General Public License, version 3 or higher
  *
  * @wordpress-plugin
  * Plugin Name: Import Woocommerce
  * Description: Import your WordPress Post, Page and Simple WooCommerce Product with Import Woocommerce. 
- * Version: 1.5.6
+ * Version: 1.6.3
  * Text Domain: import-woocommerce
  * Domain Path: /languages
  * Author: smackcoders
@@ -29,7 +29,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 namespace Smackcoders\SMWC;
@@ -51,11 +51,9 @@ $import_extensions = glob( __DIR__ . '/importExtensions/*.php');
 class WooComCSVHandler extends ImportHelpers {
 
 	private static $instance = null;
-	private static $import_config_instance = null;
-	private static $uninstall = null ;
 	private static $install = null ;
 
-	public $version = '1.5.6';
+	public $version = '1.6.3';
 
 	public function __construct(){ 							   
 		$this->plugin = Plugin::getInstance();
@@ -64,7 +62,6 @@ class WooComCSVHandler extends ImportHelpers {
 	public static function getInstance() {
 		if (WooComCSVHandler::$instance == null) {
 			WooComCSVHandler::$instance = new WooComCSVHandler;
-# Custom content after plugin row meta ends
 			WooComCSVHandler::$install = WcomInstall::getInstance();
 			if ( ! function_exists( 'is_plugin_active' ) ) {
 				require_once ABSPATH . 'wp-admin/includes/plugin.php';

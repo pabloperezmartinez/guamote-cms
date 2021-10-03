@@ -10,6 +10,9 @@
 
 namespace SkyVerge\WooCommerce\Facebook;
 
+use SkyVerge\WooCommerce\Facebook\Admin\Settings_Screens\Product_Sync;
+use SkyVerge\WooCommerce\PluginFramework\v5_10_0 as Framework;
+
 defined( 'ABSPATH' ) or exit;
 
 /**
@@ -20,6 +23,16 @@ defined( 'ABSPATH' ) or exit;
 class AJAX {
 
 
+	/** @var string the product attribute search AJAX action */
+	const ACTION_SEARCH_PRODUCT_ATTRIBUTES = 'wc_facebook_search_product_attributes';
+
+	/** @var string facebook order cancel AJAX action */
+	const ACTION_CANCEL_ORDER = 'wc_facebook_cancel_order';
+
+	/** @var string the complete order AJAX action */
+	const ACTION_COMPLETE_ORDER = 'wc_facebook_complete_order';
+
+
 	/**
 	 * AJAX handler constructor.
 	 *
@@ -28,14 +41,225 @@ class AJAX {
 	public function __construct() {
 
 		// maybe output a modal prompt when toggling product sync in bulk or individual product actions
-		add_action( 'wp_ajax_facebook_for_woocommerce_set_product_sync_prompt',             [ $this, 'handle_set_product_sync_prompt' ] );
-		add_action( 'wp_ajax_facebook_for_woocommerce_set_product_sync_bulk_action_prompt', [ $this, 'handle_set_product_sync_bulk_action_prompt' ] );
+		add_action( 'wp_ajax_facebook_for_woocommerce_set_product_sync_prompt', array( $this, 'handle_set_product_sync_prompt' ) );
+		add_action( 'wp_ajax_facebook_for_woocommerce_set_product_sync_bulk_action_prompt', array( $this, 'handle_set_product_sync_bulk_action_prompt' ) );
 
 		// maybe output a modal prompt when setting excluded terms
-		add_action( 'wp_ajax_facebook_for_woocommerce_set_excluded_terms_prompt', [ $this, 'handle_set_excluded_terms_prompt' ] );
+		add_action( 'wp_ajax_facebook_for_woocommerce_set_excluded_terms_prompt', array( $this, 'handle_set_excluded_terms_prompt' ) );
 
-		// set product visibility in Facebook
-		add_action( 'wp_ajax_facebook_for_woocommerce_set_products_visibility', [ $this, 'set_products_visibility' ] );
+		// sync all products via AJAX
+		add_action( 'wp_ajax_wc_facebook_sync_products', array( $this, 'sync_products' ) );
+
+		// get the current sync status
+		add_action( 'wp_ajax_wc_facebook_get_sync_status', array( $this, 'get_sync_status' ) );
+
+		// search a product's attributes for the given term
+		add_action( 'wp_ajax_' . self::ACTION_SEARCH_PRODUCT_ATTRIBUTES, array( $this, 'admin_search_product_attributes' ) );
+
+		// complete a Facebook order for the given order ID
+		add_action( 'wp_ajax_' . self::ACTION_COMPLETE_ORDER, array( $this, 'admin_complete_order' ) );
+
+		// cancel facebook order by the given order ID
+		add_action( 'wp_ajax_' . self::ACTION_CANCEL_ORDER, array( $this, 'admin_cancel_order' ) );
+	}
+
+
+	/**
+	 * Cancels a Facebook order by the given order ID.
+	 *
+	 * @internal
+	 *
+	 * @since 2.1.0
+	 */
+	public function admin_cancel_order() {
+
+		$order = null;
+
+		try {
+
+			if ( ! wp_verify_nonce( Framework\SV_WC_Helper::get_posted_value( 'security' ), self::ACTION_CANCEL_ORDER ) ) {
+				throw new Framework\SV_WC_Plugin_Exception( __( 'Invalid nonce.', 'facebook-for-woocommerce' ) );
+			}
+
+			$order_id    = Framework\SV_WC_Helper::get_posted_value( 'order_id' );
+			$reason_code = Framework\SV_WC_Helper::get_posted_value( 'reason_code' );
+
+			if ( empty( $order_id ) ) {
+				throw new Framework\SV_WC_Plugin_Exception( __( 'Order ID is required.', 'facebook-for-woocommerce' ) );
+			}
+
+			if ( empty( $reason_code ) ) {
+				throw new Framework\SV_WC_Plugin_Exception( __( 'Cancel reason is required.', 'facebook-for-woocommerce' ) );
+			}
+
+			$order = wc_get_order( absint( $order_id ) );
+
+			if ( false === $order ) {
+				throw new Framework\SV_WC_Plugin_Exception( __( 'A valid Order ID is required.', 'facebook-for-woocommerce' ) );
+			}
+
+			facebook_for_woocommerce()->get_commerce_handler()->get_orders_handler()->cancel_order( $order, $reason_code );
+
+			wp_send_json_success();
+
+		} catch ( Framework\SV_WC_Plugin_Exception $exception ) {
+
+			wp_send_json_error( $exception->getMessage() );
+		}
+	}
+
+
+	/**
+	 * Searches a product's attributes for the given term.
+	 *
+	 * @internal
+	 *
+	 * @since 2.1.0
+	 */
+	public function admin_search_product_attributes() {
+
+		try {
+
+			if ( ! wp_verify_nonce( Framework\SV_WC_Helper::get_requested_value( 'security' ), self::ACTION_SEARCH_PRODUCT_ATTRIBUTES ) ) {
+				throw new Framework\SV_WC_Plugin_Exception( 'Invalid nonce' );
+			}
+
+			$term = Framework\SV_WC_Helper::get_requested_value( 'term' );
+
+			if ( ! $term ) {
+				throw new Framework\SV_WC_Plugin_Exception( 'A search term is required' );
+			}
+
+			$product = wc_get_product( (int) Framework\SV_WC_Helper::get_requested_value( 'request_data' ) );
+
+			if ( ! $product instanceof \WC_Product ) {
+				throw new Framework\SV_WC_Plugin_Exception( 'A valid product ID is required' );
+			}
+
+			$attributes = Admin\Products::get_available_product_attribute_names( $product );
+
+			// filter out any attributes whose slug or proper name don't at least partially match the search term
+			$results = array_filter(
+				$attributes,
+				function( $name, $slug ) use ( $term ) {
+
+					return false !== stripos( $name, $term ) || false !== stripos( $slug, $term );
+
+				},
+				ARRAY_FILTER_USE_BOTH
+			);
+
+			wp_send_json( $results );
+
+		} catch ( Framework\SV_WC_Plugin_Exception $exception ) {
+
+			die();
+		}
+	}
+
+
+	/**
+	 * Completes a Facebook order for the given order ID.
+	 *
+	 * @internal
+	 *
+	 * @since 2.1.0
+	 */
+	public function admin_complete_order() {
+
+		try {
+
+			if ( ! wp_verify_nonce( Framework\SV_WC_Helper::get_posted_value( 'nonce' ), self::ACTION_COMPLETE_ORDER ) ) {
+				throw new Framework\SV_WC_Plugin_Exception( 'Invalid nonce', 403 );
+			}
+
+			$order_id        = (int) Framework\SV_WC_Helper::get_posted_value( 'order_id' );
+			$tracking_number = wc_clean( Framework\SV_WC_Helper::get_posted_value( 'tracking_number' ) );
+			$carrier_code    = wc_clean( Framework\SV_WC_Helper::get_posted_value( 'carrier_code' ) );
+
+			if ( empty( $order_id ) ) {
+				throw new Framework\SV_WC_Plugin_Exception( __( 'Order ID is required', 'facebook-for-woocommerce' ) );
+			}
+
+			if ( empty( $tracking_number ) ) {
+				throw new Framework\SV_WC_Plugin_Exception( __( 'Tracking number is required', 'facebook-for-woocommerce' ) );
+			}
+
+			if ( empty( $carrier_code ) ) {
+				throw new Framework\SV_WC_Plugin_Exception( __( 'Carrier code is required', 'facebook-for-woocommerce' ) );
+			}
+
+			$order = wc_get_order( $order_id );
+
+			if ( ! $order instanceof \WC_Order ) {
+				throw new Framework\SV_WC_Plugin_Exception( __( 'Order not found', 'facebook-for-woocommerce' ) );
+			}
+
+			facebook_for_woocommerce()->get_commerce_handler()->get_orders_handler()->fulfill_order( $order, $tracking_number, $carrier_code );
+
+			wp_send_json_success();
+
+		} catch ( Framework\SV_WC_Plugin_Exception $exception ) {
+
+			wp_send_json_error( $exception->getMessage(), $exception->getCode() );
+		}
+	}
+
+
+	/**
+	 * Syncs all products via AJAX.
+	 *
+	 * @internal
+	 *
+	 * @since 2.0.0
+	 */
+	public function sync_products() {
+		// Allow opt-out of full batch-API sync, for example if store has a large number of products.
+		if ( ! facebook_for_woocommerce()->get_integration()->allow_full_batch_api_sync() ) {
+			wp_send_json_error( __( 'Full product sync disabled by filter hook `facebook_for_woocommerce_allow_full_batch_api_sync`.', 'facebook-for-woocommerce' ) );
+			return;
+		}
+
+		check_admin_referer( Product_Sync::ACTION_SYNC_PRODUCTS, 'nonce' );
+
+		facebook_for_woocommerce()->get_products_sync_handler()->create_or_update_all_products();
+
+		wp_send_json_success();
+	}
+
+
+	/**
+	 * Gets the current sync status.
+	 *
+	 * @internal
+	 *
+	 * @since 2.0.0
+	 */
+	public function get_sync_status() {
+
+		check_admin_referer( Product_Sync::ACTION_GET_SYNC_STATUS, 'nonce' );
+
+		$remaining_products = 0;
+
+		$jobs = facebook_for_woocommerce()->get_products_sync_background_handler()->get_jobs(
+			array(
+				'status' => 'processing',
+			)
+		);
+
+		if ( ! empty( $jobs ) ) {
+
+			// there should only be one processing job at a time, pluck the latest to convey status
+			$job = $jobs[0];
+
+			$remaining_products = ! empty( $job->total ) ? $job->total : count( $job->requests );
+
+			if ( ! empty( $job->progress ) ) {
+				$remaining_products -= $job->progress;
+			}
+		}
+
+		wp_send_json_success( $remaining_products );
 	}
 
 
@@ -51,45 +275,23 @@ class AJAX {
 		check_ajax_referer( 'set-product-sync-prompt', 'security' );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$product_id       = isset( $_POST['product'] )          ? (int) $_POST['product']             : 0;
+		$product_id = isset( $_POST['product'] ) ? (int) $_POST['product'] : 0;
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$sync_enabled     = isset( $_POST['sync_enabled'] )     ? (string) $_POST['sync_enabled']     : '';
+		$sync_enabled = isset( $_POST['sync_enabled'] ) ? (string) $_POST['sync_enabled'] : '';
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$var_sync_enabled = isset( $_POST['var_sync_enabled'] ) ? (string) $_POST['var_sync_enabled'] : '';
 	    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$product_cats     = isset( $_POST['categories'] )       ? (array) $_POST['categories']        : [];
+		$product_cats = isset( $_POST['categories'] ) ? (array) $_POST['categories'] : array();
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$product_tags     = isset( $_POST['tags'] )             ? (array) $_POST['tags']              : [];
+		$product_tags = isset( $_POST['tags'] ) ? (array) $_POST['tags'] : array();
 
-		if ( $product_id > 0 && in_array( $var_sync_enabled, [ 'enabled', 'disabled' ], true ) && in_array( $sync_enabled, [ 'enabled', 'disabled' ], true ) ) {
+		if ( $product_id > 0 && in_array( $var_sync_enabled, array( 'enabled', 'disabled' ), true ) && in_array( $sync_enabled, array( 'enabled', 'disabled' ), true ) ) {
 
 			$product = wc_get_product( $product_id );
 
 			if ( $product instanceof \WC_Product ) {
 
-				if ( 'disabled' === $sync_enabled && Products::is_sync_enabled_for_product( $product ) ) {
-
-					ob_start();
-
-					?>
-					<button
-						id="facebook-for-woocommerce-hide-products"
-						class="button button-large button-primary facebook-for-woocommerce-toggle-product-visibility hide-products"
-					><?php esc_html_e( 'Hide Product', 'facebook-for-woocommerce' ); ?></button>
-					<button
-						id="facebook-for-woocommerce-do-not-hide-products"
-						class="button button-large button-primary facebook-for-woocommerce-toggle-product-visibility show-products"
-					><?php esc_html_e( 'Do Not Hide Product', 'facebook-for-woocommerce' ); ?></button>
-					<?php
-
-					$buttons = ob_get_clean();
-
-					wp_send_json_error( [
-						'message' => __( 'This product will no longer be updated in your Facebook catalog. Would you like to hide this product from your Facebook shop?', 'facebook-for-woocommerce' ),
-						'buttons' => $buttons,
-					] );
-
-				} elseif ( ( 'enabled' === $sync_enabled && ! $product->is_type( 'variable' ) ) || ( 'enabled' === $var_sync_enabled && $product->is_type( 'variable' ) ) ) {
+				if ( ( 'enabled' === $sync_enabled && ! $product->is_type( 'variable' ) ) || ( 'enabled' === $var_sync_enabled && $product->is_type( 'variable' ) ) ) {
 
 					$has_excluded_terms = false;
 
@@ -98,16 +300,29 @@ class AJAX {
 						// try with categories first, since we have already IDs
 						$has_excluded_terms = ! empty( $product_cats ) && array_intersect( $product_cats, $integration->get_excluded_product_category_ids() );
 
+						// the form post can send an array with empty items, so filter them out
+						$product_tags = array_filter( $product_tags );
+
 						// try next with tags, but WordPress only gives us tag names
 						if ( ! $has_excluded_terms && ! empty( $product_tags ) ) {
 
-							$product_tag_ids = [];
+							$product_tag_ids = array();
 
-							foreach ( $product_tags as $product_tag_name ) {
+							foreach ( $product_tags as $product_tag_name_or_id ) {
 
-								if ( $term = get_term_by( 'name', $product_tag_name, 'product_tag' ) ) {
+								$term = get_term_by( 'name', $product_tag_name_or_id, 'product_tag' );
+
+								if ( $term instanceof \WP_Term ) {
 
 									$product_tag_ids[] = $term->term_id;
+
+								} else {
+
+									$term = get_term( (int) $product_tag_name_or_id, 'product_tag' );
+
+									if ( $term instanceof \WP_Term ) {
+										$product_tag_ids[] = $term->term_id;
+									}
 								}
 							}
 
@@ -123,7 +338,7 @@ class AJAX {
 						<a
 							id="facebook-for-woocommerce-go-to-settings"
 							class="button button-large"
-							href="<?php echo esc_url( add_query_arg( 'section', \WC_Facebookcommerce::INTEGRATION_ID, admin_url( 'admin.php?page=wc-settings&tab=integration' ) ) ); ?>"
+							href="<?php echo esc_url( add_query_arg( 'tab', Product_Sync::ID, facebook_for_woocommerce()->get_settings_url() ) ); ?>"
 						><?php esc_html_e( 'Go to Settings', 'facebook-for-woocommerce' ); ?></a>
 						<button
 							id="facebook-for-woocommerce-cancel-sync"
@@ -134,14 +349,16 @@ class AJAX {
 
 						$buttons = ob_get_clean();
 
-						wp_send_json_error( [
-							'message' => sprintf(
-								/* translators: Placeholder %s - <br/> tag */
-								__( 'This product belongs to a category or tag that is excluded from the Facebook catalog sync. It will not sync to Facebook. %sTo sync this product to Facebook, click Go to Settings and remove the category or tag exclusion or click Cancel and update the product\'s category / tag assignments.', 'facebook-for-woocommerce' ),
-								'<br/><br/>'
-							),
-							'buttons' => $buttons,
-						] );
+						wp_send_json_error(
+							array(
+								'message' => sprintf(
+								 /* translators: Placeholder %s - <br/> tag */
+									__( 'This product belongs to a category or tag that is excluded from the Facebook catalog sync. It will not sync to Facebook. %sTo sync this product to Facebook, click Go to Settings and remove the category or tag exclusion or click Cancel and update the product\'s category / tag assignments.', 'facebook-for-woocommerce' ),
+									'<br/><br/>'
+								),
+								'buttons' => $buttons,
+							)
+						);
 					}
 				}
 			}
@@ -163,77 +380,49 @@ class AJAX {
 		check_ajax_referer( 'set-product-sync-bulk-action-prompt', 'security' );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$product_ids = isset( $_POST['products'] ) ? (array)  $_POST['products'] : [];
+		$product_ids = isset( $_POST['products'] ) ? (array) $_POST['products'] : array();
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$toggle      = isset( $_POST['toggle'] )   ? (string) $_POST['toggle']   : '';
+		$toggle = isset( $_POST['toggle'] ) ? (string) $_POST['toggle'] : '';
 
-		if ( ! empty( $product_ids ) && ! empty( $toggle ) ) {
+		if ( ! empty( $product_ids ) && ! empty( $toggle ) && 'facebook_include' === $toggle ) {
 
-			// merchant wants to exclude products from sync: ask them what they want to do with their visibility status
-			if ( 'facebook_exclude' === $toggle ) {
+			$has_excluded_term = false;
+
+			foreach ( $product_ids as $product_id ) {
+				$product = wc_get_product( $product_id );
+
+				if ( $product instanceof \WC_Product && ! facebook_for_woocommerce()->get_product_sync_validator( $product )->passes_product_terms_check() ) {
+					$has_excluded_term = true;
+					break;
+				}
+			}
+
+			// show modal if there's at least one product that belongs to an excluded term
+			if ( $has_excluded_term ) {
 
 				ob_start();
 
 				?>
+				<a
+					id="facebook-for-woocommerce-go-to-settings"
+					class="button button-large"
+					href="<?php echo esc_url( add_query_arg( 'tab', Product_Sync::ID, facebook_for_woocommerce()->get_settings_url() ) ); ?>"
+				><?php esc_html_e( 'Go to Settings', 'facebook-for-woocommerce' ); ?></a>
 				<button
-					id="facebook-for-woocommerce-hide-products"
-					class="button button-large button-primary facebook-for-woocommerce-toggle-product-visibility hide-products"
-				><?php esc_html_e( 'Hide Products', 'facebook-for-woocommerce' ); ?></button>
-				<button
-					id="facebook-for-woocommerce-do-not-hide-products"
-					class="button button-large button-primary facebook-for-woocommerce-toggle-product-visibility show-products"
-				><?php esc_html_e( 'Do Not Hide Products', 'facebook-for-woocommerce' ); ?></button>
+					id="facebook-for-woocommerce-cancel-sync"
+					class="button button-large button-primary"
+					onclick="jQuery( '.modal-close' ).trigger( 'click' )"
+				><?php esc_html_e( 'Cancel', 'facebook-for-woocommerce' ); ?></button>
 				<?php
 
 				$buttons = ob_get_clean();
 
-				wp_send_json_error( [
-					'message' => __( 'The selected products will no longer be updated in your Facebook catalog. Would you like to hide these products from your Facebook shop?', 'facebook-for-woocommerce' ),
-					'buttons' => $buttons,
-				] );
-
-			// merchant wants to enable sync in Facebook multiple products: we must check if they belong to excluded categories, and perhaps warn them
-			} elseif ( 'facebook_include' === $toggle && ( $integration = facebook_for_woocommerce()->get_integration() ) ) {
-
-				$has_excluded_term = false;
-
-				foreach ( $product_ids as $product_id ) {
-
-					$product = wc_get_product( $product_id );
-
-					// product belongs to at least one excluded term: break the loop
-					if ( $product instanceof \WC_Product && Products::is_sync_excluded_for_product_terms( $product ) ) {
-
-						$has_excluded_term = true;
-						break;
-					}
-				}
-
-				// show modal if there's at least one product that belongs to an excluded term
-				if ( $has_excluded_term )  {
-
-					ob_start();
-
-					?>
-					<a
-						id="facebook-for-woocommerce-go-to-settings"
-						class="button button-large"
-						href="<?php echo esc_url( add_query_arg( 'section', \WC_Facebookcommerce::INTEGRATION_ID, admin_url( 'admin.php?page=wc-settings&tab=integration' ) ) ); ?>"
-					><?php esc_html_e( 'Go to Settings', 'facebook-for-woocommerce' ); ?></a>
-					<button
-						id="facebook-for-woocommerce-cancel-sync"
-						class="button button-large button-primary"
-						onclick="jQuery( '.modal-close' ).trigger( 'click' )"
-					><?php esc_html_e( 'Cancel', 'facebook-for-woocommerce' ); ?></button>
-					<?php
-
-					$buttons = ob_get_clean();
-
-					wp_send_json_error( [
+				wp_send_json_error(
+					array(
 						'message' => __( 'One or more of the selected products belongs to a category or tag that is excluded from the Facebook catalog sync. To sync these products to Facebook, please remove the category or tag exclusion from the plugin settings.', 'facebook-for-woocommerce' ),
 						'buttons' => $buttons,
-					] );
-				}
+					)
+				);
 			}
 		}
 
@@ -253,12 +442,12 @@ class AJAX {
 		check_ajax_referer( 'set-excluded-terms-prompt', 'security' );
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$posted_categories = isset( $_POST['categories'] ) ? wp_unslash( $_POST['categories'] ) : [];
+		$posted_categories = isset( $_POST['categories'] ) ? wp_unslash( $_POST['categories'] ) : array();
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$posted_tags = isset( $_POST['tags'] ) ? wp_unslash( $_POST['tags'] ) : [];
+		$posted_tags = isset( $_POST['tags'] ) ? wp_unslash( $_POST['tags'] ) : array();
 
-		$new_category_ids = [];
-		$new_tag_ids      = [];
+		$new_category_ids = array();
+		$new_tag_ids      = array();
 
 		if ( ! empty( $posted_categories ) ) {
 			foreach ( $posted_categories as $posted_category_id ) {
@@ -285,12 +474,6 @@ class AJAX {
 				class="button button-large button-primary facebook-for-woocommerce-confirm-settings-change"
 			><?php esc_html_e( 'Exclude Products', 'facebook-for-woocommerce' ); ?></button>
 
-			<!-- TODO: restore for FBE 2.0
-			<button
-				id="facebook-for-woocommerce-confirm-settings-change-hide-products"
-				class="button button-large button-primary facebook-for-woocommerce-confirm-settings-change hide-products"
-			><?php esc_html_e( 'Exclude Products and Hide in Facebook', 'facebook-for-woocommerce' ); ?></button> -->
-
 			<button
 				id="facebook-for-woocommerce-cancel-settings-change"
 				class="button button-large button-primary"
@@ -300,14 +483,16 @@ class AJAX {
 
 			$buttons = ob_get_clean();
 
-			wp_send_json_error( [
-				'message' => sprintf(
-					/* translators: Placeholder %s - <br/> tags */
-					__( 'The categories and/or tags that you have selected to exclude from sync contain products that are currently synced to Facebook.%sTo exclude these products from the Facebook sync, click Exclude Products. To review the category / tag exclusion settings, click Cancel.', 'facebook-for-woocommerce' ),
-					'<br/><br/>'
-				),
-				'buttons' => $buttons,
-			] );
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+					 /* translators: Placeholder %s - <br/> tags */
+						__( 'The categories and/or tags that you have selected to exclude from sync contain products that are currently synced to Facebook.%sTo exclude these products from the Facebook sync, click Exclude Products. To review the category / tag exclusion settings, click Cancel.', 'facebook-for-woocommerce' ),
+						'<br/><br/>'
+					),
+					'buttons' => $buttons,
+				)
+			);
 
 		} else {
 
@@ -329,34 +514,34 @@ class AJAX {
 	 * @param string[] $new_excluded_tags
 	 * @return int[]
 	 */
-	private function get_products_to_be_excluded( $new_excluded_categories = [], $new_excluded_tags = [] ) {
+	private function get_products_to_be_excluded( $new_excluded_categories = array(), $new_excluded_tags = array() ) {
 
 		// products with sync enabled
-		$sync_enabled_meta_query = [
+		$sync_enabled_meta_query = array(
 			'relation' => 'OR',
-			[
+			array(
 				'key'   => Products::SYNC_ENABLED_META_KEY,
 				'value' => 'yes',
-			],
-			[
+			),
+			array(
 				'key'     => Products::SYNC_ENABLED_META_KEY,
 				'compare' => 'NOT EXISTS',
-			],
-		];
+			),
+		);
 
-		$products_query_vars = [
+		$products_query_vars = array(
 			'post_type'  => 'product',
 			'fields'     => 'ids',
 			'meta_query' => $sync_enabled_meta_query,
-		];
+		);
 
 		if ( ! empty( $new_excluded_categories ) ) {
 
 			// products that belong to the new excluded categories
-			$categories_tax_query = [
+			$categories_tax_query = array(
 				'taxonomy' => 'product_cat',
 				'terms'    => $new_excluded_categories,
-			];
+			);
 
 			if ( $integration = facebook_for_woocommerce()->get_integration() ) {
 
@@ -365,15 +550,15 @@ class AJAX {
 
 				if ( ! empty( $saved_excluded_categories ) ) {
 
-					$categories_tax_query = [
+					$categories_tax_query = array(
 						'relation' => 'AND',
 						$categories_tax_query,
-						[
+						array(
 							'taxonomy' => 'product_cat',
 							'terms'    => $saved_excluded_categories,
 							'operator' => 'NOT IN',
-						],
-					];
+						),
+					);
 				}
 			}
 
@@ -383,10 +568,10 @@ class AJAX {
 		if ( ! empty( $new_excluded_tags ) ) {
 
 			// products that belong to the new excluded tags
-			$tags_tax_query = [
+			$tags_tax_query = array(
 				'taxonomy' => 'product_tag',
 				'terms'    => $new_excluded_tags,
-			];
+			);
 
 			if ( $integration = facebook_for_woocommerce()->get_integration() ) {
 
@@ -395,15 +580,15 @@ class AJAX {
 				if ( ! empty( $save_excluded_tags ) ) {
 
 					// products that do not belong to the saved excluded tags
-					$tags_tax_query = [
+					$tags_tax_query = array(
 						'relation' => 'AND',
 						$tags_tax_query,
-						[
+						array(
 							'taxonomy' => 'product_tag',
 							'terms'    => $save_excluded_tags,
 							'operator' => 'NOT IN',
-						],
-					];
+						),
+					);
 				}
 			}
 
@@ -413,174 +598,17 @@ class AJAX {
 
 			} else {
 
-				$products_query_vars['tax_query'] = [
+				$products_query_vars['tax_query'] = array(
 					'relation' => 'OR',
 					$products_query_vars,
 					$tags_tax_query,
-				];
+				);
 			}
 		}
 
 		$products_query = new \WP_Query( $products_query_vars );
 
 		return $products_query->posts;
-	}
-
-
-	/**
-	 * Gets an array of product IDs data for handling visibility (helper method).
-	 *
-	 * @see \SkyVerge\WooCommerce\Facebook\AJAX::set_products_visibility()
-	 *
-	 * @since 1.10.2
-	 *
-	 * @param array $terms_data term data with product IDs and visibility
-	 * @return array product IDs and visibility data
-	 */
-	private function get_product_ids_for_visibility_from_terms( $terms_data ) {
-
-		$products  = [];
-
-		foreach ( $terms_data as $term_data ) {
-
-			if ( ! isset( $term_data['term_id'], $term_data['taxonomy'], $term_data['visibility'] ) ) {
-				continue;
-			}
-
-			if ( 'product_cat' === $term_data['taxonomy'] ) {
-				$tax_query_arg = 'category';
-			} elseif( 'product_tag' === $term_data['taxonomy'] ) {
-				$tax_query_arg = 'tag';
-			} else {
-				continue;
-			}
-
-			$term = get_term_by( 'id', $term_data['term_id'], $term_data['taxonomy'] );
-
-			if ( ! $term instanceof \WP_Term ) {
-				continue;
-			}
-
-			$found_products = wc_get_products( [
-				'limit'        => -1,
-				'return'       => 'ids',
-				$tax_query_arg => [ $term->slug ],
-			] );
-
-			foreach ( $found_products as $product_id ) {
-
-				$products[] = [
-					'product_id' => $product_id,
-					'visibility' => $term_data['visibility']
-				];
-			}
-		}
-
-		return $products;
-	}
-
-
-	/**
-	 * Sets products visibility in Facebook.
-	 *
-	 * @internal
-	 *
-	 * @since 1.10.0
-	 */
-	public function set_products_visibility() {
-
-		check_ajax_referer( 'set-products-visibility', 'security' );
-
-		// phpcs:disable WordPress.Security.NonceVerification.Missing
-
-		$integration = facebook_for_woocommerce()->get_integration();
-		$products    = isset( $_POST['products'] ) ? (array) $_POST['products'] : [];
-
-		if ( ! empty( $_POST['product_categories'] ) && is_array( $_POST['product_categories'] ) ) {
-			$products = array_merge( $products, $this->get_product_ids_for_visibility_from_terms( $_POST['product_categories'] ) );
-		}
-
-		if ( ! empty( $_POST['product_tags'] ) && is_array( $_POST['product_tags'] ) ) {
-			$products = array_merge( $products, $this->get_product_ids_for_visibility_from_terms( $_POST['product_tags'] ) );
-		}
-
-		// phpcs:enable WordPress.Security.NonceVerification.Missing
-
-		$error = 'No products found to set visibility for.'; // console error message
-
-		if ( $integration && ! empty( $products ) ) {
-
-			$processed_products = [];
-
-			foreach ( $products as $product_data ) {
-
-				$product_id = isset( $product_data['product_id'] ) ? absint( $product_data['product_id'] ) : 0;
-
-				// bail if already processed
-				if ( in_array( $product_id, $processed_products, true ) ) {
-					continue;
-				}
-
-				$visibility_meta_value = isset( $product_data['visibility'] ) ? wc_string_to_bool( $product_data['visibility'] ) : null;
-
-				// bail if visibility value is not valid
-				if ( ! is_bool( $visibility_meta_value ) ) {
-					continue;
-				}
-
-				$visibility_api_value = $visibility_meta_value ? $integration::FB_SHOP_PRODUCT_VISIBLE : $integration::FB_SHOP_PRODUCT_HIDDEN;
-
-				$product = $product_id > 0 ? wc_get_product( $product_id ) : null;
-
-				if ( $product instanceof \WC_Product ) {
-
-					// also extend toggle to child variations
-					if ( $product->is_type( 'variable' ) ) {
-
-						foreach ( $product->get_children() as $variation_id ) {
-
-							// bail if already processed
-							if ( in_array( $variation_id, $processed_products, true ) ) {
-								continue;
-							}
-
-							if ( $variation_product = wc_get_product( $variation_id ) ) {
-
-								$fb_item_id = $integration->get_product_fbid( \WC_Facebookcommerce_Integration::FB_PRODUCT_ITEM_ID, $variation_product->get_id() );
-								$fb_request = $integration->fbgraph->update_product_item( $fb_item_id, [
-									'visibility' => $visibility_api_value,
-								] );
-
-								if ( $integration->check_api_result( $fb_request ) ) {
-									Products::set_product_visibility( $variation_product, $visibility_meta_value );
-								}
-
-								$processed_products[] = $variation_id;
-							}
-						}
-
-						Products::set_product_visibility( $product, $visibility_meta_value );
-
-					} else {
-
-						$fb_item_id = $integration->get_product_fbid( \WC_Facebookcommerce_Integration::FB_PRODUCT_ITEM_ID, $product->get_id() );
-						$fb_request = $integration->fbgraph->update_product_item( $fb_item_id, [
-							'visibility' => $visibility_api_value,
-						] );
-
-						if ( $integration->check_api_result( $fb_request ) ) {
-							Products::set_product_visibility( $product, $visibility_meta_value );
-						}
-					}
-
-					$processed_products[] = $product_id;
-				}
-			}
-
-			wp_send_json_success( $processed_products );
-		}
-
-		wp_send_json_error( $error );
 	}
 
 

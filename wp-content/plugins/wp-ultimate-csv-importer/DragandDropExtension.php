@@ -29,9 +29,9 @@ class DragandDropExtension {
     }
 
     public function display_csv_values(){
-        $hashkey = $_POST['HashKey'];
-        $templatename = $_POST['templatename'];
-        $get_row = $_POST['row'];
+        $hashkey = sanitize_key($_POST['HashKey']);
+        $templatename = sanitize_text_field($_POST['templatename']);
+        $get_row = intval($_POST['row']);
         
         global $wpdb;
         $file_table_name = $wpdb->prefix ."smackcsv_file_events";
@@ -107,8 +107,8 @@ class DragandDropExtension {
 	}
 
     public function preview_record(){
-        $row = $_POST['row'];
-        $hashkey = $_POST['hashkey'];
+        $row = intval($_POST['row']);
+        $hashkey = sanitize_key($_POST['hashkey']);
         $response = [];
         $helpers_instance = ImportHelpers::getInstance(); 
 
@@ -118,7 +118,7 @@ class DragandDropExtension {
 
         $file = $upload_dir.$hashkey.'/'.$hashkey;
 
-			if($_POST['xml'] == 'true'){
+			if(sanitize_text_field($_POST['xml']) == 'true'){
 
                 $xml = simplexml_load_file($file);
                 $xml_arr = json_decode( json_encode($xml) , 1);
@@ -127,7 +127,7 @@ class DragandDropExtension {
                     $child_name = $child->getName();    
                 }
 
-				$mapping = array('title' => $_POST['title'], 'content' => $_POST['content'], 'excerpt' => $_POST['excerpt'], 'image' => $_POST['image'], 'slug' => $_POST['slug'], 'date' => $_POST['date'], 'status' => $_POST['status']);
+				$mapping = array('title' => sanitize_title($_POST['title']), 'content' => sanitize_text_field($_POST['content']), 'excerpt' => sanitize_text_field($_POST['excerpt']), 'image' => sanitize_text_field($_POST['image']), 'slug' => sanitize_text_field($_POST['slug']), 'date' => sanitize_text_field($_POST['date']), 'status' => sanitize_text_field($_POST['status']));
 				$doc = new \DOMDocument();
 				$doc->load($file);
 
@@ -137,9 +137,9 @@ class DragandDropExtension {
                         $val = str_replace('}', '', $val);
                         $val = str_replace('<p>', '', $val);
                         $val = str_replace('</p>', '', $val);
-                        $val = preg_replace("(".$child_name."[+[0-9]+])", $child_name."[".$_POST['row']."]", $val);
+                        $val = preg_replace("(".$child_name."[+[0-9]+])", $child_name."[".intval($_POST['row'])."]", $val);
 
-                        $modified_result[$key] = $this->parse_element($doc, $val, $_POST['row'], $parent_name, $child_name);
+                        $modified_result[$key] = $this->parse_element($doc, $val, intval($_POST['row']), $parent_name, $child_name);
 					}
 				}	
             }
@@ -179,7 +179,7 @@ class DragandDropExtension {
                 $data = array();
                 $data = array_combine($Headers , $csv_values);
 
-                $mapping = array('title' => $_POST['title'], 'content' => $_POST['content'], 'excerpt' => $_POST['excerpt'], 'image' => $_POST['image'], 'slug' => $_POST['slug'], 'date' => $_POST['date'], 'status' => $_POST['status']);		
+                $mapping = array('title' => sanitize_title($_POST['title']), 'content' => sanitize_text_field($_POST['content']), 'excerpt' => sanitize_text_field($_POST['excerpt']), 'image' => sanitize_text_field($_POST['image']), 'slug' => sanitize_text_field($_POST['slug']), 'date' => sanitize_text_field($_POST['date']), 'status' => sanitize_text_field($_POST['status']));		
                 foreach($mapping as $key => $val) {		
                     $pattern = "/({([a-z A-Z 0-9 | , _ -]+)(.*?)(}))/";
                     preg_match_all($pattern, $val, $results, PREG_PATTERN_ORDER);

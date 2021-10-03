@@ -71,6 +71,8 @@ class LangFR {
                         'CustomFieldSuite' => 'Suite de terrain personnalisée',
                         'AllInOneSeoFields' => 'Tout en un Seo Fields',
                         'YoastSeoFields' => 'Yoast Seo Fields',
+                        'RankMathFields'=>'Rank Math Fields',
+                        'RankMathProFields'=>'Rank Math Pro Fields',
                         'BillingAndShippingInformation' => "Informations de facturation et d'expédition",
                         'CustomFieldsWPMemberFields' => 'Champs personnalisés Champs de membre WP',
                         'CustomFieldsMemberFields' => 'Champs personnalisés',
@@ -78,6 +80,13 @@ class LangFR {
                         'WPECommerceCustomFields' => 'WP Custom Commerce Champs',
                         'EventsManagerFields' => "Champs du gestionnaire d'événements",
                         'CMB2CustomFields' => 'Champs personnalisés CMB2',
+                        'JetEngineFields' => 'Champs de moteurs à réaction',
+                        'JetEngineRFFields' => 'Champs de répéteur de moteur à réaction',
+                        'JetEngineCPTFields' => 'Champs CPT Jet Engine',
+                        'JetEngineCPTRFFields' => 'Champs de répéteur CPT Jet Engine',
+                        'JetEngineTaxonomyFields' => 'Champs de taxonomie des moteurs à réaction',
+                        'JetEngineTaxonomyRFFields' => 'Champs de répéteur de taxonomie des moteurs à réaction',
+
                         'CourseSettingsFields' => 'Champs des paramètres du cours',
                         'CurriculumSettingsFields' => 'Champs des paramètres du programme',
                         'QuizSettingsFields' => 'Champs des paramètres du quiz',
@@ -121,6 +130,7 @@ class LangFR {
                         'SetimageAltText' => "Définir l'image Alt Text",
                         'SetimageDescription' => "Définir l'image Description",
                         'Changeimagefilenameto' => 'Changer le nom du fichier image en',
+                        'polylangfields'=>'Champs de paramètres Polylang',
                         'ImportconfigurationSection' => "Section de configuration d'importation",
                         'EnablesafeprestateRollback' => 'Activer la restauration sécurisée',
                         'Backupbeforeimport' => 'Sauvegarde avant importation',
@@ -297,7 +307,7 @@ class LangFR {
                         'SelectTimeZone' => 'Sélectionnez TimeZone',
                         'ScheduleExport' => "Calendrier d'exportation",
                         'DataExported' => 'Données exportées',
-
+                        'FilePath' => 'Chemin du fichier',
 		        );
                 return $response;
         }

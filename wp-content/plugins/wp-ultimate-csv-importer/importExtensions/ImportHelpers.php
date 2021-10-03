@@ -201,10 +201,9 @@ class ImportHelpers {
 							}
 						}
 						
-							$math = 'MATH(';
+							$math = 'MATH';
 							if (strpos($csv_element, $math) !== false) {		
-								$equation = str_replace('MATH(', '', $csv_element);
-								$equation = str_replace(')', '', $equation);
+								$equation = str_replace('MATH', '', $csv_element);
 								$csv_element = $this->evalmath($equation);
 							}
 								$wp_element= trim($key);

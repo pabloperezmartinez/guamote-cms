@@ -22,7 +22,7 @@ class LangGE {
         }
 
         public static function contents(){
-                $response = array('Importieren',
+                $response = array('ImportUpdate' => 'Importieren',
                 'Dashboard' => 'Instrumententafel',
                 'Manager' => 'Manager',
                 'Export' => 'Export',
@@ -71,6 +71,8 @@ class LangGE {
                 'CustomFieldSuite' => 'Custom Field Suite',
                 'AllInOneSeoFields' => 'Alle in einem Seo-Feldern',
                 'YoastSeoFields' => 'Yoast Seo Felder',
+                'RankMathFields'=>'Rank Math Felder',
+                'RankMathProFields'=>'Rank Math Pro Felder',
                 'BillingAndShippingInformation' => 'Rechnungs- und Versandinformationen',
                 'CustomFieldsWPMemberFields' => 'Benutzerdefinierte Felder WP-Mitgliederfelder',
                 'CustomFieldsMemberFields' => 'Benutzerfelder für benutzerdefinierte Felder',
@@ -78,6 +80,14 @@ class LangGE {
                 'WPECommerceCustomFields' => 'Benutzerdefinierte Felder für WP-E-Commerce',
                 'EventsManagerFields' => 'Felder des Ereignis-Managers',
                 'CMB2CustomFields' => 'Benutzerdefinierte CMB2-Felder',
+                'JetEngineFields' => 'Jet Engine Felder',
+                'JetEngineRFFields' => 'Jet Engine Repeater Felder',
+                'JetEngineCPTFields' => 'Jet Engine CPT Felder',
+                'JetEngineCPTRFFields' => 'Jet Engine CPT  Repeater Felde',
+                'JetEngineTaxonomyFields' => 'Jet Engine Taxonomiefelder',
+                'JetEngineTaxonomyRFFields' => 'Jet Engine Taxonomie Repeater felder',
+                'JetEngineRelationsFields' => 'Jet Engine Relations-Felder',
+
                 'CourseSettingsFields' => 'Felder für Kurseinstellungen',
                 'CurriculumSettingsFields' => 'Felder für die Lehrplaneinstellungen',
                 'QuizSettingsFields' => 'Felder für Quizeinstellungen',
@@ -123,6 +133,7 @@ class LangGE {
                 'Changeimagefilenameto' => 'Ändern Sie den Namen der Bilddatei in',
                 'ImportconfigurationSection' => 'Konfigurationsabschnitt importieren',
                 'EnablesafeprestateRollback' => 'Ermöglichen Sie ein sicheres Prestate-Rollback',
+                'polylangfields'=>'Polylang-Einstellungsfelder',
                 'Backupbeforeimport' => 'Sicherung vor dem Import',
                 'DoyouwanttoSWITCHONMaintenancemodewhileimport' => 'Möchten Sie den Wartungsmodus während des Imports EINSCHALTEN?',
                 'Doyouwanttohandletheduplicateonexistingrecords' => 'Möchten Sie das Duplikat in vorhandenen Datensätzen behandeln?',
@@ -297,7 +308,7 @@ class LangGE {
                 'SelectTimeZone' => 'Wähle Zeitzone aus',
                 'ScheduleExport' => 'Export planen',
                 'DataExported' => 'Daten exportiert',
-
+                'FilePath' => 'Dateipfad',
 
         );
                 return $response;

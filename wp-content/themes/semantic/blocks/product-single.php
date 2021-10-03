@@ -20,6 +20,7 @@
     </script>
 <?php while (have_posts()) :
     the_post();
+    global $product;
     $meta_artist_name = get_post_meta(get_the_ID(), "artist_name", true);
     $meta_label_name = get_post_meta(get_the_ID(), "label_name", true);
     ?>

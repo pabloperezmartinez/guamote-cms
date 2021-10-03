@@ -114,15 +114,16 @@ class ValidateFile {
     public function get_config_bytes($val) {
         $val = trim($val);
         $last = strtolower($val[strlen($val) - 1]);
+        $intval = intval(trim($val));
         switch ($last) {
                 case 'g':
-                        $val *= 1024;
+                        $intval *= 1024;
                 case 'm':
-                        $val *= 1024;
+                        $intval *= 1024;
                 case 'k':
-                        $val *= 1024;
+                        $intval *= 1024;
         }
-        return $val;
+        return $intval;
     }
 
     /**

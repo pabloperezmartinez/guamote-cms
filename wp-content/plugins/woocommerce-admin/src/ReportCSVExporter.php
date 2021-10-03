@@ -1,8 +1,6 @@
 <?php
 /**
  * Handles reports CSV export batches.
- *
- * @package WooCommerce/Export
  */
 
 namespace Automattic\WooCommerce\Admin;
@@ -121,10 +119,6 @@ class ReportCSVExporter extends \WC_CSV_Batch_Exporter {
 
 		if ( isset( $controller_map[ $this->report_type ] ) ) {
 			// Load the controllers if accessing outside the REST API.
-			if ( ! did_action( 'rest_api_init' ) ) {
-				do_action( 'rest_api_init' );
-			}
-
 			return new $controller_map[ $this->report_type ]();
 		}
 
@@ -197,8 +191,10 @@ class ReportCSVExporter extends \WC_CSV_Batch_Exporter {
 			}
 		}
 
+		$request->set_attributes( array( 'args' => $params ) );
 		$request->set_default_params( $defaults );
 		$request->set_query_params( $this->report_args );
+		$request->sanitize_params();
 
 		// Does the controller have an export-specific item retrieval method?
 		// @todo - Potentially revisit. This is only for /revenue/stats/.
