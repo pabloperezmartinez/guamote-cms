@@ -11,7 +11,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <script src="<?php bloginfo('stylesheet_directory'); ?>/css/semantic.js"></script>
     <script type="text/javascript">var site_url = "<?php echo get_site_url(); ?>"</script>
-    <script type="text/javascript" src="<?php bloginfo('stylesheet_directory'); ?>/js/functions.js"/>
+    <script type="text/javascript" src="<?php bloginfo('stylesheet_directory'); ?>/js/functions.js"></script>
     <?php if (is_single() || is_page()): ?>
         <meta property="og:title" content="<?php echo the_title(); ?>"/>
         <title><?php echo the_title(); ?></title>
