@@ -11,8 +11,22 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <script src="<?php bloginfo('stylesheet_directory'); ?>/css/semantic.js"></script>
     <script type="text/javascript">var site_url = "<?php echo get_site_url(); ?>"</script>
-    <script type="text/javascript" src="<?php bloginfo('stylesheet_directory'); ?>/js/functions.js"/>
-    <?php if (is_single() || is_page()): ?>
+    <script type="text/javascript" src="<?php bloginfo('stylesheet_directory'); ?>/js/functions.js"></script>
+    <?php if (is_front_page()) : ?>
+        <title><?php bloginfo('name'); ?></title>
+        <meta property="og:title" content="<?php bloginfo('name'); ?>"/>
+        <meta property="og:description" content="La Venganza del Análogo"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="<?php echo site_url(); ?>"/>
+        <meta property="og:site_name" content="<?php echo get_bloginfo(); ?>"/>
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:site" content="@ccjpv"/>
+        <meta name="twitter:title" content="<?php bloginfo('name'); ?>"/>
+        <meta name="twitter:text:description" content="La Venganza del Análogo"/>
+        <meta property="og:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg"/>
+        <meta name="twitter:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg"/>
+    
+    <?php elseif (is_single() || is_page()): ?>
         <meta property="og:title" content="<?php echo the_title(); ?>"/>
         <title><?php echo the_title(); ?></title>
         <meta property="og:description"
@@ -32,20 +46,7 @@
             <meta property="og:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg"/>
             <meta name="twitter:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg"/>
         <?php endif; ?>
-    <?php elseif (is_front_page()) : ?>
-        <title><?php bloginfo('name'); ?></title>
-        <meta property="og:title" content="<?php bloginfo('name'); ?>"/>
-        <meta property="og:description" content="La Venganza del Análogo"/>
-        <meta property="og:type" content="article"/>
-        <meta property="og:url" content="<?php echo site_url(); ?>"/>
-        <meta property="og:site_name" content="<?php echo get_bloginfo(); ?>"/>
-        <meta name="twitter:card" content="summary"/>
-        <meta name="twitter:site" content="@ccjpv"/>
-        <meta name="twitter:title" content="<?php bloginfo('name'); ?>"/>
-        <meta name="twitter:text:description" content="La Venganza del Análogo"/>
-        <meta property="og:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg"/>
-        <meta name="twitter:image" content="<?php bloginfo('stylesheet_directory'); ?>/img/logo-redes.jpg"/>
-
+        
     <?php else : ?>
         <title><?php bloginfo('name'); ?></title>
         <meta property="og:title" content="<?php bloginfo('name'); ?>"/>
