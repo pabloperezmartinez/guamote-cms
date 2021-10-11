@@ -128,7 +128,7 @@ function new_loop_shop_per_page($cols)
 {
     // $cols contains the current number of products per page based on the value stored on Options -> Reading
     // Return the number of products you wanna show per page.
-    $cols = 9;
+    $cols = 18;
     return $cols;
 }
 
@@ -136,19 +136,73 @@ function new_loop_shop_per_page($cols)
 /**
  * Add custom metadata to search
  */
-function woo_custom_search( $query ) {
-    if( ! is_admin() && $query->is_main_query() ) {
-        if ( $query->is_search() ) { 
-            $meta_query = $query->get( 'meta_query' );
-            $meta_query[] = array(
-                'key'       => 'artist_name',
-                'value'     => $query->query['s'],
-                'compare'   => 'LIKE'  
-            );
-            $query->set( 'meta_query', $meta_query );
-    
+/*
+function lava_custom_search( $query ) {
+    if ( !is_admin() && $query->is_search ) {
+        $custom_fields = array(
+           'artist_name'
+        );
+        $meta_query = array('relation' => 'OR');
+        foreach($custom_fields as $cf) {
+            array_push($meta_query, array(
+                'key' => $cf,
+                'value' => $_GET['s'],
+                'compare' => 'LIKE'
+            ));
         }
+        $query->set("meta_query", $meta_query);
     }
 }
-    
-add_action( 'pre_get_posts' , 'woo_custom_search' );
+
+add_action( 'pre_get_posts', 'lava_custom_search');
+*/
+
+/**
+ * Join posts and postmeta tables
+ *
+ * http://codex.wordpress.org/Plugin_API/Filter_Reference/posts_join
+ */
+function cf_search_join( $join ) {
+    global $wpdb;
+
+    if ( is_search() ) {    
+        $join .=' LEFT JOIN '.$wpdb->postmeta. ' ON '. $wpdb->posts . '.ID = ' . $wpdb->postmeta . '.post_id ';
+    }
+
+    return $join;
+}
+add_filter('posts_join', 'cf_search_join' );
+
+/**
+ * Modify the search query with posts_where
+ *
+ * http://codex.wordpress.org/Plugin_API/Filter_Reference/posts_where
+ */
+function cf_search_where( $where ) {
+    global $pagenow, $wpdb;
+
+    if ( is_search() ) {
+        $where = preg_replace(
+            "/\(\s*".$wpdb->posts.".post_title\s+LIKE\s*(\'[^\']+\')\s*\)/",
+            "(".$wpdb->posts.".post_title LIKE $1) OR (".$wpdb->postmeta.".meta_value LIKE $1)", $where );
+    }
+
+    return $where;
+}
+add_filter( 'posts_where', 'cf_search_where' );
+
+/**
+ * Prevent duplicates
+ *
+ * http://codex.wordpress.org/Plugin_API/Filter_Reference/posts_distinct
+ */
+function cf_search_distinct( $where ) {
+    global $wpdb;
+
+    if ( is_search() ) {
+        return "DISTINCT";
+    }
+
+    return $where;
+}
+add_filter( 'posts_distinct', 'cf_search_distinct' );

@@ -29,7 +29,9 @@
             <div class="content">
                 <?php if ($meta_artist_name != null) echo $meta_artist_name ?> - <?php the_title(); ?>
                 <?php if ($meta_label_name != null): ?>
-                    <div class="sub header"><i class="music icon"></i><?php echo $meta_label_name ?></div>
+                    <div class="sub header">
+                        <i class="record vinyl icon"></i><?php echo $meta_label_name ?>
+                    </div>
                 <?php endif; ?>
             </div>
         </h2>
@@ -47,7 +49,7 @@
            onclick='displayToast("<?php echo the_permalink(); ?>?add-to-cart=<?php echo get_the_ID(); ?>")'>
             <i class="cart icon"></i> <?php echo $product->get_price_html(); ?>
         </a>
-        <h3 class="ui blue header">Descripci&oacute;n</h3>
+        <!-- h3 class="ui blue header">Descripci&oacute;n</h3>
         <p>
             <span class="ui blue text"><strong>Ancho: </strong></span><?php echo $product->get_height() . get_option('woocommerce_dimension_unit'); ?>
             &nbsp;&nbsp;&nbsp;
@@ -56,7 +58,14 @@
             <span class="ui blue text"><strong>Espesor: </strong></span><?php echo $product->get_width() . get_option('woocommerce_dimension_unit'); ?>
             &nbsp;&nbsp;&nbsp;
             <span class="ui blue text"><strong>Peso: </strong></span><?php echo $product->get_weight() . get_option('woocommerce_weight_unit'); ?>
-        </p>
+        </p-->
         <?php the_content(); ?>
+        <?php $posttags = wp_get_post_terms( get_the_id(), 'product_tag' );
+        if ($posttags):?>
+            <br/><br/><br/><br/>
+            <?php foreach($posttags as $tag):?>
+                <a class="ui blue basic label" href="<?php echo get_term_link( $tag->term_id , 'product_tag' )?>"><?php echo $tag->name?></a>&nbsp;
+            <?php endforeach?>
+        <?php endif;?>
     </div>
 <?php endwhile; ?>

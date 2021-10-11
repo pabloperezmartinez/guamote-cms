@@ -53,20 +53,21 @@ if (have_posts()) : ?>
                                 <?php echo $product->get_price_html(); ?>
                             </div>
                             <div class="header">
-                                <?php the_title() ?></div>
-                            <div class="description">
-                                <?php the_excerpt() ?>
+                                <?php the_title() ?>
                             </div>
+                            <?php if ($meta_artist_name != null): ?>
+                                <div class="description">
+                                    <i class="microphone icon"></i>
+                                    <?php echo $meta_artist_name ?>
+                                </div>
+                            <?php endif ?>
                         </div>
-                        <?php if ($meta_artist_name != null): ?>
+                        <?php if ($meta_label_name != null): ?>
                             <div class="extra content">
-                                                <span class="right floated">
-                                                    <?php echo $meta_label_name ?>
-                                                </span>
-                                <span>
-                                                    <i class="microphone icon"></i>
-                                                    <?php echo $meta_artist_name ?>
-                                                </span>
+                                <span class="right floated">
+                                    <i class="record vinyl icon"></i>
+                                    <?php echo $meta_label_name ?>
+                                </span>
                             </div>
                         <?php endif ?>
                     </a>
