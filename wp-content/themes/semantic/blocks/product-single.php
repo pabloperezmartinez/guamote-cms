@@ -59,6 +59,7 @@
             &nbsp;&nbsp;&nbsp;
             <span class="ui blue text"><strong>Peso: </strong></span><?php echo $product->get_weight() . get_option('woocommerce_weight_unit'); ?>
         </p-->
+        <?php the_excerpt(); ?>
         <?php the_content(); ?>
         <?php $posttags = wp_get_post_terms( get_the_id(), 'product_tag' );
         if ($posttags):?>

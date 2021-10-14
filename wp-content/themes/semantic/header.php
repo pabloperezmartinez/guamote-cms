@@ -80,9 +80,7 @@
     <div class="ui orange inverted segment" style="border-radius: 0px; margin:0px;">
         <br>
         <div class="ui container">
-
-            <img src="<?php bloginfo('stylesheet_directory'); ?>/img/lava-vect.svg" class="ui large centered image"><br>
-
+            <img src="<?php bloginfo('stylesheet_directory'); ?>/img/lava-vect.svg" class="ui medium centered image"><br>
         </div>
     </div>
     <div class="ui orange inverted segment"
