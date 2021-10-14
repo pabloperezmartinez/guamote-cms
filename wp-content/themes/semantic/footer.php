@@ -6,7 +6,7 @@
 							<img src="<?php bloginfo('stylesheet_directory'); ?>/img/lava-foot.svg" class="ui small image"/>
 						</div>
 						<div class="ui seven wide column">
-							<p style="color: #FFF !important;"><a style="color: #FFF !important;" href="/legal-notice/" target="_parent">Aviso Legal</a> · Todos los derechos reservados <br>© LA VENGANZA DEL AN&Aacute;LOGO - 2019</p>
+							<p style="color: #FFF !important;"><a style="color: #FFF !important;" href="/legal-notice/" target="_parent">Aviso Legal</a> · Todos los derechos reservados <br>© LA VENGANZA DEL AN&Aacute;LOGO - <?php echo date("Y");?></p>
 						</div>
 						<div class="ui six wide right aligned column">
 							<p>
