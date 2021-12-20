@@ -21,10 +21,20 @@ if (have_posts()) : ?>
         <?php /***** subategories links *******/
         if (!empty($terms) && !is_front_page()): ?>
             <div class="three wide column">
-                <div class="ui link list">
-                    <?php foreach ( $terms as $term ): ?>
-                        <a href="<?php echo get_term_link( $term, $taxonomy ); ?>" class="item"><?php echo $term->name ?></a>
-                    <?php endforeach; ?>
+                <div class= "ui segment">
+                    <div class="ui accordion" id="cat_accordion">
+                        <div class="title">
+                            <i class="dropdown icon"></i>
+                            Categorías
+                        </div>
+                        <div class="content">
+                            <div class="ui link list">
+                                <?php foreach ( $terms as $term ): ?>
+                                    <a href="<?php echo get_term_link( $term, $taxonomy ); ?>" class="item"><?php echo $term->name ?></a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         <?php endif; 
@@ -49,9 +59,15 @@ if (have_posts()) : ?>
                             <?php endif; ?>
                         </div>
                         <div class="content">
-                            <div class="ui blue right floated tag label">
-                                <?php echo $product->get_price_html(); ?>
-                            </div>
+                            <?php if ($product->get_stock_quantity() <= 0): ?>
+                                <div class="ui blue right floated tag label">
+                                    <?php echo $product->get_price_html(); ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="ui right floated tag label">
+                                    No disponible
+                                </div>
+                            <?php endif; ?>
                             <div class="header">
                                 <?php the_title() ?>
                             </div>

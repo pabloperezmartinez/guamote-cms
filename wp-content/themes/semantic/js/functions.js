@@ -17,4 +17,8 @@ $(document).ready(function () {
     $('#search_button').popup({
       on: 'focus'
     });
+
+    $('.ui.accordion')
+      .accordion()
+    ;
 });
