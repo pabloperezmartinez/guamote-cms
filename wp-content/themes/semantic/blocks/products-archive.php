@@ -17,22 +17,20 @@ if (have_posts()) : ?>
         <i class="big circular green inverted whatsapp icon"></i>
         <span class="ui left pointing green big basic label">¿Necesitas ayuda?</span>
     </a>
-    <div class="ui grid">
+    <div class="ui stackable grid">
         <?php /***** subategories links *******/
         if (!empty($terms) && !is_front_page()): ?>
             <div class="three wide column">
-                <div class= "ui segment">
-                    <div class="ui accordion" id="cat_accordion">
-                        <div class="title">
-                            <i class="dropdown icon"></i>
-                            Categorías
-                        </div>
-                        <div class="content">
-                            <div class="ui link list">
-                                <?php foreach ( $terms as $term ): ?>
-                                    <a href="<?php echo get_term_link( $term, $taxonomy ); ?>" class="item"><?php echo $term->name ?></a>
-                                <?php endforeach; ?>
-                            </div>
+                <div class="ui accordion" id="cat_accordion">
+                    <div class="title">
+                        <i class="dropdown icon"></i>
+                        Categorías
+                    </div>
+                    <div class="content">
+                        <div class="ui link list">
+                            <?php foreach ( $terms as $term ): ?>
+                                <a href="<?php echo get_term_link( $term, $taxonomy ); ?>" class="item"><?php echo $term->name ?></a>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
