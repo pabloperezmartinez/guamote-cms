@@ -215,6 +215,9 @@ class MediaHandling{
 
 	public function image_function($f_img , $post_id , $data_array = null,$option_name = null, $use_existing_image = false,$header_array = null , $value_array = null){
 		global $wpdb;
+		$f_img = urldecode($f_img);
+		$image = explode("?", $f_img);
+		$f_img=$image[0];
 		$media_handle = get_option('smack_image_options');
 		if(!empty($header_array) && !empty($value_array) ){
 			$media_settings = array_combine($header_array,$value_array);
@@ -279,9 +282,26 @@ class MediaHandling{
 		if ($uploaddir_paths != "" && $uploaddir_paths) {
 			$uploaddir_path = $uploaddir_paths . "/" . $fimg_name;
 		}
+		if(strstr($f_img, 'https://www.dropbox.com/')) {	
+			$page_content   = file_get_contents($f_img);	
+			
+			$dom_obj = new \DOMDocument();
+			$dom_obj->loadHTML($page_content);
+			$meta_val = null;		
+			foreach($dom_obj->getElementsByTagName('meta') as $meta) {
+				if($meta->getAttribute('property')=='og:image'){ 
+					$meta_val = $meta->getAttribute('content');
+				}
+			}
+			$response = wp_remote_get($meta_val);
+			$rawdata =  wp_remote_retrieve_body($response);
+			
+		}
 		//Removed curl and added wordpress http api
-		$response = wp_remote_get($f_img, array( 'timeout' => 10));				
-		$rawdata =  wp_remote_retrieve_body($response);
+		else{
+			$response = wp_remote_get($f_img, array( 'timeout' => 10));				
+			$rawdata =  wp_remote_retrieve_body($response);
+		}
 		$http_code = wp_remote_retrieve_response_code($response);
 
 		if($http_code == 404){

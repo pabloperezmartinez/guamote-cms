@@ -81,6 +81,7 @@ class LangPT {
                         'CustomFieldsWPMemberFields' => 'Campos personalizados WP Member Fields',
                         'CustomFieldsMemberFields' => 'Campos personalizados Campos de membros',
                         'ProductMetaFields' => 'Metacampos do produto',
+                        'ProductAttrFields' => 'Campos de Atr do Produto',
                         'WPECommerceCustomFields' => 'WP ECommerce Custom Fields',
                         'EventsManagerFields' => 'Campos do gerente de eventos',
                         'CMB2CustomFields' => 'Campos personalizados CMB2',

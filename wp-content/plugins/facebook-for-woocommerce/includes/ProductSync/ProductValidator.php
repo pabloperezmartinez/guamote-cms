@@ -3,8 +3,13 @@
 namespace SkyVerge\WooCommerce\Facebook\ProductSync;
 
 use SkyVerge\WooCommerce\Facebook\Products;
+use WC_Facebook_Product;
 use WC_Product;
 use WC_Facebookcommerce_Integration;
+
+if ( ! class_exists( 'WC_Facebookcommerce_Utils' ) ) {
+	include_once '../fbutils.php';
+}
 
 /**
  * Class ProductValidator
@@ -21,6 +26,27 @@ class ProductValidator {
 	 * @var string
 	 */
 	const SYNC_ENABLED_META_KEY = '_wc_facebook_sync_enabled';
+
+	/**
+	 * Maximum length of product description.
+	 *
+	 * @var int
+	 */
+	const MAX_DESCRIPTION_LENGTH = 5000;
+
+	/**
+	 * Maximum length of product title.
+	 *
+	 * @var int
+	 */
+	const MAX_TITLE_LENGTH = 150;
+
+	/**
+	 * Maximum allowed attributes in a variation;
+	 *
+	 * @var int
+	 */
+	const MAX_NUMBER_OF_ATTRIBUTES_IN_VARIATION = 4;
 
 	/**
 	 * The FB integration instance.
@@ -44,22 +70,33 @@ class ProductValidator {
 	protected $product_parent;
 
 	/**
+	 * The product parent object if the product has a parent.
+	 *
+	 * @var WC_Facebook_Product
+	 */
+	protected $fb_product_parent;
+
+	/**
 	 * ProductValidator constructor.
 	 *
 	 * @param WC_Facebookcommerce_Integration $integration The FB integration instance.
 	 * @param WC_Product                      $product     The product to validate. Accepts both variations and variable products.
 	 */
 	public function __construct( WC_Facebookcommerce_Integration $integration, WC_Product $product ) {
-		$this->product = $product;
+		$this->product           = $product;
+		$this->product_parent    = null;
+		$this->fb_product_parent = null;
 
 		if ( $product->get_parent_id() ) {
 			$parent_product = wc_get_product( $product->get_parent_id() );
 			if ( $parent_product instanceof WC_Product ) {
-				$this->product_parent = $parent_product;
+				$this->product_parent    = $parent_product;
+				$this->fb_product_parent = new WC_Facebook_Product( $parent_product );
 			}
 		}
 
-		$this->integration = $integration;
+		$this->facebook_product = new WC_Facebook_Product( $this->product, $this->fb_product_parent );
+		$this->integration      = $integration;
 	}
 
 	/**
@@ -75,6 +112,8 @@ class ProductValidator {
 		$this->validate_product_price();
 		$this->validate_product_visibility();
 		$this->validate_product_terms();
+		$this->validate_product_description();
+		$this->validate_product_title();
 	}
 
 	/**
@@ -91,6 +130,8 @@ class ProductValidator {
 		$this->validate_product_price();
 		$this->validate_product_visibility();
 		$this->validate_product_terms();
+		$this->validate_product_description();
+		$this->validate_product_title();
 	}
 
 	/**
@@ -102,6 +143,8 @@ class ProductValidator {
 		try {
 			$this->validate();
 		} catch ( ProductExcludedException $e ) {
+			return false;
+		} catch ( ProductInvalidException $e ) {
 			return false;
 		}
 
@@ -118,6 +161,8 @@ class ProductValidator {
 			$this->validate_product_terms();
 		} catch ( ProductExcludedException $e ) {
 			return false;
+		} catch ( ProductInvalidException $e ) {
+			return false;
 		}
 
 		return true;
@@ -132,6 +177,8 @@ class ProductValidator {
 		try {
 			$this->validate_product_sync_field();
 		} catch ( ProductExcludedException $e ) {
+			return false;
+		} catch ( ProductInvalidException $e ) {
 			return false;
 		}
 
@@ -253,6 +300,81 @@ class ProductValidator {
 
 		if ( ! Products::get_product_price( $this->product ) ) {
 			throw new ProductExcludedException( __( 'If product is not simple, variable or variation it must have a price.', 'facebook-for-woocommerce' ) );
+		}
+	}
+
+	/**
+	 * Check if the description field has correct format according to:
+	 * Product Description Specifications for Catalogs : https://www.facebook.com/business/help/2302017289821154
+	 *
+	 * @throws ProductInvalidException If product description does not meet the requirements.
+	 */
+	protected function validate_product_description() {
+		/*
+		 * First step is to select the description that we want to evaluate.
+		 * Main description is the one provided for the product in the Facebook.
+		 * If it is blank, product description will be used.
+		 * If product description is blank, shortname will be used.
+		 */
+		$description = $this->facebook_product->get_fb_description();
+
+		/*
+		 * Requirements:
+		 * - No all caps descriptions.
+		 * - Max length 5000.
+		 * - Min length 30 ( tested and not required, will not enforce until this will become a hard requirement )
+		 */
+		if ( \WC_Facebookcommerce_Utils::is_all_caps( $description ) ) {
+			throw new ProductInvalidException( __( 'Product description is all capital letters. Please change the description to sentence case in order to allow synchronization of your product.', 'facebook-for-woocommerce' ) );
+		}
+		if ( strlen( $description ) > self::MAX_DESCRIPTION_LENGTH ) {
+			throw new ProductInvalidException( __( 'Product description is too long. Maximum allowed length is 5000 characters.', 'facebook-for-woocommerce' ) );
+		}
+	}
+
+	/**
+	 * Check if the title field has correct format according to:
+	 * Product Title Specifications for Catalogs : https://www.facebook.com/business/help/2104231189874655
+	 *
+	 * @throws ProductInvalidException If product title does not meet the requirements.
+	 */
+	protected function validate_product_title() {
+		$title = $this->product->get_title();
+
+		/*
+		 * Requirements:
+		 * - No all caps title.
+		 * - Max length 150.
+		 */
+		if ( \WC_Facebookcommerce_Utils::is_all_caps( $title ) ) {
+			throw new ProductInvalidException( __( 'Product title is all capital letters. Please change the title to sentence case in order to allow synchronization of your product.', 'facebook-for-woocommerce' ) );
+		}
+		if ( strlen( $title ) > self::MAX_TITLE_LENGTH ) {
+			throw new ProductInvalidException( __( 'Product title is too long. Maximum allowed length is 150 characters.', 'facebook-for-woocommerce' ) );
+		}
+	}
+
+	/**
+	 * Check if variation product has proper settings.
+	 *
+	 * @throws ProductInvalidException If product variation violates some requirements.
+	 */
+	protected function validate_variation_structure() {
+		// Check if we are dealing with a variation.
+		if ( ! $this->product->is_type( 'variation' ) ) {
+			return;
+		}
+		$attributes = $this->product->get_attributes();
+
+		$used_attributes_count = count(
+			array_filter(
+				$attributes
+			)
+		);
+
+		// No more than MAX_NUMBER_OF_ATTRIBUTES_IN_VARIATION ar allowed to be used.
+		if ( $used_attributes_count > self::MAX_NUMBER_OF_ATTRIBUTES_IN_VARIATION ) {
+			throw new ProductInvalidException( __( 'Too many attributes selected for product. Use 4 or less.', 'facebook-for-woocommerce' ) );
 		}
 	}
 

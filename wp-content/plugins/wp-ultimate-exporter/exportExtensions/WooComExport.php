@@ -352,7 +352,9 @@ class WooCommerceExport extends ExportExtension{
 			
 			if(!empty($bundle_results)){
 				foreach($bundle_results as $bundle_value){
-					$bundle_item[] = $bundle_value->product_id;
+					$product_bundle_query = $wpdb->prepare("SELECT post_title FROM {$wpdb->prefix}posts where id = %d", $bundle_value->product_id);
+					$product_bundle_value=$wpdb->get_results($product_bundle_query);
+					$bundle_item[] = $product_bundle_value[0]->post_title;
 				}
 		
 				$bundle_items = implode('|', $bundle_item);
@@ -464,11 +466,14 @@ class WooCommerceExport extends ExportExtension{
 				$discount_values = implode('|', $discount_value);
 				WooCommerceExport::$export_instance->data[$id]['discount'] = $discount_values;
 				$product_values = implode('|', $product_value);
-				WooCommerceExport::$export_instance->data[$id]['product_details'] = $product_values;
+				//WooCommerceExport::$export_instance->data[$id]['product_details'] = $product_values;
+				WooCommerceExport::$export_instance->data[$id]['single_product_visibility'] = $product_values;
 				$cart_values = implode('|', $cart);
-				WooCommerceExport::$export_instance->data[$id]['cart_checkout'] = $cart_values;
+				//WooCommerceExport::$export_instance->data[$id]['cart_checkout'] = $cart_values;
+				WooCommerceExport::$export_instance->data[$id]['cart_visibility'] = $cart_values;
 				$order_values = implode('|', $order);
-				WooCommerceExport::$export_instance->data[$id]['order_details'] = $order_values;
+				//WooCommerceExport::$export_instance->data[$id]['order_details'] = $order_values;
+				WooCommerceExport::$export_instance->data[$id]['order_visibility'] = $order_values;
 				$thumbs = implode('|', $thumb);
 				WooCommerceExport::$export_instance->data[$id]['hide_thumbnail'] = $thumbs;
 				$overrides = implode('|', $override);

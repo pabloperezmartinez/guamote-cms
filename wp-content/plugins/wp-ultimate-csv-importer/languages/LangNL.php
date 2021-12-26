@@ -85,6 +85,7 @@ class LangNL {
                         'CustomFieldsWPMemberFields' => 'Aangepaste velden WP-ledenvelden',
                         'CustomFieldsMemberFields' => 'Aangepaste velden Ledenvelden',
                         'ProductMetaFields' => 'Product-metavelden',
+                        'ProductAttrFields' => 'Productattr-velden',
                         'ProductImageMetaFields' => 'Productgalerij metavelden',
                         'OrderMetaFields' => 'Bestel metavelden',
                         'CouponMetaFields' => 'Coupon-metavelden',

@@ -125,6 +125,7 @@ class ExtensionHandler{
 
 		if(is_plugin_active('woocommerce/woocommerce.php') && is_plugin_active('import-woocommerce/import-woocommerce.php')){
 			$importas['WooCommerce Product'] ='WooCommerce';
+			$importas['WooCommerce Product Variations'] ='WooCommerceVariations';
 		}
 
 		if(array_key_exists('location' , $importas) && array_key_exists('event-recurring' , $importas)){

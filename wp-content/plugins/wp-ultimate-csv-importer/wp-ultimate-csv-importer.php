@@ -10,7 +10,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WP Ultimate CSV Importer
- * Version:     6.2.6
+ * Version:     6.3
  * Plugin URI:  https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
  * Description: Seamlessly create posts, custom posts, pages, media, SEO and more from your CSV data with ease.
  * Author:      Smackcoders
@@ -148,7 +148,7 @@ class SmackCSV extends MappingExtension{
 	private static $dutch_instance = null;
 	private static $en_ZA_instance = null;
 	private static $addon_instance = null;
-	public $version = '6.2.6';
+	public $version = '6.3';
 
 	public function __construct(){ 
 
@@ -219,7 +219,6 @@ class SmackCSV extends MappingExtension{
 			SmackCSV::$send_password = SendPassword::getInstance();
 			SmackCSV::$security = Security::getInstance();
 			SmackCSV::$support_instance = SupportMail::getInstance();
-			SmackCSV::$uninstall = SmackUCIUnInstall::getInstance();
 			SmackCSV::$install = SmackCSVInstall::getInstance();
 			SmackCSV::$export_instance = ExportExtension::getInstance();
 			SmackCSV::$italy_instance = LangIT::getInstance();
@@ -250,13 +249,12 @@ class SmackCSV extends MappingExtension{
 	}
 
 
-	public static function init_hooks() {																																												
+	public static function init_hooks() {	
 		$ucisettings = get_option('sm_uci_pro_settings');
 		if(isset($ucisettings['enable_main_mode']) && $ucisettings['enable_main_mode'] == 'true') {
 			add_action( 'admin_bar_menu', array(SmackCSV::$instance,'admin_bar_menu'));
 			add_action('wp_head', array(SmackCSV::$instance,'activate_maintenance_mode'));		
 		}
-		register_deactivation_hook( __FILE__, array( SmackCSV::$uninstall, 'unInstall' ) );
 	}
 
 	public static function testing_function (){
@@ -478,7 +476,9 @@ global $csv_class;
 $csv_class = new SmackCSV();
 
 $activate_plugin = new SmackCSVInstall();
+$deactive_plugin = SmackUCIUnInstall::getInstance();
 register_activation_hook( __FILE__, array($activate_plugin,'install'));
+register_deactivation_hook(__FILE__, array($deactive_plugin, 'unInstall'));
 add_action( 'plugins_loaded', 'Smackcoders\\FCSV\\onpluginsload' );
 
 function onpluginsload(){

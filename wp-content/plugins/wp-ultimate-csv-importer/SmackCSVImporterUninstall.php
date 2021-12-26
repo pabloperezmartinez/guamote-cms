@@ -43,7 +43,6 @@ class SmackUCIUnInstall {
 		$prefix = $wpdb->prefix;
 		$droptable = isset($ucisettings['drop_table']) ? $ucisettings['drop_table'] : '';
 		if(!empty($droptable) && $droptable == 'true'){
-			$tables[] = "drop table {$prefix}ultimate_csv_importer_external_file_schedules";
 			$tables[] = "drop table {$prefix}ultimate_csv_importer_mappingtemplate";
 			$tables[] = "drop table {$prefix}import_detail_log";
 			$tables[] = "drop table {$prefix}import_log_detail";
@@ -52,7 +51,7 @@ class SmackUCIUnInstall {
 			$tables[] = "drop table {$prefix}ultimate_csv_importer_shortcode_manager";
 			$tables[] = "drop table {$prefix}import_postID";
 			$tables[] = "drop table {$prefix}smackuci_events";
-			$tables[] = "drop table smack_field_types";
+			$tables[] = "drop table {$prefix}ultimate_post_entries";
 			$tables[] = "drop table {$prefix}ultimate_csv_importer_acf_fields";
 
 			foreach($tables as $table) {

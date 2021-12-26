@@ -82,7 +82,7 @@ this["wc"] = this["wc"] || {}; this["wc"]["betaFeaturesTrackingModal"] =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 469);
+/******/ 	return __webpack_require__(__webpack_require__.s = 473);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -101,14 +101,14 @@ this["wc"] = this["wc"] || {}; this["wc"]["betaFeaturesTrackingModal"] =
 
 /***/ }),
 
-/***/ 122:
+/***/ 121:
 /***/ (function(module, exports) {
 
 (function() { module.exports = window["wc"]["explat"]; }());
 
 /***/ }),
 
-/***/ 13:
+/***/ 14:
 /***/ (function(module, exports) {
 
 (function() { module.exports = window["wp"]["compose"]; }());
@@ -129,21 +129,21 @@ this["wc"] = this["wc"] || {}; this["wc"]["betaFeaturesTrackingModal"] =
 
 /***/ }),
 
-/***/ 4:
+/***/ 3:
 /***/ (function(module, exports) {
 
 (function() { module.exports = window["wp"]["components"]; }());
 
 /***/ }),
 
-/***/ 458:
+/***/ 461:
 /***/ (function(module, exports, __webpack_require__) {
 
 // extracted by mini-css-extract-plugin
 
 /***/ }),
 
-/***/ 469:
+/***/ 473:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -157,13 +157,13 @@ var external_wp_element_ = __webpack_require__(0);
 var external_wp_i18n_ = __webpack_require__(2);
 
 // EXTERNAL MODULE: external ["wp","components"]
-var external_wp_components_ = __webpack_require__(4);
+var external_wp_components_ = __webpack_require__(3);
 
 // EXTERNAL MODULE: external ["wp","data"]
 var external_wp_data_ = __webpack_require__(7);
 
 // EXTERNAL MODULE: external ["wp","compose"]
-var external_wp_compose_ = __webpack_require__(13);
+var external_wp_compose_ = __webpack_require__(14);
 
 // EXTERNAL MODULE: external ["wc","data"]
 var external_wc_data_ = __webpack_require__(11);
@@ -172,7 +172,7 @@ var external_wc_data_ = __webpack_require__(11);
 var external_wc_tracks_ = __webpack_require__(16);
 
 // EXTERNAL MODULE: external ["wc","explat"]
-var external_wc_explat_ = __webpack_require__(122);
+var external_wc_explat_ = __webpack_require__(121);
 
 // CONCATENATED MODULE: ./client/wp-admin-scripts/beta-features-tracking-modal/container.js
 
@@ -246,7 +246,7 @@ const BetaFeaturesTrackingModal = ({
     onRequestClose: () => setIsModalOpen(false),
     className: "woocommerce-beta-features-tracking-modal"
   }, Object(external_wp_element_["createElement"])("p", null, Object(external_wp_i18n_["__"])('Testing new features requires sharing non-sensitive data via ', 'woocommerce-admin'), Object(external_wp_element_["createElement"])("a", {
-    href: "https://woocommerce.com/usage-tracking"
+    href: "https://woocommerce.com/usage-tracking?utm_medium=product"
   }, Object(external_wp_i18n_["__"])('usage tracking', 'woocommerce-admin')), Object(external_wp_i18n_["__"])('. Gathering usage data allows us to make WooCommerce better — your store will be considered as we evaluate new features, judge the quality of an update, or determine if an improvement makes sense. No personal data is tracked or stored and you can opt-out at any time.', 'woocommerce-admin')), Object(external_wp_element_["createElement"])("div", {
     className: "woocommerce-beta-features-tracking-modal__checkbox"
   }, Object(external_wp_element_["createElement"])(external_wp_components_["CheckboxControl"], {
@@ -279,7 +279,7 @@ const BetaFeaturesTrackingContainer = Object(external_wp_compose_["compose"])(Ob
   };
 }))(BetaFeaturesTrackingModal);
 // EXTERNAL MODULE: ./client/wp-admin-scripts/beta-features-tracking-modal/style.scss
-var style = __webpack_require__(458);
+var style = __webpack_require__(461);
 
 // CONCATENATED MODULE: ./client/wp-admin-scripts/beta-features-tracking-modal/index.js
 

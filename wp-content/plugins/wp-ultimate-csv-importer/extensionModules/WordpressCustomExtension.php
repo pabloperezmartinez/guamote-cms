@@ -33,7 +33,7 @@ class WordpressCustomExtension extends ExtensionHandler{
         $import_type = $this->import_type_as($import_types);
         $response =[];
         $module = $this->import_post_types($import_type);
-        $acf_values = [];
+        $acf_values = $acfvalues = [];
         $acf_values = array('admin_color', 'comment_shortcuts', 'community-events-location', 'dbem_phone', 'health-check', 'first_name', 'last_name', 'last_update', 'locale',
                             'nickname', 'orderby', 'rich_editing', 'syntax_highlighting', 'toolset-rg-view', 'username', 'use_ssl', 'session_tokens', 'smack_uci_import', 'description');
 
@@ -65,7 +65,8 @@ class WordpressCustomExtension extends ExtensionHandler{
 				$get_acf_fields = $wpdb->get_results( $wpdb->prepare( "SELECT ID, post_title, post_content, post_excerpt, post_name FROM {$wpdb->prefix}posts where post_status != 'trash' AND post_parent in (%s)", array($groupId) ) );				
 				if ( ! empty( $get_acf_fields ) ) {						
 					foreach ( $get_acf_fields as $acf_pro_fields ) {
-						$acf_values[] = $acf_pro_fields->post_excerpt;   
+						$acf_values[] = $acf_pro_fields->post_excerpt;  
+                        $acfvalues[] = $acf_pro_fields->post_excerpt;   
                     }
                 }
             }   
@@ -79,20 +80,37 @@ class WordpressCustomExtension extends ExtensionHandler{
 
         $pods = [];
         $get_pods_fields = $wpdb->get_results("SELECT post_name FROM {$wpdb->prefix}posts where post_type = '_pods_field' ");
-        
         foreach($get_pods_fields as $pods_fields){
             $pods[] = $pods_fields->post_name;  
         }
   
         $commonMetaFields = array();
         
-        if($module != 'user') {   
+        if($module != 'user') { 
+            //query to remove all acf fields from meta
+            $acf_not_like_query = '';
+            if(!empty($acfvalues)){
+                foreach($acfvalues as $acf_name){
+                    $acf_not_like_query .= "meta_key NOT LIKE '%{$acf_name}%' AND ";
+                }
+                $acf_not_like_query = 'AND ' . rtrim($acf_not_like_query, 'AND ');
+            }
+    
+            //query to remove all pods fields from meta
+            $pods_not_like_query = '';
+            if(!empty($pods)){
+                foreach($pods as $pods_name){
+                    $pods_not_like_query .= "meta_key NOT LIKE '%{$pods_name}%' AND ";
+                }
+                $pods_not_like_query = 'AND ' . rtrim($pods_not_like_query, 'AND ');
+            }
+         
             $keys = $wpdb->get_col( "SELECT pm.meta_key FROM {$wpdb->prefix}posts p
                                     JOIN {$wpdb->prefix}postmeta pm
                                     ON p.ID = pm.post_id
                                     WHERE p.post_type = '{$module}' AND NOT p.post_status = 'trash'
                                     GROUP BY meta_key
-                                    HAVING meta_key NOT LIKE '\_%' and meta_key NOT LIKE 'rank_%'and meta_key NOT LIKE 'field_%' and meta_key NOT LIKE 'wpcf-%' and meta_key NOT LIKE 'wpcr3_%' and meta_key NOT LIKE '%pods%' and meta_key NOT LIKE '%group_%' and meta_key NOT LIKE '%repeat_%' and meta_key NOT LIKE 'mp_%'
+                                    HAVING meta_key NOT LIKE '\_%' and meta_key NOT LIKE 'rank_%'and meta_key NOT LIKE 'field_%' and meta_key NOT LIKE 'wpcf-%' and meta_key NOT LIKE 'wpcr3_%' and meta_key NOT LIKE '%pods%' and meta_key NOT LIKE '%group_%' and meta_key NOT LIKE '%repeat_%' and meta_key NOT LIKE 'mp_%' $acf_not_like_query $pods_not_like_query
                                     ORDER BY meta_key" );
                                     
         } else {
