@@ -362,17 +362,31 @@ class PostExport extends ExportExtension{
 				self::$export_instance->data[$id]['downloadable_files'] = rtrim($down_file,"|");
 			}
 		}
+		elseif($value->mta_key == '_downloadable'){
+			self::$export_instance->data[$id]['downloadable'] =  $value->meta_value;
+		}
 		elseif($value->meta_key == '_upsell_ids'){
 			$upselldata = unserialize($value->meta_value);
 			if(!empty($upselldata)){
-				$upsellids = implode(',',$upselldata);
+				foreach($upselldata as $upselldata_value){
+					$upselldata_query = $wpdb->prepare("SELECT post_title FROM {$wpdb->prefix}posts where id = %d", $upselldata_value);
+					$upselldata_value=$wpdb->get_results($upselldata_query);	
+					$upselldata_item[] = $upselldata_value[0]->post_title;
+				}
+				$upsellids = implode(',',$upselldata_item);
 				self::$export_instance->data[$id]['upsell_ids'] =  $upsellids;
 			}
 		}
 		elseif($value->meta_key == '_crosssell_ids'){
 			$cross_selldata = unserialize($value->meta_value);
 			if(!empty($cross_selldata)){
-				$cross_sellids = implode(',',$cross_selldata);
+				foreach($cross_selldata as $cross_selldata_value){
+					$cross_selldata_query = $wpdb->prepare("SELECT post_title FROM {$wpdb->prefix}posts where id = %d", $cross_selldata_value);
+					$cross_selldata_value=$wpdb->get_results($cross_selldata_query);
+					
+					$cross_selldata_item[] = $cross_selldata_value[0]->post_title;
+				}
+				$cross_sellids = implode(',',$cross_selldata_item);
 				self::$export_instance->data[$id]['crosssell_ids'] =  $cross_sellids;
 			}
 		}

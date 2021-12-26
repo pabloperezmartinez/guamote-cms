@@ -79,6 +79,7 @@ class LangRU {
                         'CustomFieldsWPMemberFields' => 'Настраиваемые поля Поля участников WP',
                         'CustomFieldsMemberFields' => 'Пользовательские поля Поля-члены',
                         'ProductMetaFields' => 'Мета-поля продукта',
+                        'ProductAttrFields' => 'Поля атрибутов продукта',
                         'WPECommerceCustomFields' => 'Пользовательские поля WP ECommerce',
                         'EventsManagerFields' => 'Поля диспетчера событий',
                         'CMB2CustomFields' => 'CMB2 Пользовательские поля',

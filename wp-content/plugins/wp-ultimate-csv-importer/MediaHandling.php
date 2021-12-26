@@ -259,6 +259,21 @@ class MediaHandling{
 			$rawdata =  wp_remote_retrieve_body($response);	
 
 		}
+		else if(strstr($f_img, 'https://www.dropbox.com/')) {	
+			$page_content   = file_get_contents($f_img);	
+			
+			$dom_obj = new \DOMDocument();
+			$dom_obj->loadHTML($page_content);
+			$meta_val = null;		
+			foreach($dom_obj->getElementsByTagName('meta') as $meta) {
+				if($meta->getAttribute('property')=='og:image'){ 
+					$meta_val = $meta->getAttribute('content');
+				}
+			}
+			$response = wp_remote_get($meta_val);
+			$rawdata =  wp_remote_retrieve_body($response);
+			
+		}
 		else{
 			if($file_type['ext'] == 'jpeg'){
 				$response = wp_remote_get($f_img, array( 'timeout' => 30));		
@@ -371,7 +386,7 @@ class MediaHandling{
 
 		$original_file_perms = fileperms($current_file) & 0777;
 
-		$this->emr_delete_current_files( $current_file, $current_metadata , $post_id );
+		$this->emr_delete_current_files( $current_file, $post_id, $current_metadata);
 
 		$new_filename = wp_unique_filename( $current_path, $new_filename );
 		$new_file = $current_path . "/" . $new_filename;
@@ -452,7 +467,7 @@ class MediaHandling{
 	}
 
 
-	function emr_delete_current_files( $current_file, $metadta = null , $post_id ) {
+	function emr_delete_current_files( $current_file, $post_id, $metadta = null) {
 		$current_path = substr($current_file, 0, (strrpos($current_file, "/")));
 
 		// Check if old file exists first

@@ -63,17 +63,26 @@ class TermsAndTaxonomies extends ExtensionHandler{
 		
 		if(!empty($taxonomies)) {
 			
+			$temp = 0;
 			foreach ($taxonomies as $key => $value) {
+				//added - check for woocommerce product attribute values - if so unset it
+				$check_for_pro_attr = explode('_', $value);
+				if($check_for_pro_attr[0] == 'pa'){	
+					unset($taxonomies[$key]);
+					continue;
+				}
+
 				$get_taxonomy_label = get_taxonomy($value);
-				#$taxonomy_label = $get_taxonomy_label->labels->singular_name;
 				$taxonomy_label = $get_taxonomy_label->name;
+				
 				if($value == 'wpsc_product_category' || $value == 'product_cat'){
 					$value = 'product_category';
 				}elseif($value == 'category'){
 					$value = 'post_category';
 				}
-				$term_taxonomies['TERMS'][$key]['label'] = $taxonomy_label;
-				$term_taxonomies['TERMS'][$key]['name'] = $value;
+				$term_taxonomies['TERMS'][$temp]['label'] = $taxonomy_label;
+				$term_taxonomies['TERMS'][$temp]['name'] = $value;
+				$temp++;
 			}
 		}
 		

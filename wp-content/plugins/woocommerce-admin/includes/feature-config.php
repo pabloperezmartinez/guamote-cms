@@ -15,12 +15,14 @@ if ( ! function_exists( 'wc_admin_get_feature_config' ) ) {
 			'navigation' => true,
 			'onboarding' => true,
 			'remote-inbox-notifications' => true,
-			'remote-extensions-list' => true,
+			'remote-free-extensions' => true,
 			'payment-gateway-suggestions' => true,
 			'settings' => false,
 			'shipping-label-banner' => true,
+			'subscriptions' => true,
 			'store-alerts' => true,
 			'transient-notices' => true,
+			'wc-pay-promotion' => true,
 		);
 	}
 }

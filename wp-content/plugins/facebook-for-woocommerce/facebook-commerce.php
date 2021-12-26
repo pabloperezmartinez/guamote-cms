@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
  *
@@ -100,14 +101,17 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	/** @var string the "debug mode" setting ID */
 	const SETTING_ENABLE_DEBUG_MODE = 'wc_facebook_enable_debug_mode';
 
+	/** @var string the "debug mode" setting ID */
+	const SETTING_ENABLE_NEW_STYLE_FEED_GENERATOR = 'wc_facebook_enable_new_style_feed_generator';
+
+	/** @var string request headers in the debug log */
+	const SETTING_REQUEST_HEADERS_IN_DEBUG_MODE = 'wc_facebook_request_headers_in_debug_log';
+
 	/** @var string the standard product description mode name */
 	const PRODUCT_DESCRIPTION_MODE_STANDARD = 'standard';
 
 	/** @var string the short product description mode name */
 	const PRODUCT_DESCRIPTION_MODE_SHORT = 'short';
-
-	/** @var string the hook for the recurreing action that syncs products */
-	const ACTION_HOOK_SCHEDULED_RESYNC = 'sync_all_fb_products_using_feed';
 
 	/** @var string custom taxonomy FB product set ID */
 	const FB_PRODUCT_SET_ID = 'fb_product_set_id';
@@ -320,12 +324,6 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			);
 
 			add_action(
-				'wp_ajax_ajax_sync_all_fb_products_using_feed',
-				array( $this, 'ajax_sync_all_fb_products_using_feed' ),
-				self::FB_PRIORITY_MID
-			);
-
-			add_action(
 				'wp_ajax_ajax_check_feed_upload_status',
 				array( $this, 'ajax_check_feed_upload_status' ),
 				self::FB_PRIORITY_MID
@@ -339,12 +337,6 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			add_action(
 				'wp_ajax_ajax_display_test_result',
 				array( $this, 'ajax_display_test_result' )
-			);
-
-			add_action(
-				'wp_ajax_ajax_schedule_force_resync',
-				array( $this, 'ajax_schedule_force_resync' ),
-				self::FB_PRIORITY_MID
 			);
 
 			// Don't duplicate product FBID meta.
@@ -368,7 +360,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 
 				add_action( 'before_delete_post', array( $this, 'on_product_delete' ) );
 
-				add_action( 'add_meta_boxes', array( $this, 'fb_product_metabox' ), 10, 1 );
+				add_action( 'add_meta_boxes', 'SkyVerge\WooCommerce\Facebook\Admin\Product_Sync_Meta_Box::register', 10, 1 );
 
 				add_action(
 					'transition_post_status',
@@ -412,11 +404,6 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			$this->load_background_sync_process();
 		}
 
-		// Must be outside of admin for cron to schedule correctly.
-		add_action( 'sync_all_fb_products_using_feed', array( $this, 'handle_scheduled_resync_action' ), self::FB_PRIORITY_MID );
-
-		// Handle the special background feed generation action.
-		add_action( 'wc_facebook_generate_product_catalog_feed', array( $this, 'handle_generate_product_catalog_feed' ) );
 
 		if ( $this->get_facebook_pixel_id() ) {
 			$aam_settings         = $this->load_aam_settings_of_pixel();
@@ -590,102 +577,6 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		wc_deprecated_function( __METHOD__, '1.10.0', '\\SkyVerge\\WooCommerce\\Facebook\\Admin::add_product_list_table_columns_content()' );
 	}
 
-
-	public function fb_product_metabox() {
-		$ajax_data = array(
-			'nonce' => wp_create_nonce( 'wc_facebook_metabox_jsx' ),
-		);
-		wp_enqueue_script(
-			'wc_facebook_metabox_jsx',
-			facebook_for_woocommerce()->get_asset_build_dir_url() . '/admin/metabox.js',
-			array(),
-			\WC_Facebookcommerce::PLUGIN_VERSION
-		);
-		wp_localize_script(
-			'wc_facebook_metabox_jsx',
-			'wc_facebook_metabox_jsx',
-			$ajax_data
-		);
-
-		add_meta_box(
-			'facebook_metabox', // Meta box ID
-			'Facebook', // Meta box Title
-			array( $this, 'fb_product_meta_box_html' ), // Callback
-			'product', // Screen to which to add the meta box
-			'side' // Context
-		);
-	}
-
-
-	/**
-	 * Renders the content of the product meta box.
-	 */
-	public function fb_product_meta_box_html() {
-		global $post;
-
-		$woo_product         = new WC_Facebook_Product( $post->ID );
-		$fb_product_group_id = null;
-
-		if ( $woo_product->woo_product instanceof \WC_Product && Products::product_should_be_synced( $woo_product->woo_product ) ) {
-			$fb_product_group_id = $this->get_product_fbid( self::FB_PRODUCT_GROUP_ID, $post->ID, $woo_product );
-		}
-
-		?>
-			<span id="fb_metadata">
-		<?php
-
-		if ( $fb_product_group_id ) {
-
-			?>
-
-			<?php echo esc_html__( 'Facebook ID:', 'facebook-for-woocommerce' ); ?> <a href="https://facebook.com/<?php echo esc_attr( $fb_product_group_id ); ?>"
-																					   target="_blank"><?php echo esc_html( $fb_product_group_id ); ?></a>
-
-			<?php if ( WC_Facebookcommerce_Utils::is_variable_type( $woo_product->get_type() ) ) : ?>
-
-				<?php if ( $product_item_ids_by_variation_id = $this->get_variation_product_item_ids( $woo_product, $fb_product_group_id ) ) : ?>
-
-					<p>
-						<?php echo esc_html__( 'Variant IDs:', 'facebook-for-woocommerce' ); ?><br/>
-
-						<?php foreach ( $product_item_ids_by_variation_id as $variation_id => $product_item_id ) : ?>
-
-							<?php echo esc_html( $variation_id ); ?>: <a href="https://facebook.com/<?php echo esc_attr( $product_item_id ); ?>"
-																		 target="_blank"><?php echo esc_html( $product_item_id ); ?></a><br/>
-
-						<?php endforeach; ?>
-					</p>
-
-				<?php endif; ?>
-
-			<?php endif; ?>
-
-				<input name="is_product_page" type="hidden" value="1"/>
-
-				<p/>
-				<a href="#" onclick="fb_reset_product( <?php echo esc_js( $post->ID ); ?> )">
-					<?php echo esc_html__( 'Reset Facebook metadata', 'facebook-for-woocommerce' ); ?>
-				</a>
-
-				<p/>
-				<a href="#" onclick="fb_delete_product( <?php echo esc_js( $post->ID ); ?> )">
-					<?php echo esc_html__( 'Delete product(s) on Facebook', 'facebook-for-woocommerce' ); ?>
-				</a>
-
-			<?php
-
-		} else {
-
-			?>
-				<b><?php echo esc_html__( 'This product is not yet synced to Facebook.', 'facebook-for-woocommerce' ); ?></b>
-			<?php
-		}
-
-		?>
-			</span>
-		<?php
-	}
-
 	/**
 	 * Returns graph API client object.
 	 *
@@ -705,7 +596,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 * @param string $product_group_id product group ID
 	 * @return array
 	 */
-	private function get_variation_product_item_ids( $product, $product_group_id ) {
+	public function get_variation_product_item_ids( $product, $product_group_id ) {
 
 		$product_item_ids_by_variation_id = array();
 		$missing_product_item_ids         = array();
@@ -1514,20 +1405,13 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			return;
 		}
 
-		// figure out the matching default variation
-		$default_product_fbid  = null;
-		$woo_default_variation = $this->get_product_group_default_variation( $woo_product );
-
-		if ( $woo_default_variation ) {
-			$default_product_fbid = $this->get_product_fbid(
-				self::FB_PRODUCT_ITEM_ID,
-				$woo_default_variation['variation_id']
-			);
-		}
 
 		$product_group_data = array(
 			'variants' => $variants,
 		);
+
+		// Figure out the matching default variation.
+		$default_product_fbid = $this->get_product_group_default_variation( $woo_product, $fb_product_group_id );
 
 		if ( $default_product_fbid ) {
 			$product_group_data['default_product_id'] = $default_product_fbid;
@@ -1554,13 +1438,17 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 
 	/**
 	 * Determines if there is a matching variation for the default attributes.
+	 * Select closest matching if best can't be found.
+	 *
+	 * @since 2.6.6
+	 * The algorithm only considers the variations that already have been synchronized to the catalog successfully.
 	 *
 	 * @since 2.1.2
 	 *
 	 * @param \WC_Facebook_Product $woo_product
-	 * @return array|null
+	 * @return integer|null Facebook Catalog variation id.
 	 */
-	private function get_product_group_default_variation( $woo_product ) {
+	private function get_product_group_default_variation( $woo_product, $fb_product_group_id ) {
 
 		$default_attributes = $woo_product->woo_product->get_default_attributes( 'edit' );
 
@@ -1568,19 +1456,41 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			return null;
 		}
 
-		$default_variation  = null;
-		$product_variations = $woo_product->woo_product->get_available_variations();
+		$default_variation = null;
+		// Fetch variations that exist in the catalog.
+		$existing_catalog_variations              = $this->find_variation_product_item_ids( $fb_product_group_id );
+		$existing_catalog_variations_retailer_ids = array_keys( $existing_catalog_variations );
+		// All woocommerce variations for the product.
+		$product_variations                       = $woo_product->woo_product->get_available_variations();
 
+		$best_match_count = 0;
 		foreach ( $product_variations as $variation ) {
 
-			$variation_attributes = $this->get_product_variation_attributes( $variation );
+			$fb_retailer_id = WC_Facebookcommerce_Utils::get_fb_retailer_id(
+				wc_get_product(
+					$variation['variation_id']
+				)
+			);
 
-			$matching_attributes = array_intersect_assoc( $default_attributes, $variation_attributes );
-
-			if ( count( $matching_attributes ) === count( $variation_attributes ) ) {
-				$default_variation = $variation;
-				break;
+			// Check if currently processed variation exist in the catalog.
+			if ( ! in_array( $fb_retailer_id, $existing_catalog_variations_retailer_ids ) ) {
+				continue;
 			}
+
+			$variation_attributes       = $this->get_product_variation_attributes( $variation );
+			$variation_attributes_count = count( $variation_attributes );
+			$matching_attributes_count  = count( array_intersect_assoc( $default_attributes, $variation_attributes ) );
+
+			// Check how much current variation matches the selected default attributes.
+			if ( $matching_attributes_count === $variation_attributes_count ) {
+				// We found a perfect match;
+				$default_variation = $existing_catalog_variations[ $fb_retailer_id ];
+				break;
+			} else if ( $matching_attributes_count > $best_match_count ) {
+				// We found a better match.
+				$default_variation = $existing_catalog_variations[ $fb_retailer_id ];
+			}
+
 		}
 
 		return $default_variation;
@@ -1877,7 +1787,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 */
 	function display_error_message_from_result( $result ) {
 		$error = json_decode( $result['body'] )->error;
-		$msg   = ( 'Fatal' === $error->message && ! empty( $error->error_user_title ) ) ? $error->error_user_title : $error_message;
+		$msg   = ( 'Fatal' === $error->message && ! empty( $error->error_user_title ) ) ? $error->error_user_title : $error->message;
 		$this->display_error_message( $msg );
 	}
 
@@ -2200,7 +2110,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		WC_Facebookcommerce_Utils::check_woo_ajax_permissions( 'syncall products', true );
 		check_ajax_referer( 'wc_facebook_settings_jsx' );
 
-		$this->sync_facebook_products( 'background' );
+		$this->sync_facebook_products();
 	}
 
 
@@ -2212,22 +2122,11 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 *
 	 * @since 1.10.2
 	 *
-	 * @param string $method either 'feed' or 'background'
 	 */
-	private function sync_facebook_products( $method ) {
+	private function sync_facebook_products() {
 
 		try {
-
-			if ( 'feed' === $method ) {
-
-				$this->sync_facebook_products_using_feed();
-
-			} elseif ( 'background' === $method ) {
-
-				// if syncs starts, the background processor will continue executing until the request ends and no response will be sent back to the browser
-				$this->sync_facebook_products_using_background_processor();
-			}
-
+			$this->sync_facebook_products_using_background_processor();
 			wp_send_json_success();
 
 		} catch ( Framework\SV_WC_Plugin_Exception $e ) {
@@ -2404,121 +2303,6 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 
 		return true;
 	}
-
-
-	/**
-	 * Special function to run all visible products by uploading feed.
-	 *
-	 * @internal
-	 */
-	public function ajax_sync_all_fb_products_using_feed() {
-		WC_Facebookcommerce_Utils::check_woo_ajax_permissions(
-			'syncall products using feed',
-			! $this->test_mode
-		);
-		check_ajax_referer( 'wc_facebook_settings_jsx' );
-
-		$this->sync_facebook_products( 'feed' );
-	}
-
-
-	/**
-	 * Syncs Facebook products using a Feed.
-	 *
-	 * @see https://developers.facebook.com/docs/marketing-api/fbe/fbe1/guides/feed-approach
-	 *
-	 * @since 1.10.2
-	 *
-	 * @throws Framework\SV_WC_Plugin_Exception
-	 * @return bool
-	 */
-	public function sync_facebook_products_using_feed() {
-
-		if ( ! $this->is_product_sync_enabled() ) {
-			WC_Facebookcommerce_Utils::log( 'Sync to Facebook is disabled' );
-
-			throw new Framework\SV_WC_Plugin_Exception( __( 'Product sync is disabled.', 'facebook-for-woocommerce' ) );
-		}
-
-		if ( ! $this->is_configured() || ! $this->get_product_catalog_id() ) {
-
-			WC_Facebookcommerce_Utils::log( sprintf( 'Not syncing, the plugin is not configured or the Catalog ID is missing' ) );
-
-			throw new Framework\SV_WC_Plugin_Exception( __( 'The plugin is not configured or the Catalog ID is missing.', 'facebook-for-woocommerce' ) );
-		}
-
-		$this->remove_resync_message();
-
-		if ( ! $this->fbgraph->is_product_catalog_valid( $this->get_product_catalog_id() ) ) {
-
-			WC_Facebookcommerce_Utils::log( 'Not syncing, invalid product catalog!' );
-			WC_Facebookcommerce_Utils::fblog(
-				'Tried to sync with an invalid product catalog!',
-				array(),
-				true
-			);
-
-			throw new Framework\SV_WC_Plugin_Exception( __( "We've detected that your Facebook Product Catalog is no longer valid. This may happen if it was deleted, but could also be a temporary error. If the error persists, please click Manage connection > Advanced Options > Remove and setup the plugin again.", 'facebook-for-woocommerce' ) );
-		}
-
-		if ( ! class_exists( 'WC_Facebook_Product_Feed' ) ) {
-			include_once 'includes/fbproductfeed.php';
-		}
-		if ( $this->test_mode ) {
-			$this->fbproductfeed = new WC_Facebook_Product_Feed_Test_Mock(
-				$this->get_product_catalog_id(),
-				$this->fbgraph,
-				$this->get_feed_id()
-			);
-		} else {
-			$this->fbproductfeed = new WC_Facebook_Product_Feed(
-				$this->get_product_catalog_id(),
-				$this->fbgraph,
-				$this->get_feed_id()
-			);
-		}
-
-		if ( ! $this->fbproductfeed->sync_all_products_using_feed() ) {
-
-			WC_Facebookcommerce_Utils::fblog( 'Sync all products using feed, curl failed', array(), true );
-
-			throw new Framework\SV_WC_Plugin_Exception( __( "We couldn't create the feed or upload the product information.", 'facebook-for-woocommerce' ) );
-		}
-
-		$this->update_feed_id( $this->fbproductfeed->feed_id );
-		$this->update_upload_id( $this->fbproductfeed->upload_id );
-
-		update_option(
-			$this->get_option_key(),
-			apply_filters( 'woocommerce_settings_api_sanitized_fields_' . $this->id, $this->settings )
-		);
-
-		wp_reset_postdata();
-
-		return true;
-	}
-
-
-	/**
-	 * Syncs Facebook products using a Feed.
-	 *
-	 * TODO: deprecate this methid in 1.11.0 or newer {WV 2020-03-12}
-	 *
-	 * @see https://developers.facebook.com/docs/marketing-api/fbe/fbe1/guides/feed-approach
-	 *
-	 * @return bool
-	 */
-	public function sync_all_fb_products_using_feed() {
-
-		try {
-			$sync_started = $this->sync_facebook_products_using_feed();
-		} catch ( Framework\SV_WC_Plugin_Exception $e ) {
-			$sync_started = false;
-		}
-
-		return $sync_started;
-	}
-
 
 	/**
 	 * Toggles product visibility via AJAX.
@@ -3266,6 +3050,29 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		return (bool) apply_filters( 'wc_facebook_is_debug_mode_enabled', 'yes' === get_option( self::SETTING_ENABLE_DEBUG_MODE ), $this );
 	}
 
+	/**
+	 * Determines whether debug mode is enabled.
+	 *
+	 * @since 2.6.6
+	 *
+	 * @return bool
+	 */
+	public function is_new_style_feed_generation_enabled() {
+		return (bool) ( 'yes' === get_option( self::SETTING_ENABLE_NEW_STYLE_FEED_GENERATOR ) );
+	}
+
+	/**
+	 * Check if logging headers is requested.
+	 * For a typical troubleshooting session the request headers bring zero value except making the log unreadable.
+	 * They will be disabled by default. Enabling them will require setting an option in the options table.
+	 *
+	 * @since 2.6.6
+	 *
+	 */
+	public function are_headers_requested_for_debug() {
+		return (bool) get_option( self::SETTING_REQUEST_HEADERS_IN_DEBUG_MODE, false );
+	}
+
 
 	/***
 	 * Determines if the feed has been migrated from FBE 1 to FBE 1.5
@@ -3768,126 +3575,6 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		printf( json_encode( $response ) );
 		wp_die();
 	}
-
-
-	/**
-	 * Schedules a recurring event to sync products.
-	 *
-	 * @deprecated 1.10.0
-	 */
-	function ajax_schedule_force_resync() {
-
-		wc_deprecated_function( __METHOD__, '1.10.0' );
-		die;
-	}
-
-
-	/**
-	 * Adds an recurring action to sync products.
-	 *
-	 * The action is scheduled using a cron schedule instead of a recurring interval (see https://en.wikipedia.org/wiki/Cron#Overview).
-	 * A cron schedule should allow for the action to run roughly at the same time every day regardless of the duration of the task.
-	 *
-	 * @since 1.10.0
-	 *
-	 * @param int $offset number of seconds since the beginning of the daay
-	 */
-	public function schedule_resync( $offset ) {
-
-		try {
-
-			$current_time         = new DateTime( 'now', new DateTimeZone( wc_timezone_string() ) );
-			$first_scheduled_time = new DateTime( "today +{$offset} seconds", new DateTimeZone( wc_timezone_string() ) );
-			$next_scheduled_time  = new DateTime( "today +1 day {$offset} seconds", new DateTimeZone( wc_timezone_string() ) );
-
-		} catch ( \Exception $e ) {
-			// TODO: log an error indicating that it was not possible to schedule a recurring action to sync products {WV 2020-01-28}
-			return;
-		}
-
-		// unschedule previously scheduled resync actions
-		$this->unschedule_resync();
-
-		$timestamp = $first_scheduled_time >= $current_time ? $first_scheduled_time->getTimestamp() : $next_scheduled_time->getTimestamp();
-
-		// TODO: replace 'facebook-for-woocommerce' with the plugin ID once we stat using the Framework {WV 2020-01-30}
-		as_schedule_single_action( $timestamp, self::ACTION_HOOK_SCHEDULED_RESYNC, array(), 'facebook-for-woocommerce' );
-	}
-
-
-	/**
-	 * Removes the recurring action that syncs products.
-	 *
-	 * @since 1.10.0
-	 */
-	private function unschedule_resync() {
-
-		// TODO: replace 'facebook-for-woocommerce' with the plugin ID once we stat using the Framework {WV 2020-01-30}
-		as_unschedule_all_actions( self::ACTION_HOOK_SCHEDULED_RESYNC, array(), 'facebook-for-woocommerce' );
-	}
-
-
-	/**
-	 * Determines whether a recurring action to sync products is scheduled and not running.
-	 *
-	 * @see \as_next_scheduled_action()
-	 *
-	 * @since 1.10.0
-	 *
-	 * @return bool
-	 */
-	public function is_resync_scheduled() {
-
-		// TODO: replace 'facebook-for-woocommerce' with the plugin ID once we stat using the Framework {WV 2020-01-30}
-		return is_int( as_next_scheduled_action( self::ACTION_HOOK_SCHEDULED_RESYNC, array(), 'facebook-for-woocommerce' ) );
-	}
-
-
-	/**
-	 * Handles the scheduled action used to sync products daily.
-	 *
-	 * It will schedule a new action if product sync is enabled and the plugin is configured to resnyc procucts daily.
-	 *
-	 * @internal
-	 *
-	 * @see \WC_Facebookcommerce_Integration::schedule_resync()
-	 *
-	 * @since 1.10.0
-	 */
-	public function handle_scheduled_resync_action() {
-
-		try {
-			$this->sync_facebook_products_using_feed();
-		} catch ( Framework\SV_WC_Plugin_Exception $e ) {
-		}
-
-		$resync_offset = $this->get_scheduled_resync_offset();
-
-		// manually schedule the next product resync action if possible
-		if ( null !== $resync_offset && $this->is_product_sync_enabled() && ! $this->is_resync_scheduled() ) {
-			$this->schedule_resync( $resync_offset );
-		}
-	}
-
-	/**
-	 * Handles the schedule feed generation action, triggered by the REST API.
-	 *
-	 * @since 1.11.0
-	 */
-	public function handle_generate_product_catalog_feed() {
-
-		$feed_handler = new WC_Facebook_Product_Feed();
-
-		try {
-
-			$feed_handler->generate_feed();
-
-		} catch ( \Exception $exception ) {
-
-			WC_Facebookcommerce_Utils::log( 'Error generating product catalog feed. ' . $exception->getMessage() );
-		}
-	}
-
 
 	/** Deprecated methods ********************************************************************************************/
 

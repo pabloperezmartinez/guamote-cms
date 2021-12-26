@@ -6,8 +6,8 @@ Tags: WordPress exporter, wp exporter, CSV, exporter, all export, export, csv ex
 Requires at least: 5.0
 Tested up to: 5.8
 Requires PHP: 5.2.4
-Stable tag: 1.6.2
-Version: 1.6.2
+Stable tag: 1.6.3
+Version: 1.6.3
 Author: smackcoders
 Author URI: https://profiles.wordpress.org/smackcoders/
 License: GPLv2 or later
@@ -102,6 +102,9 @@ Yes, you can export all Custom Post listed in the drop down.
 No, there is no limitation on the records exported.
 
 ## Changelog
+### 1.6.3
+- Added: Export support for latest woocommerce product bundle plugin fields 
+
 ### 1.6.2
 
 - Checked: Compatibility for WordPress 5.8
@@ -225,6 +228,10 @@ No, there is no limitation on the records exported.
 - Initial release version. Tested and found to work well without any issues.
 
 ## Upgrade Notice
+### 1.6.3
+
+- Upgrade now for newly added features.
+
 ### 1.6.2
 
 - Upgrade now for newly added features.

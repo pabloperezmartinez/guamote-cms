@@ -1,9 +1,9 @@
 === Easy Drag And drop All Import : WP Ultimate CSV Importer ===
 Contributors: smackcoders, smacksupport
 Requires at least: 5.0
-Tested up to: 5.8
-Stable tag: 6.2.6
-Version: 6.2.6
+Tested up to: 5.8.2
+Stable tag: 6.3
+Version: 6.3
 Requires PHP: 5.2.4
 Author: smackcoders
 Author URI: https://profiles.wordpress.org/smackcoders/
@@ -18,6 +18,8 @@ WP ULTIMATE CSV IMPORTER PLUGIN ALLOWS TO IMPORT ALL DATA IN CSV AND XML FORMAT 
 Import your unlimited data into WordPress as CSV, XML, txt or zip file using WP Ultimate CSV importer. Import your content on WordPress using this best CSV importer quick and simple with a few steps. Built-in drag and drop facility is also available to make the import process a hassle-free task in less time. No other special requirements are needed to import any CSV or XML files.
 
 WordPress Importer can import the Core Modules of post, page, comments and custom posts. Custom Posts with CPT UI, Pods, Toolset, Jet engine, Custom Press and default custom post can be imported. Also, import any type of data into the custom fields created using the default wordpress custom fields feature.
+
+[youtube https://www.youtube.com/watch?v=HHPpS0uZzeU&t=2s]
 
 = FEATURES OF WP ULTIMATE CSV IMPORTER FREE =
 
@@ -170,6 +172,27 @@ WordPress Ultimate CSV Importer can be installed by normal way, FTP users can in
 For more details about plugin documentation, [check out here](https://www.smackcoders.com/documentation/ultimate-csv-importer-pro/how-to-import-csv).
 
 == Changelog ==
+= 6.3 =
+* Checked: Compatibility for WordPress 5.8.2
+* Updated: Thirdparty CSS and JS libraries 
+
+= 6.2.9 =
+* Added: Import support for latest woocommerce product bundle plugin-v6.12.4 
+* Fixed: dropbox link image issue 
+* Fixed: Language - English(South Africa) issue    
+
+= 6.2.8 = 
+* Added: support for image import through dropbox link  
+* Checked: Compatibility for WordPress 5.8.1
+
+= 6.2.7 =
+* Added: Upgrade now for latest updates.
+* Added: Delete records not present in csv/xml file - settings option
+* Added: Separate widget for woocommerce product attributes
+* Added: List Woocommerce Product Variations in dropdown, onclicking display update to pro alert (toastify)
+* Fixed: Support page mail issue
+* Fixed: Post content image import issue
+
 = 6.2.6 =
 * Added: Support for URL and FTP file upload
 * Added: WordPress 5.8 Compatibility 
@@ -666,6 +689,14 @@ For more details about plugin documentation, [check out here](https://www.smackc
 * Initial release version. Tested and found works well without any issues.
 
 == Upgrade Notice ==
+= 6.3 =
+* Added: Upgrade now for latest updates.
+= 6.2.9 =
+* Added: Upgrade now for latest updates.
+= 6.2.8 =
+* Added: Upgrade now for latest updates.
+= 6.2.7 =
+* Added: Upgrade now for latest updates.
 = 6.2.6 =
 * Added: Upgrade now for latest updates.
 = 6.2.5 =

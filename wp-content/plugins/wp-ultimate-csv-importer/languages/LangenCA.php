@@ -82,6 +82,7 @@ class LangEN_CA {
                         'CustomFieldsWPMemberFields' => 'Custom Fields WP Member Fields',
                         'CustomFieldsMemberFields' => 'Custom Fields Member Fields',
                         'ProductMetaFields' => 'Product Meta Fields',
+                        'ProductAttrFields' => 'Product Attr Fields',
                         'WPECommerceCustomFields' => 'WP ECommerce Custom Fields',
                         'EventsManagerFields' => 'Events Manager Fields',
                         'CMB2CustomFields' => 'CMB2 Custom Fields',

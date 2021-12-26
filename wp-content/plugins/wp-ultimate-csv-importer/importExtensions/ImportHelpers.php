@@ -188,11 +188,13 @@ class ImportHelpers {
 			foreach($map as $key => $value){
 				$csv_value= trim($map[$key]);
 				if(!empty($csv_value)){
-					$pattern = "/({([a-z A-Z 0-9 | , _ -]+)(.*?)(}))/";
+					//$pattern = "/({([a-z A-Z 0-9 | , _ -]+)(.*?)(}))/";
+					$pattern = '/{([^}]*)}/';
 					if(preg_match_all($pattern, $csv_value, $matches, PREG_PATTERN_ORDER)){	
 						$csv_element = $csv_value;
-						foreach($matches[2] as $value){
-							
+						
+						//foreach($matches[2] as $value){
+						foreach($matches[1] as $value){	
 							$get_key = array_search($value , $header_array);
 							if(isset($value_array[$get_key])){
 								$csv_value_element = $value_array[$get_key];	

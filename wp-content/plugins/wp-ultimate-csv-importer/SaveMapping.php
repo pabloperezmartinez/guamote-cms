@@ -276,7 +276,7 @@ class SaveMapping{
 	 */
 
 	public function bulk_import(){
-		global $wpdb,$core_instance,$uci_woocomm_meta,$uci_woocomm_bundle_meta;
+		global $wpdb,$core_instance,$uci_woocomm_meta,$uci_woocomm_bundle_meta,$product_attr_instance;
 		$upload_dir = SaveMapping::$smackcsv_instance->create_upload_dir();
 		$hash_key  = sanitize_key($_POST['HashKey']);
 		$check = sanitize_text_field($_POST['Check']);
@@ -377,6 +377,14 @@ class SaveMapping{
 
 							case 'BUNDLEMETA':
 								$uci_woocomm_bundle_meta->set_product_bundle_meta_values($header_array ,$value_array , $map['BUNDLEMETA'], $post_id , $selected_type , $line_number , $get_mode);
+								break;
+								//added for woocommerce product attributes separate widget
+							case 'ATTRMETA':
+								//$product_attr_instance = ProductAttrImport::getInstance();
+								$variation_id = isset($variation_id) ? $variation_id :'';
+								$wpml_map = isset($map['WPML']) ? $map['WPML'] : '';
+								$woocom_image = isset($map['PRODUCTIMAGEMETA']) ? $map['PRODUCTIMAGEMETA'] : '';
+								$product_attr_instance->set_product_attr_values($header_array, $value_array, $map['ATTRMETA'], $woocom_image, $post_id, $variation_id ,$selected_type, $line_number, $get_mode, $hash_key, $wpml_map);
 								break;
 
 							case 'CFS':
@@ -590,7 +598,7 @@ class SaveMapping{
 		}
 
 		if (($unmatched_row == 'true') && ($page_number >= $total_pages)){
-			return true;
+			
 			$post_entries_table = $wpdb->prefix ."ultimate_post_entries";
 			$post_entries_value = $wpdb->get_results("select ID from {$wpdb->prefix}ultimate_post_entries " ,ARRAY_A);
 			if(!empty($post_entries_value)){
@@ -689,7 +697,7 @@ class SaveMapping{
 		$import_config_instance = ImportConfiguration::getInstance();
 		$log_manager_instance = LogManager::getInstance();
 		global $core_instance;
-		global $uci_woocomm_meta,$uci_woocomm_bundle_meta;
+		global $uci_woocomm_meta,$uci_woocomm_bundle_meta,$product_attr_instance;
 
 		$file_table_name = $wpdb->prefix ."smackcsv_file_events";
 		$template_table_name = $wpdb->prefix ."ultimate_csv_importer_mappingtemplate";
@@ -965,7 +973,7 @@ class SaveMapping{
 	{
 		$return_arr = [];
 		$core_instance = CoreFieldsImport::getInstance();
-		global $core_instance,$uci_woocomm_meta,$uci_woocomm_bundle_meta;
+		global $core_instance,$uci_woocomm_meta,$uci_woocomm_bundle_meta,$product_attr_instance;
 
 		foreach($map as $group_name => $group_value){
 			if($group_name == 'CORE'){
@@ -985,7 +993,14 @@ class SaveMapping{
 			case 'ECOMMETA':
 				$uci_woocomm_meta->set_product_meta_values($header_array ,$value_array , $map['ECOMMETA'], $post_id , $selected_type , $line_number , $get_mode);
 				break;
-
+			//added for woocommerce product attributes separate widget
+			case 'ATTRMETA':
+				//$product_attr_instance = ProductAttrImport::getInstance();
+				$variation_id = isset($variation_id) ? $variation_id :'';
+				$wpml_map = isset($map['WPML']) ? $map['WPML'] : '';
+				$woocom_image = isset($map['PRODUCTIMAGEMETA']) ? $map['PRODUCTIMAGEMETA'] : '';
+				$product_attr_instance->set_product_attr_values($header_array, $value_array, $map['ATTRMETA'], $woocom_image, $post_id, $variation_id ,$selected_type, $line_number, $get_mode, $hash_key, $wpml_map);
+				break;
 			case 'BUNDLEMETA':
 				$uci_woocomm_bundle_meta->set_product_bundle_meta_values($header_array ,$value_array , $map['BUNDLEMETA'], $post_id , $selected_type , $line_number , $get_mode);
 				break;

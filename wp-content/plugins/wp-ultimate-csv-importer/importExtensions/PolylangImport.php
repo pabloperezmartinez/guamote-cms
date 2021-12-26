@@ -32,7 +32,7 @@ class PolylangImport {
 
 	function polylang_import_function($data_array, $importas,$pId) {
 		global $wpdb;
-		$code=trim($data_array['language_code']);
+		$code = trim($data_array['language_code']);
 		//pll_set_post_language($pId,$code);
 		$arr = array(
 			$code=>$pId
