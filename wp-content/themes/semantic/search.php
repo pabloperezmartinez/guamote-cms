@@ -3,45 +3,99 @@ get_header();
 ?>
 
 <div class="ui container">
-	<div class="segment" style="margin-top: 2vh">
-		<div class="ui link cards">
-			<?php
-			// Start the Loop.
-			if (have_posts ()):
-			while ( have_posts() ) : the_post();?>
-		 		<a href="<?php echo the_permalink()?>" class="card">
-	 				<?php if ( get_post_thumbnail_id()!=null || get_post_thumbnail_id()!=''):?>
-						<div class="image">
-	 						<img alt="<?php the_title()?>" src="<?php the_post_thumbnail_url();?>" class="ui fluid image">
-						</div>
-	 				<?php else:?>
-	 					&nbsp;
-	 				<?php endif;?>
-					<div class="content">
-						<div class="header"><i class="music icon"></i> <?php the_title()?></div>
-						<div class="meta">
-			        <?php echo get_post_field('artist_name', the_ID()); ?>
-			      </div>
-						<div class="description">
-							<?php echo wp_trim_words( wp_strip_all_tags(get_post_field('post_content', the_ID())) , 20 , " | Ver m&aacute;s...") ?>
-						</div>
-						<div class="extra content">
-				      <span>
-				        <?php echo get_post_field('label_name', the_ID()); ?>
-				      </span>
-				    </div>
+	<div class="ui segment">
+		<?php /***** Products *******/
+		if (have_posts()) : ?>
+		<a class="floating-right" href="https://wa.link/gm614a" target="_blank">
+			<i class="big circular green inverted whatsapp icon"></i>
+			<span class="ui left pointing green big basic label">¿Necesitas ayuda?</span>
+		</a>
+		<h3 class="ui primary dividing header"><?php echo get_search_query(); ?></h3>
+		<div class="ui grid">
+			<?php /***** subategories links *******/
+			if (!empty($terms) && !is_front_page()): ?>
+				<div class="three wide column">
+					<div class="ui link list">
+						<?php foreach ( $terms as $term ): ?>
+							<a href="<?php echo get_term_link( $term, $taxonomy ); ?>" class="item"><?php echo $term->name ?></a>
+						<?php endforeach; ?>
 					</div>
-		 		</a>
-			<?php endwhile;
-			else:?>
-				<div class="segment" style="min-height: 400px; display: flex; align-items: center;">
-					<p><i class="large red frown icon"></i>Lo sentimos, no hay resultados para: <strong><?php echo $_GET['s']; ?></strong></p>
 				</div>
-			<?php endif; ?>
+			<?php endif; 
+			/******** Products list block ********/ ?>
+			<div class="<?php echo (!empty($terms) && !is_front_page()) ? "thirteen" : "" ;?> wide column">
+				<ul class="ui three stackable doubling centered link cards">
+					<?php
+					while (have_posts()) : the_post();
+						global $product;
+						$meta_artist_name = get_post_meta(get_the_ID(), "artist_name", true);
+						$meta_label_name = get_post_meta(get_the_ID(), "label_name", true);
+						?>
+						<a href="<?php echo the_permalink() ?>" class="card">
+							<div class="image">
+								<?php if (get_the_post_thumbnail_url() != null || get_the_post_thumbnail_url() != ''): ?>
+									<img alt="<?php the_title() ?>" src="<?php echo get_the_post_thumbnail_url(); ?>"
+										class="ui fluid image">
+								<?php else: ?>
+									<img alt="<?php the_title() ?>"
+										src="<?php bloginfo('stylesheet_directory'); ?>/img/not-available-img.png"
+										class="ui fluid image">
+								<?php endif; ?>
+							</div>
+							<div class="content">
+								<?php if ($product->get_stock_quantity() <= 0): ?>
+									<div class="ui blue right floated tag label">
+										<?php echo $product->get_price_html(); ?>
+									</div>
+								<?php else: ?>
+									<div class="ui right floated tag label">
+										No disponible
+									</div>
+								<?php endif; ?>
+								<div class="header">
+									<?php the_title() ?>
+								</div>
+								<?php if ($meta_artist_name != null): ?>
+									<div class="description">
+										<i class="microphone icon"></i>
+										<?php echo $meta_artist_name ?>
+									</div>
+								<?php endif ?>
+							</div>
+							<?php if ($meta_label_name != null): ?>
+								<div class="extra content">
+									<span class="right floated">
+										<i class="record vinyl icon"></i>
+										<?php echo $meta_label_name ?>
+									</span>
+								</div>
+							<?php endif ?>
+						</a>
+					<?php endwhile; ?>
+				</ul>
+			</div>
 		</div>
+
+
+		
+		<?php 
+		include ("blocks/pagination.php");
+		else :
+		wp_reset_postdata(); ?>
+		<div class="ui container">
+			<div class="ui placeholder segment">
+				<div class="ui icon header">
+					<i class="blue frown icon"></i>
+					No se encuentran productos
+				</div>
+				<div class="inline">
+					<a class="ui primary button" href="<?php echo get_site_url() ?>">Regresar a inicio</a>
+				</div>
+			</div>
+		</div>
+		<?php endif; ?>
 	</div>
 </div>
-
 
 <?php
 get_footer();

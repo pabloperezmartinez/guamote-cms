@@ -1,4 +1,4 @@
-		<footer class="ui inverted segment" style="border-radius:0px; margin-bottom: 0px !important;"><br>
+		<footer class="ui inverted segment" style="border-radius:0px; margin-bottom: 0px !important; z-index:10"><br>
 			<div class="ui container">
 				<div class="ui stackable grid">
 					<div class="middle aligned row">
@@ -17,7 +17,7 @@
 							</p>
 							<p><?php echo get_option( 'woocommerce_store_address', '' );?><br>
                                 <?php echo get_option( 'woocommerce_store_city', '' );?> <?php echo explode( ":",get_option( 'woocommerce_default_country', '' ))[0];?><br>
-							    <i class="inverted phone icon"></i> (593 2) 2453-585<br>
+							    <i class="inverted phone icon"></i> +593 96 190 5174<br>
 							    <a href="mailto:fotosyvinilos@gmail.com"><i class="inverted mail icon"></i>fotosyvinilos@gmail.com</a>
                             </p>
 						</div>
