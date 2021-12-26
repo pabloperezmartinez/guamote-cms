@@ -52,7 +52,8 @@ class SupportMail {
 			$to = 'support@smackcoders.com';
 			$subject = sanitize_text_field($_POST['query']);
 			$message = "Site URL: " . $url . "\r\n<br>";
-			$message .= "Plugin Name: WP Ultimate CSV Importer PRO " . "\r\n<br>";
+			$message .= "Email: " . $email . "\r\n<br>";
+			$message .= "Plugin Name: WP Ultimate CSV Importer" . "\r\n<br>";
 			$message .= "Message: "."\r\n" . sanitize_text_field($_POST['message']) . "\r\n<br>";
 			if(wp_mail($to, $subject, $message, $headers)) {
 				$success_message = 'Mail Sent!';
@@ -76,6 +77,7 @@ class SupportMail {
 			$to = 'support@smackcoders.com';
 			$subject = 'Newsletter Subscription';
 			$message = "Site URL: " . $url . "\r\n<br>";
+			$message .= "Email: " . $email . "\r\n<br>";
 			$message .= "Plugin Name: " . SM_UCI_SETTINGS . "\r\n<br>";
 			$message .= "Message: Hi Team, I want to subscribe to your newsletter." . "\r\n<br>";
 			if(wp_mail($to, $subject, $message, $headers)) {

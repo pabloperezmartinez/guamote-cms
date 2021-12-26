@@ -137,19 +137,19 @@ endif;
 				$import_as = $extension_object->import_post_types($import_type );
 				if(!empty($csv_value)){
 
-					$pattern = "/({([a-z A-Z 0-9 | , _ -]+)(.*?)(}))/";
+					//$pattern = "/({([a-z A-Z 0-9 | , _ -]+)(.*?)(}))/";
+					$pattern = '/{([^}]*)}/';
 					if(preg_match_all($pattern, $csv_value, $matches, PREG_PATTERN_ORDER)){	
 						$csv_element = $csv_value;
 
-
-						foreach($matches[2] as $value){
+						//foreach($matches[2] as $value){
+						foreach($matches[1] as $value){
 							$get_key = array_search($value , $header_array);
 							if(isset($value_array[$get_key])){
 								$csv_value_element = $value_array[$get_key];	
 								$value = '{'.$value.'}';
 								$csv_element = str_replace($value, $csv_value_element, $csv_element);
 							}
-
 						}
 
 						$math = 'MATH';
@@ -305,9 +305,11 @@ endif;
 				
 						$shortcode_table = $wpdb->prefix . "ultimate_csv_importer_shortcode_manager";
 						 foreach ($orig_img_src as $img => $img_val){
-						 	$shortcode  = $shortcode_img[$img][$img];
+						 	//$shortcode  = $shortcode_img[$img][$img];
+							 $shortcode  = 'inline';
+							 $wpdb->get_results("INSERT INTO $shortcode_table (image_shortcode , original_image , post_id,hash_key) VALUES ( '{$shortcode}', '{$img_val}', $post_id  ,'{$hash_key}')");
 						 }
-						 $wpdb->get_results("INSERT INTO $shortcode_table (image_shortcode , original_image , post_id,hash_key) VALUES ( '{$shortcode}', '{$img_val}', $post_id  ,'{$hash_key}')");
+				
 						$doc = new \DOMDocument();
 						$searchNode = $doc->getElementsByTagName( "img" );
 						

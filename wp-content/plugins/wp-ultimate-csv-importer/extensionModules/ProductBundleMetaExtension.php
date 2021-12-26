@@ -46,14 +46,17 @@ class ProductBundleMetaExtension extends ExtensionHandler{
                     'Quantity Maximum' => 'quantity_max',
                     'Priced Individually' => 'priced_individually',
                     'Discount' => 'discount',
-                    'Product details' => 'product_details',
-                    'Cart_checkout' => 'cart_checkout',
-                    'Order details ' => 'order_details',
+                    'Product details' => 'single_product_visibility',
+                    'Cart Visibility' => 'cart_visibility',
+                    'Order Visibility ' => 'order_visibility',
                     'Override Title' => 'override_title',
                     'Override Title Value' => 'override_title_value',
                     'Override Description' => 'override_description',
                     'Override Description Value' => 'override_description_value',
-                    'Hide Thumbnail' => 'hide_thumbnail'
+                    'Hide Thumbnail' => 'hide_thumbnail',
+                    'Bundle Virtual'=>'_wc_pb_virtual_bundle',
+					'Bundle Min Qty '=>'_wcpb_min_qty_limit',
+					'Bundle Max Qty '=>'_wcpb_max_qty_limit'
                    
                 );
             }

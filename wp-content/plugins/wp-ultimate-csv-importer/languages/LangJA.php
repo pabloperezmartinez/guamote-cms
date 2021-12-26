@@ -83,6 +83,7 @@ class LangJA {
                         'CustomFieldsWPMemberFields' => 'カスタムフィールドWPメンバーフィールド',
                         'CustomFieldsMemberFields' => 'カスタムフィールドメンバーフィールド',
                         'ProductMetaFields' => '製品メタフィールド',
+                        'ProductAttrFields' => '製品属性フィールド',
                         'ProductImageMetaFields' => '製品ギャラリーメタフィールド',
                         'OrderMetaFields' => 'メタフィールドの注文',
                         'CouponMetaFields' => 'クーポンメタフィールド',

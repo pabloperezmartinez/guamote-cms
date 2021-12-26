@@ -12,7 +12,7 @@
  * @wordpress-plugin
  * Plugin Name: Import Users
  * Description: Seamlessly create users and import from your CSV data with ease. 
- * Version: 1.2.7
+ * Version: 1.2.8
  * Text Domain: Import-Users
  * Domain Path:	 /languages
  * Author: Smackcoders
@@ -52,7 +52,7 @@ require_once('controllers/SendPassword.php');
 class UserCSVHandler extends UsersImport{
 
 	private static $instance = null,$install;
-	public $version = '1.2.7';
+	public $version = '1.2.8';
 
 	public function __construct(){ 
 		$this->plugin = Plugin::getInstance();

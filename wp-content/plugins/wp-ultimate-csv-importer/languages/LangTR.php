@@ -77,6 +77,7 @@ class LangTR {
 		'CustomFieldsWPMemberFields' => 'Özel Alanlar WP Üye Alanları',
 		'CustomFieldsMemberFields' => 'Özel Alanlar Üye Alanları',
 		'ProductMetaFields' => 'Ürün Meta Alanları',
+		'ProductAttrFields' => 'Ürün Attr Alanları',
 		'WPECommerceCustomFields' => 'WP ECommerce Özel Alanları',
 		'EventsManagerFields' => 'Etkinlik Yöneticisi Alanları',
 		'CMB2CustomFields' => 'CMB2 Özel Alanları',

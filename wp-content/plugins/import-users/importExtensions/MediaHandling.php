@@ -503,7 +503,7 @@ class MediaHandling{
 
 		$original_file_perms = fileperms($current_file) & 0777;
 
-		$this->emr_delete_current_files( $current_file, $current_metadata , $post_id );
+		$this->emr_delete_current_files( $current_file, $post_id, $current_metadata  );
 
 		$new_filename = wp_unique_filename( $current_path, $new_filename );
 		$new_file = $current_path . "/" . $new_filename;
@@ -584,7 +584,7 @@ class MediaHandling{
 	}
 
 
-	function emr_delete_current_files( $current_file, $metadta = null , $post_id ) {
+	function emr_delete_current_files( $current_file, $post_id , $metadta = null ) {
 		// Delete old file
 
 		// Find path of current file

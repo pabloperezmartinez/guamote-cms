@@ -2,7 +2,7 @@
 
 Contributors: smackcoders, smacksupport
 Requires at least: 5.0
-Tested up to: 5.5.1
+Tested up to: 5.8.2
 Stable tag: 6.2.2
 Version: 6.2.2
 Requires PHP: 5.2.4
@@ -205,6 +205,58 @@ If you'd like to help out by translating this plugin, please [sign up for an acc
 [youtube https://www.youtube.com/watch?v=8P8xtRY3bCM&feature=youtu.be]
 
 ## Changelog
+
+### 6.3 
+
+- Checked: Compatibility for WordPress 5.8.2
+- Updated: Thirdparty CSS and JS libraries 
+
+### 6.2.9
+
+- Added: Import support for latest woocommerce product bundle plugin-v6.12.4 
+- Fixed: dropbox link image issue 
+- Fixed: Language - English(South Africa) issue    
+
+### 6.2.8  
+
+- Added: support for image import through dropbox link  
+- Checked: Compatibility for WordPress 5.8.1
+
+### 6.2.7 
+
+- Added: Upgrade now for latest updates.
+- Added: Delete records not present in csv/xml file - settings option
+- Added: Separate widget for woocommerce product attributes
+- Added: List Woocommerce Product Variations in dropdown, onclicking display update to pro alert (toastify)
+- Fixed: Support page mail issue
+- Fixed: Post content image import issue
+
+### 6.2.6 
+
+- Added: Support for URL and FTP file upload
+- Added: WordPress 5.8 Compatibility 
+- Fixed: Jquery droppable issue
+
+### 6.2.5 
+
+- Added: Compatibility for WordPress 5.7.2
+- Added: Import support for Polylang Free & Polylang for WooCommerce plugin.
+- Added: WP Custom field widget in advanced mode
+- Fixed: Default custom field case sensitive issue in create wp custom field widget
+
+### 6.2.4 
+
+- Added: Compatibility for WordPress 5.7
+- Added: Compatibility for All in One SEO latest version 4.1.0.2
+
+### 6.2.3 
+
+- Added: Compatibility for WordPress 5.7
+- Added: Import support for Rank Math SEO PRO Plugin.
+
+### 6.2.2 
+
+- Added: Import support for Rank Math SEO Plugin.
 
 ### 6.2.1
 
@@ -866,6 +918,42 @@ If you'd like to help out by translating this plugin, please [sign up for an acc
 - Initial release version. Tested and found works well without any issues.
 
 ## Upgrade Notice
+
+### 6.3 
+
+- Added: Upgrade now for latest updates.
+
+### 6.2.9 
+
+- Added: Upgrade now for latest updates.
+
+### 6.2.8 
+
+- Added: Upgrade now for latest updates.
+
+### 6.2.7 
+
+- Added: Upgrade now for latest updates.
+
+### 6.2.6 
+
+- Added: Upgrade now for latest updates.
+
+### 6.2.5 
+
+- Added: Upgrade now for latest updates.
+
+### 6.2.4 
+
+- Added: Upgrade now for latest updates.
+
+### 6.2.3 
+
+- Added: Upgrade now for latest updates.
+
+### 6.2.2
+
+- Added: Upgrade now for latest updates.
 
 ### 6.2.1
 
