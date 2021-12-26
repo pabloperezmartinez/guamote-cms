@@ -4,8 +4,8 @@ Donate link: https://www.paypal.me/smackcoders
 Tags: 
 Requires at least: 5.0
 Tested up to: 5.8
-Stable tag: 1.2.7
-Version: 1.2.7
+Stable tag: 1.2.8
+Version: 1.2.8
 Author: smackcoders
 Author URI: http://profiles.wordpress.org/smackcoders/
 License: GPLv2 or later
@@ -62,6 +62,9 @@ Get to know about other WordPress addons and latest product update news at [www.
 User import with all meta details can be imported using this addon like WooCommerce 
 
 == Changelog ==
+= 1.2.8 =
+* Fixed: Plugin activation conflict - file missing issue
+
 = 1.2.7 =
 * Checked: Compatibility for WordPress 5.8
 
@@ -99,6 +102,9 @@ User import with all meta details can be imported using this addon like WooComme
 * Initial stable release version.
 
 == Upgrade Notice ==
+= 1.2.8 =
+* Upgrade for latest changes
+
 = 1.2.7 =
 * Upgrade for latest changes
 
