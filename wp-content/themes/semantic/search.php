@@ -43,7 +43,7 @@ get_header();
 								<?php endif; ?>
 							</div>
 							<div class="content">
-								<?php if ($product->get_stock_quantity() <= 0): ?>
+								<?php if ($product->get_stock_quantity() > 0): ?>
 									<div class="ui blue right floated tag label">
 										<?php echo $product->get_price_html(); ?>
 									</div>

@@ -17,8 +17,8 @@
 							</p>
 							<p><?php echo get_option( 'woocommerce_store_address', '' );?><br>
                                 <?php echo get_option( 'woocommerce_store_city', '' );?> <?php echo explode( ":",get_option( 'woocommerce_default_country', '' ))[0];?><br>
-							    <i class="inverted phone icon"></i> +593 96 190 5174<br>
-							    <a href="mailto:fotosyvinilos@gmail.com"><i class="inverted mail icon"></i>fotosyvinilos@gmail.com</a>
+							    <a href="tel:+593961906174"><i class="inverted phone icon"></i> +593 96 190 6174</a><br>
+							    <a href="mailto:fotoyvinilosuio@gmail.com"><i class="inverted mail icon"></i>fotoyvinilosuio@gmail.com</a>
                             </p>
 						</div>
 
