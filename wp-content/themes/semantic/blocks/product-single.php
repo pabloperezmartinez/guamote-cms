@@ -46,10 +46,14 @@
             <?php endif; ?>
         </div>
         <?php if ($product->get_stock_quantity() > 0): ?>
-            <a class="ui right floated blue button large text"
-            onclick='displayToast("<?php echo the_permalink(); ?>?add-to-cart=<?php echo get_the_ID(); ?>")'>
-                <i class="cart icon"></i> <?php echo $product->get_price_html(); ?>
-            </a>
+            <div class="ui right floated labeled button" tabindex="0">
+                <div class="ui blue button" onclick='displayToast("<?php echo the_permalink(); ?>?add-to-cart=<?php echo get_the_ID(); ?>")'>
+                    <i class="cart icon"></i> <?php echo $product->get_price_html(); ?>
+                </div>
+                <div class="ui basic blue left pointing label" onclick='displayToast("<?php echo the_permalink(); ?>?add-to-cart=<?php echo get_the_ID(); ?>")'>
+                    <?php echo $product->get_stock_quantity() ?> en stock
+                </div>
+            </div>
         <?php else: ?>
             <div class="ui right floated button large text">
                 No disponible
@@ -77,8 +81,8 @@
                     <a href="<?php echo site_url();?>/rss" target="_blank"><i class="circular inverted red rss icon"></i></a>
                 </p>
                 <p>
-                    <i class="phone icon"></i> +593 96 190 5174<br>
-                    <a href="mailto:fotosyvinilos@gmail.com"><i class="mail icon"></i>fotosyvinilos@gmail.com</a>
+                    <a href="tel:+593961906174"><i class="phone icon"></i> +593 96 190 6174</a><br>
+					<a href="mailto:fotoyvinilosuio@gmail.com"><i class="mail icon"></i> fotoyvinilosuio@gmail.com</a>
                 </p>
             </div>
         <?php endif; ?>
