@@ -3,21 +3,21 @@ version: '3'
 services:
   db:
     image: mysql:5.7
-    container_name: mysql
+    container_name: uiofxco-db
     volumes:
       - ./mysql-dump:/docker-entrypoint-initdb.d
     ports:
     - "3306:3306"
     environment:
-      MYSQL_DATABASE: analogo
-      MYSQL_USER: analogo
-      MYSQL_PASSWORD: analogo
+      MYSQL_DATABASE: uiofxco
+      MYSQL_USER: uiofxco
+      MYSQL_PASSWORD: uiofxco
       MYSQL_ROOT_PASSWORD: root
 
   web:
     image: php:7.3.16-apache
-    domainname: venganza-analogo.test
-    container_name: venganza-analogo.test
+    domainname: uiofxco.test
+    container_name: uiofxco.test
     build:
       context: ./
       dockerfile: Dockerfile
