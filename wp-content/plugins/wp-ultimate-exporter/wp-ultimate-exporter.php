@@ -10,9 +10,9 @@
  *
  * @wordpress-plugin
  * Plugin Name: WP Ultimate Exporter
- * Version:     1.6.3
+ * Version:     1.7.9
  * Plugin URI:  https://www.smackcoders.com/ultimate-exporter.html
- * Description: Backup tool to export all your WordPress data as CSV file. eCommerce data of WooCommerce, MarketPress, eCommerce, eShop, Custom Post and Custom field information along with default WordPress modules.
+ * Description: Backup tool to export all your WordPress data as CSV file. eCommerce data of WooCommerce, eCommerce, Custom Post and Custom field information along with default WordPress modules.
  * Author:      Smackcoders
  * Author URI:  https://www.smackcoders.com/wordpress.html
  * Text Domain: wp-ultimate-exporter
@@ -61,10 +61,15 @@ if (is_plugin_active('wp-ultimate-exporter/wp-ultimate-exporter.php')) {
 	}
 }
 
+if(! class_exists('Smackcoders\SMEXP\ExportExtension')){	
+	ExpInstall::init(plugin_basename( __FILE__ ));	
+	add_action( 'admin_notices', 'Smackcoders\\SMEXP\\Notice_msg_exporter_free' );
+}
+else {
 class ExpCSVHandler extends ExportExtension{
 
 	protected static $instance = null,$install,$exp_instance;
-	public $version = '1.6.3';
+	public $version = '1.7.9';
 
 	public function __construct(){ 
 		$this->plugin = Plugin::getInstance();
@@ -75,32 +80,11 @@ class ExpCSVHandler extends ExportExtension{
 			ExpCSVHandler::$instance = new ExpCSVHandler;	
 			ExpCSVHandler::$install = ExpInstall::getInstance();
 			ExpCSVHandler::$exp_instance = ExportExtension::getInstance();
-			add_filter( 'plugin_row_meta' . plugin_basename( __FILE__ ),  array(ExpCSVHandler::$install, 'plugin_row_meta'), 10, 2 );
-			add_action('plugin_action_links_' . plugin_basename( __FILE__ ), array(ExpCSVHandler::$install, 'plugin_row_meta'), 10, 3);
-
-			self::init_hooks();
-
+			
 			return ExpCSVHandler::$instance;
 		}
 		return ExpCSVHandler::$instance;
-	}
-
-	public static function init_hooks() {
-
-		add_action( 'admin_notices', array(ExpCSVHandler::$instance,'admin_notice_exporter_free'));
-	}
-
-	public static function admin_notice_exporter_free() {
-		global $pagenow;
-		$active_plugins = get_option( "active_plugins" );
-		if ( $pagenow == 'plugins.php' && !in_array('wp-ultimate-csv-importer/wp-ultimate-csv-importer.php', $active_plugins) ) {
-?>
-				    <div class="notice notice-warning is-dismissible" >
-					<p> WP Ultimate Exporter is an addon of <a href="https://wordpress.org/plugins/wp-ultimate-csv-importer" target="blank" style="cursor: pointer;text-decoration:none">WP Ultimate CSV Importer</a> plugin, kindly install it to continue using WP ultimate exporter. </p>
-				    </div>
-<?php 
-		}
-	}
+	}	
 
 	/**
 	 * Init UserSmCSVHandlerPro when WordPress Initialises.
@@ -111,6 +95,7 @@ class ExpCSVHandler extends ExportExtension{
 			do_action('uci_init');
 		}
 	}
+}
 }
 
 add_action( 'plugins_loaded', 'Smackcoders\\SMEXP\\onpluginsload' );
@@ -124,17 +109,16 @@ function onpluginsload(){
 	$request_page = isset($_REQUEST['page']) ? $_REQUEST['page'] : '';
 	$request_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 	if (in_array($request_page, $plugin_pages) || in_array($request_action, $plugin_ajax_hooks)) {
-		$plugin = ExpCSVHandler::getInstance();
+		$plugin = ExpCSVHandler::getInstance();						
 	}
 }
 
-$plugin_pages = ['com.smackcoders.csvimporternew.menu'];
-include __DIR__ . '/wp-exp-hooks.php';
-global $plugin_ajax_hooks;
-
-$request_page = isset($_REQUEST['page']) ? $_REQUEST['page'] : '';
-$request_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
-if (in_array($request_page, $plugin_pages) || in_array($request_action, $plugin_ajax_hooks)) {
-	global $export_class;
-	$export_class = new ExpCSVHandler();
-}
+function Notice_msg_exporter_free() {
+	
+?>
+				<div class="notice notice-warning is-dismissible" >
+				<p> WP Ultimate Exporter is an addon of <a href="https://wordpress.org/plugins/wp-ultimate-csv-importer" target="blank" style="cursor: pointer;text-decoration:none">WP Ultimate CSV Importer</a> plugin, kindly install it to continue using WP ultimate exporter. </p>
+				</div>
+<?php 
+	
+}?>

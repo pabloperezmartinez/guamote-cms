@@ -78,7 +78,8 @@ class LearnPressImport
                         $all_lesson_names = array_column($get_all_lesson_names, 'post_title');
 
                         $i = 0;
-                        foreach($individual_lesson_names as $lesson_names){
+                        foreach($individual_lesson_names as $lesson_name){
+                            $lesson_names = trim($lesson_name);
                             if(in_array($lesson_names, $all_lesson_names)){
                                 $lesson_post_id = $wpdb->get_var("SELECT ID from {$wpdb->prefix}posts WHERE post_title = '$lesson_names' and post_type = 'lp_lesson' ");   
                             
@@ -123,7 +124,7 @@ class LearnPressImport
                             
                                 $check_assigned_to_course = $wpdb->get_var("SELECT section_id FROM {$wpdb->prefix}learnpress_section_items WHERE item_id = $quiz_post_id AND item_type = 'lp_quiz' ");
                                 if(empty($check_assigned_to_course)){
-                                    LearnPressImport::$learnpress_instance->insert_quiz_details($inserted_section_id, $quiz_post_id, $post_values);
+                                    LearnPressImport::$learnpress_instance->insert_quiz_details($type,$inserted_section_id, $quiz_post_id, $post_values);
                                 }
                             }else{
                                 $quizs_description = isset($individual_quiz_description[$j]) ? $individual_quiz_description[$j] : '';
@@ -133,7 +134,7 @@ class LearnPressImport
                                 $quiz_array['post_status'] = 'publish';
                 
                                 $quiz_post_id = wp_insert_post($quiz_array);
-                                LearnPressImport::$learnpress_instance->insert_quiz_details($inserted_section_id, $quiz_post_id, $post_values);
+                                LearnPressImport::$learnpress_instance->insert_quiz_details($type,$inserted_section_id, $quiz_post_id, $post_values);
                             }
                             
                             $j++;
@@ -141,6 +142,31 @@ class LearnPressImport
                     }
                     $temp++;
                 }   
+            }
+            if(isset($post_values['_lp_requirements'])){
+                $lp_requi = $post_values['_lp_requirements'];
+                $lp_require = explode('|',$lp_requi);
+                $lp_requirements = $lp_require;
+            }
+            if(isset($post_values['_lp_target_audiences'])){
+                $lp_target = $post_values['_lp_target_audiences'];
+                $lp_target = explode('|',$lp_target);
+                $lp_target_audiences = $lp_target;
+            }
+            if(isset($post_values['_lp_key_features'])){
+                $lp_key_feature = $post_values['_lp_key_features'];
+                $lp_key = explode('|',$lp_key_feature);
+                $lp_key_features = $lp_key;
+            }
+            if(isset($post_values['_lp_faqs'])){
+                $lp_faqs = $post_values['_lp_faqs'];
+                $lp_faq = explode('|',$lp_faqs);
+                $lp_faq_value = array();
+                foreach($lp_faq as $lp_faq_values){
+                    $lp_faq_value[] = explode(',',$lp_faq_values);
+
+                }
+                
             }
 
             $course_setting_array = [];
@@ -158,6 +184,18 @@ class LearnPressImport
             $course_setting_array['_lp_sale_price'] = isset($post_values['_lp_sale_price']) ? $post_values['_lp_sale_price'] : 0;
             $course_setting_array['_lp_required_enroll'] = isset($post_values['_lp_required_enroll']) ? $post_values['_lp_required_enroll'] : 'yes';
             $course_setting_array['_lp_course_author'] = isset($post_values['_lp_course_author']) ? $post_values['_lp_course_author'] : 1;
+            $course_setting_array['_lp_block_expire_duration'] = isset($post_values['_lp_block_expire_duration']) ? $post_values['_lp_block_expire_duration'] : '';
+            $course_setting_array['_lp_allow_course_repurchase'] = isset($post_values['_lp_allow_course_repurchase']) ? $post_values['_lp_allow_course_repurchase'] : '';
+            $course_setting_array['_lp_block_finished'] = isset($post_values['_lp_block_finished']) ? $post_values['_lp_block_finished'] : '';
+            $course_setting_array['_lp_course_repurchase_option'] = isset($post_values['_lp_course_repurchase_option']) ? $post_values['_lp_course_repurchase_option'] : '';
+            $course_setting_array['_lp_level'] = isset($post_values['_lp_level']) ? $post_values['_lp_level'] : '';
+            $course_setting_array['_lp_has_finish'] = isset($post_values['_lp_has_finish']) ? $post_values['_lp_has_finish'] : '';
+            $course_setting_array['_lp_featured_review'] = isset($post_values['_lp_featured_review']) ? $post_values['_lp_featured_review'] : '';
+            $course_setting_array['_lp_no_required_enroll'] = isset($post_values['_lp_no_required_enroll']) ? $post_values['_lp_no_required_enroll'] : '';
+            $course_setting_array['_lp_requirements'] = isset($lp_requirements) ? $lp_requirements : '';
+            $course_setting_array['_lp_target_audiences'] = isset($lp_target_audiences) ? $lp_target_audiences : '';
+            $course_setting_array['_lp_key_features'] = isset($lp_key_features) ? $lp_key_features : '';
+            $course_setting_array['_lp_faqs'] = isset($lp_faq_value) ? $lp_faq_value : '';
             $course_setting_array['_lp_course_status'] = 'publish';
             
             foreach ($course_setting_array as $course_key => $course_value) {
@@ -180,10 +218,10 @@ class LearnPressImport
                 LearnPressImport::$learnpress_instance->insert_lesson_details($get_section_id, $post_id, $post_values);
             }
             if($type == 'lp_quiz'){
-                LearnPressImport::$learnpress_instance->insert_quiz_details($get_section_id, $post_id, $post_values);
+                LearnPressImport::$learnpress_instance->insert_quiz_details($type,$get_section_id, $post_id, $post_values);
             }  
             if($type == 'lp_question'){
-                LearnPressImport::$learnpress_instance->insert_question_details($get_section_id, $post_id, $post_values, 0);
+                LearnPressImport::$learnpress_instance->insert_question_details($type,$get_section_id, $post_id, $post_values, 0);
             }
         }
    
@@ -210,7 +248,7 @@ class LearnPressImport
         }
     }
 
-    public function insert_quiz_details($inserted_section_id, $quiz_post_id, $post_values){
+    public function insert_quiz_details($type,$inserted_section_id, $quiz_post_id, $post_values){
         global $wpdb;
         if(!empty($inserted_section_id)){
             $wpdb->insert( 
@@ -231,6 +269,11 @@ class LearnPressImport
         $quiz_meta_array['_lp_archive_history'] = isset($post_values['_lp_archive_history']) ? $post_values['_lp_archive_history'] : 'no';
         $quiz_meta_array['_lp_show_check_answer'] = isset($post_values['_lp_show_check_answer']) ? $post_values['_lp_show_check_answer'] : 0;
         $quiz_meta_array['_lp_show_hint'] = isset($post_values['_lp_show_hint']) ? $post_values['_lp_show_hint'] : 0;
+        $quiz_meta_array['_lp_instant_check'] = isset($post_values['_lp_instant_check']) ? $post_values['_lp_instant_check'] : 'no';
+        $quiz_meta_array['_lp_negative_marking'] = isset($post_values['_lp_negative_marking']) ? $post_values['_lp_negative_marking'] : 'no';
+        $quiz_meta_array['_lp_pagination'] = isset($post_values['_lp_pagination']) ? $post_values['_lp_pagination'] : 1;
+        $quiz_meta_array['_lp_show_correct_review'] = isset($post_values['_lp_show_correct_review']) ? $post_values['_lp_show_correct_review'] : 'yes';
+        $quiz_meta_array['_lp_review'] = isset($post_values['_lp_review']) ? $post_values['_lp_review'] : 'yes';
         
         foreach ($quiz_meta_array as $quiz_key => $quiz_value) {
             update_post_meta($quiz_post_id, $quiz_key, $quiz_value);
@@ -250,19 +293,23 @@ class LearnPressImport
                        
                     $post_values['quiz_id'] = $quiz_post_id;
                     $check_assigned_to_quiz = $wpdb->get_var("SELECT quiz_question_id FROM {$wpdb->prefix}learnpress_quiz_questions WHERE question_id = $question_post_id  ");
-                    if(empty($check_assigned_to_quiz)){
-                        LearnPressImport::$learnpress_instance->insert_question_details($inserted_section_id, $question_post_id, $post_values, $temp);
+                    if(!empty($check_assigned_to_quiz)){
+                        LearnPressImport::$learnpress_instance->insert_question_details($type,$inserted_section_id, $question_post_id, $post_values, $temp);
                     }
 
                 }else{
-                    $question_array['post_title'] = $post_values['question_title'];
-                    $question_array['post_content'] = isset($post_values['question_description']) ? $post_values['question_description'] : '';
+                    $get_question_description = explode(',', $post_values['question_description']);
+                    foreach($get_question_description as $question_description){
+                        $question_array['post_content'] = $question_description;
+                    }
+                    $question_array['post_title'] = $question_titles;
+                   
                     $question_array['post_type'] = 'lp_question';
                     $question_array['post_status'] = 'publish';
         
                     $question_post_id = wp_insert_post($question_array);
                     $post_values['quiz_id'] = $quiz_post_id;
-                    LearnPressImport::$learnpress_instance->insert_question_details($inserted_section_id, $question_post_id, $post_values, $temp);
+                    LearnPressImport::$learnpress_instance->insert_question_details($type,$inserted_section_id, $question_post_id, $post_values, $temp);
                 }
 
                 $temp++;
@@ -270,7 +317,7 @@ class LearnPressImport
         }    
     }
 
-    public function insert_question_details($inserted_section_id, $question_post_id, $post_values, $temp){
+    public function insert_question_details($type,$inserted_section_id, $question_post_id, $post_values, $temp){
         global $wpdb;
 
         if(isset($post_values['_lp_mark'])){
@@ -324,28 +371,50 @@ class LearnPressImport
                 }
             }
         }
-
-        if(isset($post_values['question_options'])){
-            $get_separate_question_options = explode(',', $post_values['question_options']);
-            $get_separate_options = explode('->', $get_separate_question_options[$temp]);
-            
-            foreach($get_separate_options as $option_values){
-                $get_title_options = explode('|', $option_values);
-
-                $answer_data = array(
-                    'text' => $get_title_options[0],
-                    'value' => md5( uniqid() ),
-                    'is_true' => $get_title_options[1]
-                );
-
-                $answer_data = serialize($answer_data);
-                $wpdb->insert( 
-                    "{$wpdb->prefix}learnpress_question_answers", 
-                    array("question_id" => $question_post_id, "answer_data" => $answer_data),
-                    array('%d', '%s')
-                );
+        if($type == 'lp_quiz'){
+            if(isset($post_values['question_options'])){
+                $get_separate_question_options = explode(',', $post_values['question_options']);
+                $get_question_titles = explode(',', $post_values['question_title']);
+                $i=0;
+                $get_separate_options =array();
+                foreach($get_separate_question_options as $get_separate_question_option){
+                    $key=$get_question_titles[$i];
+                    $get_separate_options[$key] = explode('->', $get_separate_question_option); 
+                    $i++;
+                }  
+                foreach($get_separate_options as $option_key=> $option_values){
+                   foreach($option_values as $option_value){
+                       $post_type_values = $wpdb->get_results("SELECT post_title FROM {$wpdb->prefix}posts WHERE id = $question_post_id ", ARRAY_A);
+                        $get_title_options_value = explode('|', $option_value);
+                        if($option_key == $post_type_values[0]['post_title']){
+                            $wpdb->insert( 
+                                "{$wpdb->prefix}learnpress_question_answers", 
+                                array("question_id" => $question_post_id, "title" => $get_title_options_value[0], "is_true"=>$get_title_options_value[1]),
+                                array('%d', '%s','%s')
+                            );
+                        } 
+                    }
+                   
+                }
+                
             }
         }
+        else{
+            if(isset($post_values['question_options'])){
+                
+                $get_separate_options = explode('->', $post_values['question_options']);
+                
+                foreach($get_separate_options as $option_values){
+                    $get_title_options = explode('|', $option_values);
+                    $wpdb->insert( 
+                        "{$wpdb->prefix}learnpress_question_answers", 
+                        array("question_id" => $question_post_id, "title" => $get_title_options[0], "is_true"=>$get_title_options[1]),
+                        array('%d', '%s','%s')
+                    );
+                }
+            }
+        }
+       
     }
 
     public function insert_order_details($order_id, $post_values){

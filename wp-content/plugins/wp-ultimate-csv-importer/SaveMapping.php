@@ -28,7 +28,6 @@ class SaveMapping{
 		add_action('wp_ajax_ImportState',array($this,'import_state_function'));
 		add_action('wp_ajax_ImportStop',array($this,'import_stop_function'));
 		add_action('wp_ajax_checkmain_mode',array($this,'checkmain_mode'));
-		add_action('wp_ajax_disable_main_mode',array($this,'disable_main_mode'));
 		add_action('wp_ajax_bulk_file_import',array($this,'bulk_file_import_function'));
 		add_action('wp_ajax_bulk_import',array($this,'bulk_import'));
 		add_action('wp_ajax_PauseImport',array($this,'pause_import'));
@@ -46,16 +45,8 @@ class SaveMapping{
 		return SaveMapping::$instance;
 	}
 
-	public static function disable_main_mode(){
-		$disable_option = sanitize_text_field($_POST['option']);
-		$disable_value = sanitize_text_field($_POST['value']);
-		delete_option($disable_option);
-		$result['success'] = true;
-		echo wp_json_encode($result);
-		wp_die();
-	}
-
 	public static function checkmain_mode(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$ucisettings = get_option('sm_uci_pro_settings');
 		if(isset($ucisettings['enable_main_mode']) && $ucisettings['enable_main_mode'] == 'true') {
 			$result['success'] = true;
@@ -72,6 +63,7 @@ class SaveMapping{
 	 * @return boolean
 	 */
 	public function pause_import(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		global $wpdb;
 		$response = [];
 		$hash_key = sanitize_key($_POST['HashKey']);
@@ -83,6 +75,7 @@ class SaveMapping{
 	}
 
 	public function resume_import(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		global $wpdb;
 		$response = [];
 		$hash_key = sanitize_key($_POST['HashKey']);
@@ -94,6 +87,7 @@ class SaveMapping{
 		wp_die();
 	}
 	public function save_fields_function() {
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$hash_key      = sanitize_key($_POST['HashKey']);
 		$type          = sanitize_text_field($_POST['Types']);
 		$map_fields    = sanitize_text_field($_POST['MappedFields']);	
@@ -149,6 +143,7 @@ class SaveMapping{
 	 * Provides import record details
 	 */
 	public function import_detail_function(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$hash_key = sanitize_key($_POST['HashKey']);
 		$response = [];
 
@@ -194,6 +189,7 @@ class SaveMapping{
 	 * Checks whether the import function is paused or resumed
 	 */
 	public function import_state_function(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$response = [];
 		$hash_key = sanitize_key($_POST['HashKey']);
 
@@ -252,7 +248,7 @@ class SaveMapping{
 	 * Checks whether the import function is stopped or the page is refreshed
 	 */
 	public function import_stop_function(){
-
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		global $wpdb;
 		$upload_dir = SaveMapping::$smackcsv_instance->create_upload_dir();
 		/* Gets string 'false' when page is refreshed */
@@ -276,14 +272,15 @@ class SaveMapping{
 	 */
 
 	public function bulk_import(){
-		global $wpdb,$core_instance,$uci_woocomm_meta,$uci_woocomm_bundle_meta,$product_attr_instance;
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
+		global $wpdb,$core_instance,$uci_woocomm_meta,$uci_woocomm_bundle_meta,$product_attr_instance, $wpmlimp_class;
 		$upload_dir = SaveMapping::$smackcsv_instance->create_upload_dir();
 		$hash_key  = sanitize_key($_POST['HashKey']);
 		$check = sanitize_text_field($_POST['Check']);
 		$page_number = intval($_POST['PageNumber']);
 		$rollback_option = sanitize_text_field($_POST['RollBack']);
 		$unmatched_row_value = get_option('sm_uci_pro_settings');
-		$unmatched_row = $unmatched_row_value['unmatchedrow'];
+		$unmatched_row = isset($unmatched_row_value['unmatchedrow'])?$unmatched_row_value['unmatchedrow']:'';
 		$helpers_instance = ImportHelpers::getInstance();
 		$core_instance = CoreFieldsImport::getInstance();
 		$import_config_instance = ImportConfiguration::getInstance();
@@ -353,12 +350,13 @@ class SaveMapping{
 						$value_array = $info[$i];
 						foreach($map as $group_name => $group_value){
 							if($group_name == 'CORE'){
-								$core_instance = CoreFieldsImport::getInstance();
+								$wpml_map = isset($map['WPML']) ? $map['WPML'] : '';
 
-								$post_id = $core_instance->set_core_values($header_array ,$value_array , $map['CORE'] , $selected_type , $get_mode, $line_number , $check , $hash_key, $unmatched_row);		
+								$core_instance = CoreFieldsImport::getInstance();
+								$post_id = $core_instance->set_core_values($header_array ,$value_array , $map['CORE'] , $selected_type , $get_mode, $line_number , $check , $hash_key, $unmatched_row, $wpml_map);		
 							}
 						}
-
+				
 						foreach($map as $group_name => $group_value){
 							switch($group_name){
 
@@ -468,6 +466,40 @@ class SaveMapping{
 								$polylang_instance = PolylangImport::getInstance();
 								$polylang_instance->set_polylang_values($header_array, $value_array, $map['POLYLANG'], $post_id, $selected_type);
 								break;
+
+							case 'JOB':
+								$job_listing_instance = JobListingImport::getInstance();
+								$job_listing_instance->set_job_listing_values($header_array, $value_array, $map['JOB'], $post_id, $selected_type);
+								break;
+
+							case 'WPML':
+								$wpmlimp_class->set_wpml_values($header_array ,$value_array , $map['WPML'], $post_id , $selected_type, $line_number);
+								break;
+							
+							case 'METABOX':
+								$metabox_instance = MetaBoxImport::getInstance();
+								$metabox_instance->set_metabox_values($header_array, $value_array, $map['METABOX'], $post_id, $selected_type);
+								break;
+
+							case 'PODS':
+								$wpmlmap = isset($map['WPML']) ? $map['WPML'] : '';
+								$pods_instance = PodsImport::getInstance();
+								$pods_instance->set_pods_values($header_array, $value_array, $map['PODS'], $post_id, $selected_type, $hash_key, $wpmlmap);
+								break;
+							case 'JE':
+								$jet_engine_instance = JetEngineImport::getInstance();
+								$jet_engine_instance->set_jet_engine_values($header_array, $value_array, $map['JE'], $post_id, $selected_type, $get_mode, $hash_key,$line_number);
+								break;
+							case 'JECPT':
+								$jet_engine_cpt_instance = JetEngineCPTImport::getInstance();
+								$jet_engine_cpt_instance->set_jet_engine_cpt_values($header_array, $value_array, $map['JECPT'], $post_id, $selected_type, $get_mode, $hash_key,$line_number);
+								break;
+							case 'ACF':
+								$acf_image = isset($map['ACFIMAGEMETA']) ? $map['ACFIMAGEMETA'] : '';
+								$acf_pro_instance = ACFImport::getInstance();
+								$acf_pro_instance->set_acf_values($header_array, $value_array, $map['ACF'], $acf_image ,$post_id, $selected_type,$get_mode, $hash_key,$line_number);
+							
+							break;
 							}
 						}
 						$helpers_instance->get_post_ids($post_id ,$hash_key);
@@ -477,8 +509,9 @@ class SaveMapping{
 
 						if($i == $total_rows){
 							$fields = $wpdb->get_results("UPDATE $log_table_name SET status = 'Completed' WHERE hash_key = '$hash_key'");
-						}
+						}						
 						$log_manager_instance->get_event_log($hash_key , $file_name , $file_extension, $get_mode , $total_rows , $selected_type , $core_instance->detailed_log, $addHeader);
+						$log_manager_instance->manage_records($hash_key ,$selected_type , $file_name , $total_rows);
 						$addHeader = false;
 						$core_instance->detailed_log = [];
 					}
@@ -578,6 +611,7 @@ class SaveMapping{
 					}
 
 					$log_manager_instance->get_event_log($hash_key, $file_name, $file_extension, $get_mode, $total_rows, $selected_type, $core_instance->detailed_log, $addHeader);
+					$log_manager_instance->manage_records($hash_key ,$selected_type , $file_name , $total_rows);
 					$addHeader = false;
 					$core_instance->detailed_log = [];
 		
@@ -673,7 +707,7 @@ class SaveMapping{
 	 */
 
 	public function background_starts_function(){
-
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$hash_key  = sanitize_key($_POST['HashKey']);
 		$check = sanitize_text_field($_POST['Check']);
 		$unmatched_row_value = get_option('sm_uci_pro_settings');
@@ -697,7 +731,7 @@ class SaveMapping{
 		$import_config_instance = ImportConfiguration::getInstance();
 		$log_manager_instance = LogManager::getInstance();
 		global $core_instance;
-		global $uci_woocomm_meta,$uci_woocomm_bundle_meta,$product_attr_instance;
+		global $uci_woocomm_meta,$uci_woocomm_bundle_meta,$product_attr_instance, $wpmlimp_class;
 
 		$file_table_name = $wpdb->prefix ."smackcsv_file_events";
 		$template_table_name = $wpdb->prefix ."ultimate_csv_importer_mappingtemplate";
@@ -973,15 +1007,17 @@ class SaveMapping{
 	{
 		$return_arr = [];
 		$core_instance = CoreFieldsImport::getInstance();
-		global $core_instance,$uci_woocomm_meta,$uci_woocomm_bundle_meta,$product_attr_instance;
+		global $core_instance,$uci_woocomm_meta,$uci_woocomm_bundle_meta,$product_attr_instance, $wpmlimp_class;
 
 		foreach($map as $group_name => $group_value){
 			if($group_name == 'CORE'){
+				$wpml_map = isset($map['WPML']) ? $map['WPML'] : '';
+
 				$core_instance = CoreFieldsImport::getInstance();
-				$post_id = $core_instance->set_core_values($header_array ,$value_array , $map['CORE'] , $selected_type , $get_mode, $line_number , $check , $hash_key, $unmatched_row);		
+				$post_id = $core_instance->set_core_values($header_array ,$value_array , $map['CORE'] , $selected_type , $get_mode, $line_number , $check , $hash_key, $unmatched_row, $wpml_map);		
 			}
 		}
-
+	
 		foreach($map as $group_name => $group_value){
 			switch($group_name){
 
@@ -1075,6 +1111,31 @@ class SaveMapping{
 				$learnpress_instance = LearnPressImport::getInstance();
 				$learnpress_instance->set_learnpress_values($header_array, $value_array, $map['LPORDER'], $post_id, $selected_type);
 				break;
+
+			case 'JOB':
+				$job_listing_instance = JobListingImport::getInstance();
+				$job_listing_instance->set_job_listing_values($header_array, $value_array, $map['JOB'], $post_id, $selected_type);
+				break;
+
+			case 'WPML':
+				$wpmlimp_class->set_wpml_values($header_array ,$value_array , $map['WPML'], $post_id , $selected_type, $line_number);
+				break;
+
+			case 'METABOX':
+				$metabox_instance = MetaBoxImport::getInstance();
+				$metabox_instance->set_metabox_values($header_array, $value_array, $map['METABOX'], $post_id, $selected_type);
+				break;
+
+			case 'PODS':
+				$map['WPML'] = isset($map['WPML']) ? $map['WPML'] : '';
+				$pods_instance = PodsImport::getInstance();
+				$pods_instance->set_pods_values($header_array, $value_array, $map['PODS'], $post_id, $selected_type, $hash_key, $map['WPML']);
+				break;
+			case 'ACF':
+				$acf_image = isset($map['ACFIMAGEMETA']) ? $map['ACFIMAGEMETA'] : '';
+				$acf_instance = ACFImport::getInstance();
+				$acf_instance->set_acf_values($header_array, $value_array, $map['ACF'], $acf_image ,$post_id, $selected_type,$get_mode, $hash_key,$line_number);
+				break;	
 			}
 		}
 		$return_arr['id'] = $post_id;
@@ -1084,6 +1145,7 @@ class SaveMapping{
 
 	public	function bulk_file_import_function()
 	{
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		global $wpdb;
 		$helpers_instance = ImportHelpers::getInstance();
 		$hash_key = sanitize_key($_POST['HashKey']);
@@ -1108,6 +1170,7 @@ class SaveMapping{
 	}
 
 	public function deactivate_mail(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$headers= array( "Content-type: text/html; charset=UTF-8");
 		$headers.= 'MIME-Version: 1.0' . "\r\n";
 		$to = 'support@smackcoders.com';

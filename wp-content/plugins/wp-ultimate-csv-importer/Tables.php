@@ -151,7 +151,8 @@ class Tables {
 			`last_activity` datetime NOT NULL default '0000-00-00 00:00:00',
 			`siteid` int(11) NOT NULL DEFAULT 1,
 			`month` varchar(60) DEFAULT NULL,
-			`year` varchar(60) DEFAULT NULL
+			`year` varchar(60) DEFAULT NULL,
+			`deletelog` BOOLEAN DEFAULT false
 				) ENGINE=InnoDB"
 				);
 
@@ -171,6 +172,11 @@ class Tables {
 		$result = $wpdb->query("SHOW COLUMNS FROM `{$wpdb->prefix}import_detail_log` LIKE 'running'");
 		if($result == 0){
 			$wpdb->query("ALTER TABLE `{$wpdb->prefix}import_detail_log` ADD COLUMN running boolean not null default 1");
+		}
+
+		$result = $wpdb->query("SHOW COLUMNS FROM `{$wpdb->prefix}smackuci_events` LIKE 'deletelog'");
+		if($result == 0){
+			$wpdb->query("ALTER TABLE `{$wpdb->prefix}smackuci_events` ADD COLUMN deletelog boolean default false");
 		}
 	}
 }

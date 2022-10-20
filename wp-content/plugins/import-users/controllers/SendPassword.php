@@ -38,7 +38,6 @@ class SendPassword {
 	 */
 	public function doHooks(){
 		add_action('wp_ajax_settings_options', array($this,'settingsOptions'));
-		add_action('wp_ajax_send_login_credentials_to_users', array($this,'send_login_credentials_to_users'));
 		add_action('wp_ajax_get_options', array($this,'showOptions'));
 	}
 
@@ -47,6 +46,7 @@ class SendPassword {
 	 *
 	 */
 	public function settingsOptions() {
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$ucisettings = get_option('sm_uci_pro_settings');
 		$option = sanitize_text_field($_POST['option']);
 		$value = sanitize_text_field($_POST['value']);
@@ -65,6 +65,7 @@ class SendPassword {
 	 *
 	 */
 	public function showOptions() {
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$ucisettings = get_option('sm_uci_pro_settings');
 		foreach ($ucisettings as $key => $val) {
 			$settings[$key] = json_decode($val);
@@ -79,18 +80,21 @@ class SendPassword {
 	 *
 	 */
 	public  function send_login_credentials_to_users() {
+
 		require_once(ABSPATH . "wp-includes/pluggable.php");
 		global $wpdb;
 		$ucisettings = get_option('sm_uci_pro_settings');
 		if($ucisettings['send_user_password'] == "true") {
 			$get_user_meta_info = $wpdb->get_results( $wpdb->prepare("select *from {$wpdb->prefix}usermeta where meta_key like %s", '%' . 'smack_uci_import' . '%') );
+			$get_send_password_info = $wpdb->get_results( $wpdb->prepare("select meta_value from {$wpdb->prefix}usermeta where   meta_key like %s", '%' . 'sendPassword' . '%') );
+			$send_password=$get_send_password_info[0]->meta_value;
 			if(!empty($get_user_meta_info)) {
 				foreach($get_user_meta_info as $key => $value) {
 					$data_array = maybe_unserialize($value->meta_value);
 					$currentUser             = wp_get_current_user();
 					$admin_email             = $currentUser->user_email;
 					$em_headers              = "From: Administrator <$admin_email>"; # . "\r\n";
-					$message                 = "Hi,You've been invited with the role of " . $data_array['role'] . ". Here, your login details." . "\n" . "username: " . $data_array['user_login'] . "\n" . "userpass: " . $data_array['user_pass'] . "\n" . "Please click here to login " . wp_login_url();
+					$message                 = "Hi,You've been invited with the role of " . $data_array['role'] . ". Here, your login details." . "\n" . "username: " . $data_array['user_login'] . "\n" . "userpass: " . $send_password . "\n" . "Please click here to login " . wp_login_url();
 					$emailaddress            = $data_array['user_email'];
 					$subject                 = 'Login Details';
 					if( wp_mail( $emailaddress, $subject, $message) ){

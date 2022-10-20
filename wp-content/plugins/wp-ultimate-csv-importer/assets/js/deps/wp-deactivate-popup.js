@@ -46,8 +46,7 @@ function submitReason(){
                     iReason.focus();
                     return false;
                 }else{
-                    mailReason += iReason.value;
-                    console.log(mailReason);
+                    mailReason += iReason.value;                    
                 }
             }else if(reason[i].value == 3){
                 mailReason = "I do not like to share my information with you"
@@ -61,8 +60,7 @@ function submitReason(){
                     iReason.focus();
                     return false;
                 }else{
-                    mailReason += iReason.value;
-                    console.log(mailReason);
+                    mailReason += iReason.value;                    
                 }
             }
         }
@@ -72,10 +70,10 @@ function submitReason(){
     var formData = new FormData();
     formData.append('action', 'DeactivateMail');
     formData.append('reason', mailReason);
+    formData.append("securekey", window.smack_nonce_object.nonce);
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST",ajaxurl,true);
-    xhttp.send(formData);
-    console.log('httpresponse : ' , xhttp.responseText);
+    xhttp.send(formData);    
     xhttp.onreadystatechange = function() {
         if (xhttp.readyState === 4) {
             document.getElementById("skipanddeactivate").click();

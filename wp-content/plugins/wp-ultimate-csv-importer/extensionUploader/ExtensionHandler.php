@@ -25,7 +25,7 @@ class ExtensionHandler{
 	public function import_post_types($import_type) {	
 		$import_type = trim($import_type);
 
-		$module = array('Posts' => 'post', 'Pages' => 'page', 'Users' => 'user', 'Comments' => 'comments', 'Taxonomies' => $import_type, 'CustomerReviews' =>'wpcr3_review', 'Categories' => 'categories', 'Tags' => 'tags', 'eShop' => 'post', 'WooCommerce' => 'product', 'WPeCommerce' => 'wpsc-product','WPeCommerceCoupons' => 'wpsc-product', 'WooCommerceVariations' => 'product', 'CustomPosts' => $import_type);
+		$module = array('Posts' => 'post', 'Pages' => 'page', 'Users' => 'user', 'Comments' => 'comments', 'Taxonomies' => $import_type, 'CustomerReviews' =>'wpcr3_review', 'Categories' => 'categories', 'Tags' => 'tags', 'WooCommerce' => 'product', 'WPeCommerce' => 'wpsc-product','WPeCommerceCoupons' => 'wpsc-product', 'WooCommerceVariations' => 'product', 'CustomPosts' => $import_type);
 		foreach (get_taxonomies() as $key => $taxonomy) {
 			$module[$taxonomy] = $taxonomy;
 		}
@@ -290,13 +290,8 @@ endif;
 		}
 		elseif( in_array('location_name', $Headers) || in_array('location_address', $Headers)){
 			$type = 'Event Locations';
-		} elseif( in_array('hide_on_screen', $Headers) || in_array('position', $Headers) || in_array('layout', $Headers)){
-			if(is_plugin_active('advanced-custom-fields/acf.php')){
-				$type = 'acf-field';
-			} if(is_plugin_active('advanced-custom-fields-pro/acf.php')){
-			$type = 'acf-field-group';
-				}
-		} elseif( in_array('recurrence_freq', $Headers) || in_array('recurrence_interval', $Headers) || in_array('recuurence_days', $Headers)){
+		} 
+		elseif( in_array('recurrence_freq', $Headers) || in_array('recurrence_interval', $Headers) || in_array('recuurence_days', $Headers)){
 			$type = 'Recurring Events';
 		} elseif( in_array('name', $Headers) && in_array('slug', $Headers)){
 			$type = 'category';
@@ -311,12 +306,6 @@ endif;
 				$type = 'WooCommerce Refunds';
 			} elseif(in_array('sku', $Headers)){
 				$type = 'WooCommerce Product';
-			}
-		} elseif(is_plugin_active('wordpress-ecommerce/marketpress.php') || is_plugin_active('marketpress/marketpress.php')){
-			if(in_array('VARIATIONID', $Headers) || in_array('PRODUCTID', $Headers)){
-				$type = 'MarketPress Product Variations';
-			} elseif(in_array('sku', $Headers) || in_array('PRODUCTSKU', $Headers)){
-				$type = 'MarketPress Product';
 			}
 		} elseif(is_plugin_active('wp-e-commerce/wp-shopping-cart.php')){
 			if(in_array('coupon_code', $Headers) || in_array('COUPONID', $Headers)){

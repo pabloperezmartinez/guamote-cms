@@ -230,8 +230,8 @@ class ProductValidator {
 	protected function validate_product_visibility() {
 		$product = $this->product_parent ? $this->product_parent : $this->product;
 
-		if ( 'visible' !== $product->get_catalog_visibility() ) {
-			throw new ProductExcludedException( __( 'Product is hidden from catalog and search.', 'facebook-for-woocommerce' ) );
+		if ( ! $product->is_visible() ) {
+			throw new ProductExcludedException( __( 'This product cannot be synced to Facebook because it is hidden from your store catalog.', 'facebook-for-woocommerce' ) );
 		}
 	}
 
@@ -265,6 +265,17 @@ class ProductValidator {
 	 */
 	protected function validate_product_sync_field() {
 		$invalid_exception = new ProductExcludedException( __( 'Sync disabled in product field.', 'facebook-for-woocommerce' ) );
+
+		/**
+		 * Filters whether a product should be synced to FB.
+		 *
+		 * @since 2.6.26
+		 *
+		 * @param WC_Product $product the product object.
+		 */
+		if ( ! apply_filters( 'wc_facebook_should_sync_product', true, $this->product ) ) {
+			throw new ProductExcludedException( __( 'Product excluded by wc_facebook_should_sync_product filter.', 'facebook-for-woocommerce' ) );
+		}
 
 		if ( $this->product->is_type( 'variable' ) ) {
 			foreach ( $this->product->get_children() as $child_id ) {
@@ -349,7 +360,7 @@ class ProductValidator {
 		if ( \WC_Facebookcommerce_Utils::is_all_caps( $title ) ) {
 			throw new ProductInvalidException( __( 'Product title is all capital letters. Please change the title to sentence case in order to allow synchronization of your product.', 'facebook-for-woocommerce' ) );
 		}
-		if ( strlen( $title ) > self::MAX_TITLE_LENGTH ) {
+		if ( mb_strlen( $title, 'UTF-8' ) > self::MAX_TITLE_LENGTH ) {
 			throw new ProductInvalidException( __( 'Product title is too long. Maximum allowed length is 150 characters.', 'facebook-for-woocommerce' ) );
 		}
 	}

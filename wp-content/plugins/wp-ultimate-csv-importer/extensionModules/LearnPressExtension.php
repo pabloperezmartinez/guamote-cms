@@ -42,6 +42,18 @@ class LearnPressExtension extends ExtensionHandler{
                             'Sale Price' => '_lp_sale_price',
                             'No Requirement Enroll' => '_lp_required_enroll',
                             'Author' => '_lp_course_author',
+                            'Block Expire Duration' => '_lp_block_expire_duration',
+                            'Block Finished' => '_lp_block_finished',
+                            'Allow Course Repurchase' => '_lp_allow_course_repurchase',
+                            'Course Repurchase Option' => '_lp_course_repurchase_option',
+                            'Level' => '_lp_level',
+                            'Finish Button' => '_lp_has_finish',
+                            'Featured Review' => '_lp_featured_review',
+                            'No Required Enroll' => '_lp_no_required_enroll',
+                            'Requirements' => '_lp_requirements',
+                            'Target Audience' => '_lp_target_audiences',
+                            'Key Features' => '_lp_key_features',
+                            'FAQs' => '_lp_faqs',
                 );
 
                 $learn_section_meta_fields = array(
@@ -102,7 +114,12 @@ class LearnPressExtension extends ExtensionHandler{
                             'Question explanation' => '_lp_explanation',
                             'Question hint' => '_lp_hint',
                             'Question type' => '_lp_type',
-                            'Question Options' => 'question_options'
+                            'Question Options' => 'question_options',
+                            'Instant Check' => '_lp_instant_check',
+                            'Nagative Marking' => '_lp_negative_marking',
+                            'Pagination' => '_lp_pagination',
+                            'Show Correct Review' => '_lp_show_correct_review',
+                            'Review' => '_lp_review',
                         );
             }
             if($import_type == 'lp_question'){           

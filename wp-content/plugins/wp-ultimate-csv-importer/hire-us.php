@@ -17,7 +17,7 @@ if ( !defined( 'ABSPATH' ) ) {
   <h4>Highlights of working with us!</h4>
     <ul style="font:italic;font-size:22px;">
     
-				 	<li><i class="fa fa-check" aria-hidden="true" style="font-size: 14px;color: #00a699;position:absolute;left: -10px;"></i>Leading Agency with 9+ years of experience</li>				 	
+				 	<li><i class="fa fa-check" aria-hidden="true" style="font-size: 14px;color: #00a699;position:absolute;left: -10px;"></i>Leading Agency with 13+ years of experience</li>				 	
 				 	<li><i class="fa fa-check" aria-hidden="true" style="font-size: 14px;color: #00a699;position:absolute;left: -10px;"></i>Quick ticket support, quick solution</li>
 				 	<li><i class="fa fa-check" aria-hidden="true" style="font-size: 14px;color: #00a699;position:absolute;left: -10px;"></i>Improve your online presence to drive revenue</li>
 				 	<li><i class="fa fa-check" aria-hidden="true" style="font-size: 14px;color: #00a699;position:absolute;left: -10px;"></i>Quick solution via call, email & live chat</li>
@@ -290,7 +290,7 @@ h3{
       </div>
       <div class="infos">
         <h3> Website Development </h3>
-        <h3> Plug-in Development </h3>
+        <h3> Plugin Development </h3>
       <h3>Third Party Integration</h3>
         <h3> Theme Development </h3>
         <h3> Custom Development</h3>
@@ -312,7 +312,7 @@ h3{
       </div>
       <div class="infos">
         <h3> Website Development </h3>
-        <h3> Plug-in Development </h3>
+        <h3> Plugin Development </h3>
       <h3>Third Party Integration</h3>
         <h3> Theme Development </h3>
         <h3> Custom Development</h3>

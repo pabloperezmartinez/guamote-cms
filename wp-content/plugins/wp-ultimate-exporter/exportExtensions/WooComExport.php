@@ -497,7 +497,7 @@ class WooCommerceExport extends ExportExtension{
 		if(!empty($attlabel)){
 			$cus = explode('|', substr($attlabel, 0, -1));		
 			$cusAttr = "";
-				if(!empty($cus)){
+				if(!empty($cus[0])){
 					foreach ($cus as $cus1) {
 						$name = 'attribute_'.$cus1;
 						$custname = substr($cus1 , 3);
@@ -514,10 +514,18 @@ class WooCommerceExport extends ExportExtension{
 		if(!empty($result)){
 			foreach ($result as $key => $value) {
 				if($value->meta_key == '_sale_price_dates_from'){
-					WooCommerceExport::$export_instance->data[$id]['sale_price_dates_from'] =  date('Y-m-d', $value->meta_value);
+                	$woo_sales_price_dates_value = '';
+                    if(!empty($value->meta_value)){
+                    	$woo_sales_price_dates_value = date('Y-m-d', $value->meta_value);
+                    }
+					WooCommerceExport::$export_instance->data[$id]['sale_price_dates_from'] =  $woo_sales_price_dates_value;
 				}
 				if($value->meta_key == '_sale_price_dates_to'){
-					WooCommerceExport::$export_instance->data[$id]['sale_price_dates_to'] =  date('Y-m-d', $value->meta_value);
+               		$woo_sales_price_datesto_value = '';
+                    if(!empty($value->meta_value)){
+                    	$woo_sales_price_datesto_value = date('Y-m-d', $value->meta_value);
+                    }
+					WooCommerceExport::$export_instance->data[$id]['sale_price_dates_to'] = $woo_sales_price_datesto_value;
 				}
 				if($value->meta_key == '_downloadable_files'){
 					$downfiles = unserialize($value->meta_value);
@@ -584,7 +592,7 @@ class WooCommerceExport extends ExportExtension{
 	 * @param $optionalType
 	 * @return array
 	 */
-	public function FetchTaxonomies($mode = null,$module,$optionalType) {
+	public function FetchTaxonomies($module, $optionalType, $mode = null) {
 
 		global $wpdb;
 		$terms_table = $wpdb->prefix."terms";
@@ -653,6 +661,8 @@ class WooCommerceExport extends ExportExtension{
 				self::$export_instance->data[$termID]['description'] = $termDesc;
 				self::$export_instance->data[$termID]['TERMID'] = $termID;
 				self::$export_instance->data[$termID]['parent'] = $termParent;
+				self::$export_instance->getWPMLData($termID,$optionalType,$module);
+
 				WooCommerceExport::$post_export->getPostsMetaDataBasedOnRecordId($termID, $module, $optionalType);
 
 				if(in_array('wordpress-seo/wp-seo.php', self::$export_instance->get_active_plugins())) {
@@ -814,15 +824,15 @@ class WooCommerceExport extends ExportExtension{
 			$get_question_hint .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $question_id AND meta_key = '_lp_hint' ") . ',';	
 			$get_question_type .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $question_id AND meta_key = '_lp_type' ") . ',';	
 
-			$get_question_options = $wpdb->get_results("SELECT answer_data FROM {$wpdb->prefix}learnpress_question_answers WHERE question_id = $question_id ", ARRAY_A);
+			$get_question_options = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}learnpress_question_answers WHERE question_id = $question_id ", ARRAY_A);
 			$option_value = '';
-			foreach($get_question_options as $question_options){
-				$get_answer_data = unserialize($question_options['answer_data']);
-				if(empty($get_answer_data['is_true'])){
-					$get_answer_data['is_true'] = 'no';
+			foreach($get_question_options as $question_option){
+				//$get_answer_data = unserialize($question_options['answer_data']);
+				if(empty($question_option['is_true'])){
+					$question_option['is_true'] = 'no';
 				}
 
-				$option_value .= $get_answer_data['text'] .'|'. $get_answer_data['is_true'] . '->';
+				$option_value .= $question_option['title'] .'|'. $question_option['is_true'] . '->';
 			}
 			$get_option_value .=  rtrim($option_value, '->') . ',';
 		}
@@ -841,14 +851,14 @@ class WooCommerceExport extends ExportExtension{
 		global $wpdb;
 		$get_quiz_id = $wpdb->get_var("SELECT quiz_id FROM {$wpdb->prefix}learnpress_quiz_questions WHERE question_id = $id ");
 
-		$get_question_options = $wpdb->get_results("SELECT answer_data FROM {$wpdb->prefix}learnpress_question_answers WHERE question_id = $id ", ARRAY_A);
+		$get_question_options = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}learnpress_question_answers WHERE question_id = $id ", ARRAY_A);
 		$option_value = '';
-		foreach($get_question_options as $question_options){
-			$get_answer_data = unserialize($question_options['answer_data']);
-			if(empty($get_answer_data['is_true'])){
-				$get_answer_data['is_true'] = 'no';
+		foreach($get_question_options as  $question_options){
+			//$get_answer_data = unserialize($question_options['answer_data']);
+			if(empty($question_options['is_true'])){
+				$question_options['is_true'] = 'no';
 			}
-			$option_value .= $get_answer_data['text'] .'|'. $get_answer_data['is_true'] . '->';
+			$option_value .= $question_options['title'] .'|'. $question_options['is_true'] . '->';
 		}
 
 		if(!empty($get_quiz_id)){

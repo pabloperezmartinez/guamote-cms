@@ -155,7 +155,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	const FB_SHOP_PRODUCT_VISIBLE = 'published';
 
 	/** @var string the API flag to set a product as not visible in the Facebook shop */
-	const FB_SHOP_PRODUCT_HIDDEN = 'staging';
+	const FB_SHOP_PRODUCT_HIDDEN = 'hidden';
 
 	/** @var string @deprecated  */
 	const FB_CART_URL = 'fb_cart_url';
@@ -360,14 +360,10 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 
 				add_action( 'before_delete_post', array( $this, 'on_product_delete' ) );
 
-				add_action( 'add_meta_boxes', 'SkyVerge\WooCommerce\Facebook\Admin\Product_Sync_Meta_Box::register', 10, 1 );
+				// Ensure product is deleted from FB when moved to trash.
+				add_action( 'wp_trash_post', array( $this, 'on_product_delete' ) );
 
-				add_action(
-					'transition_post_status',
-					array( $this, 'fb_change_product_published_status' ),
-					10,
-					3
-				);
+				add_action( 'add_meta_boxes', 'SkyVerge\WooCommerce\Facebook\Admin\Product_Sync_Meta_Box::register', 10, 1 );
 
 				add_action(
 					'wp_ajax_ajax_fb_toggle_visibility',
@@ -418,6 +414,16 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 				'facebook_jssdk_version' => $this->get_js_sdk_version(),
 			)
 		);
+
+		// Update products on change of status.
+		add_action(
+			'transition_post_status',
+			array( $this, 'fb_change_product_published_status' ),
+			10,
+			3
+		);
+
+		add_action( 'untrashed_post', array( $this, 'fb_restore_untrashed_variable_product' ) );
 
 		// Product Set hooks.
 		add_action( 'fb_wc_product_set_sync', array( $this, 'create_or_update_product_set_item' ), 99, 2 );
@@ -694,7 +700,29 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 * @since 2.6.1
 	 */
 	public function allow_full_batch_api_sync() {
+
+		/**
+		 * Block the full batch API sync.
+		 *
+		 * @param bool $block_sync Should the full batch API sync be blocked?
+		 *
+		 * @return boolean True if full batch sync should be blocked.
+		 * @since 2.6.10
+		 */
+		$block_sync = apply_filters(
+			'facebook_for_woocommerce_block_full_batch_api_sync',
+			false
+		);
+
+		if ( $block_sync ) {
+			return false;
+		}
+
 		$default_allow_sync = true;
+		// If 'facebook_for_woocommerce_allow_full_batch_api_sync' is not used, prevent get_product_count from firing.
+		if ( ! has_filter( 'facebook_for_woocommerce_allow_full_batch_api_sync' ) ) {
+			return $default_allow_sync;
+		}
 
 		/**
 		 * Allow full batch api sync to be enabled or disabled.
@@ -703,12 +731,18 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		 * @param int $product_count Number of products in store.
 		 *
 		 * @return boolean True if full batch sync is safe.
+		 *
 		 * @since 2.6.1
+		 * @deprecated deprecated since version 2.6.10
 		 */
-		return apply_filters(
+		return apply_filters_deprecated(
 			'facebook_for_woocommerce_allow_full_batch_api_sync',
-			$default_allow_sync,
-			$this->get_product_count()
+			array(
+				$default_allow_sync,
+				$this->get_product_count(),
+			),
+			'2.6.10',
+			'facebook_for_woocommerce_block_full_batch_api_sync'
 		);
 	}
 
@@ -972,12 +1006,14 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		}
 
 		/**
-		 * bail if not enabled for sync, except if explicitly deleting from the metabox
+		 * Bail if not enabled for sync, except if explicitly deleting from the metabox or when deleting the
+		 * parent product ( Products::published_product_should_be_synced( $product ) will fail for the parent product
+		 * when deleting a variable product. This causes the fb_group_id to remain on the DB. )
 		 *
 		 * @see ajax_delete_fb_product()
 		 */
-		if ( ( ! is_ajax() || ! isset( $_POST['action'] ) || 'ajax_delete_fb_product' !== $_POST['action'] )
-			 && ! Products::published_product_should_be_synced( $product ) ) {
+		if ( ( ! wp_doing_ajax() || ! isset( $_POST['action'] ) || 'ajax_delete_fb_product' !== $_POST['action'] )
+			 && ! Products::published_product_should_be_synced( $product ) && ! $product->is_type( 'variable' ) ) {
 
 			return;
 		}
@@ -995,7 +1031,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 *
 	 * @param \WC_Product $product WooCommerce product object
 	 */
-	private function delete_fb_product( $product ) {
+	public function delete_fb_product( $product ) {
 
 		$product_id = $product->get_id();
 
@@ -1017,13 +1053,13 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 				if ( $variation instanceof \WC_Product ) {
 					$retailer_ids[] = \WC_Facebookcommerce_Utils::get_fb_retailer_id( $variation );
 				}
+				delete_post_meta( $variation_id, self::FB_PRODUCT_ITEM_ID );
 			}
 
 			// enqueue variations to be deleted in the background
 			facebook_for_woocommerce()->get_products_sync_handler()->delete_products( $retailer_ids );
 
 			$this->delete_product_group( $product_id );
-
 		} else {
 
 			$this->delete_product_item( $product_id );
@@ -1033,6 +1069,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		// clear out both item and group IDs
 		delete_post_meta( $product_id, self::FB_PRODUCT_ITEM_ID );
 		delete_post_meta( $product_id, self::FB_PRODUCT_GROUP_ID );
+
 	}
 
 
@@ -1055,8 +1092,6 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			return;
 		}
 
-		$visibility = $new_status === 'publish' ? self::FB_SHOP_PRODUCT_VISIBLE : self::FB_SHOP_PRODUCT_HIDDEN;
-
 		$product = wc_get_product( $post->ID );
 
 		// bail if we couldn't retrieve a valid product object or the product isn't enabled for sync
@@ -1065,11 +1100,50 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		// variations before it gets called with the variable product. As a result, Products::product_should_be_synced()
 		// always returns false for the variable product (since all children are in the trash at that point).
 		// This causes update_fb_visibility() to be called on simple products and product variations only.
-		if ( ! $product instanceof \WC_Product || ! Products::published_product_should_be_synced( $product ) ) {
+		if ( ! $product instanceof \WC_Product || ( ! Products::published_product_should_be_synced( $product ) ) ) {
 			return;
 		}
 
-		$this->update_fb_visibility( $product, $visibility );
+		// Exclude variants. Product variables visibility is handled separately.
+		// @See fb_restore_untrashed_variable_product.
+		if ( $product->is_type( 'variant' ) ) {
+			return;
+		}
+
+		$visibility = $product->is_visible() ? self::FB_SHOP_PRODUCT_VISIBLE : self::FB_SHOP_PRODUCT_HIDDEN;
+
+		if ( $visibility === self::FB_SHOP_PRODUCT_VISIBLE ) {
+			// - new status is 'publish' regardless of old status, sync to Facebook
+			$this->on_product_publish( $product->get_id() );
+		} else {
+			$this->update_fb_visibility( $product, $visibility );
+		}
+	}
+
+	/**
+	 * Re-publish restored variable product.
+	 *
+	 * @internal
+	 *
+	 * @param int $post_id
+	 */
+	public function fb_restore_untrashed_variable_product ( $post_id ) {
+		$product = wc_get_product( $post_id );
+
+		if ( ! $product instanceof \WC_Product  ) {
+			return;
+		}
+
+		if ( ! $product->is_type( 'variable' ) ) {
+			return;
+		}
+
+		$visibility = $product->is_visible() ? self::FB_SHOP_PRODUCT_VISIBLE : self::FB_SHOP_PRODUCT_HIDDEN;
+
+		if ( $visibility === self::FB_SHOP_PRODUCT_VISIBLE ) {
+			// - new status is 'publish' regardless of old status, sync to Facebook
+			$this->on_product_publish( $product->get_id() );
+		}
 	}
 
 
@@ -1088,7 +1162,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 */
 	private function should_update_visibility_for_product_status_change( $new_status, $old_status ) {
 
-		return ( $old_status === 'publish' && $new_status !== 'publish' ) || ( $old_status === 'trash' && $new_status === 'publish' );
+		return ( $old_status === 'publish' && $new_status !== 'publish' ) || ( $old_status === 'trash' && $new_status === 'publish' ) || ( $old_status === 'future' && $new_status === 'publish' );
 	}
 
 
@@ -1124,8 +1198,8 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	function delete_on_out_of_stock( $wp_id, $woo_product ) {
 
 		if ( Products::product_should_be_deleted( $woo_product ) ) {
-
-			$this->delete_product_item( $wp_id );
+			$product = wc_get_product( $wp_id );
+			$this->delete_fb_product( $product );
 			return true;
 		}
 
@@ -1145,11 +1219,11 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			$woo_product = new \WC_Facebook_Product( $wp_id );
 		}
 
-		if ( ! $this->product_should_be_synced( $woo_product->woo_product ) ) {
+		if ( $this->delete_on_out_of_stock( $wp_id, $woo_product->woo_product ) ) {
 			return;
 		}
 
-		if ( $this->delete_on_out_of_stock( $wp_id, $woo_product->woo_product ) ) {
+		if ( ! $this->product_should_be_synced( $woo_product->woo_product ) ) {
 			return;
 		}
 
@@ -1200,11 +1274,11 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			$woo_product = new \WC_Facebook_Product( $wp_id, $parent_product );
 		}
 
-		if ( ! $this->product_should_be_synced( $woo_product->woo_product ) ) {
+		if ( $this->delete_on_out_of_stock( $wp_id, $woo_product->woo_product ) ) {
 			return;
 		}
 
-		if ( $this->delete_on_out_of_stock( $wp_id, $woo_product->woo_product ) ) {
+		if ( ! $this->product_should_be_synced( $woo_product->woo_product ) ) {
 			return;
 		}
 
@@ -1451,51 +1525,68 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	private function get_product_group_default_variation( $woo_product, $fb_product_group_id ) {
 
 		$default_attributes = $woo_product->woo_product->get_default_attributes( 'edit' );
-
-		if ( empty( $default_attributes ) ) {
-			return null;
-		}
-
 		$default_variation = null;
+		
 		// Fetch variations that exist in the catalog.
 		$existing_catalog_variations              = $this->find_variation_product_item_ids( $fb_product_group_id );
 		$existing_catalog_variations_retailer_ids = array_keys( $existing_catalog_variations );
+		
 		// All woocommerce variations for the product.
 		$product_variations                       = $woo_product->woo_product->get_available_variations();
+		
+		if ( ! empty( $default_attributes ) ) {
 
-		$best_match_count = 0;
-		foreach ( $product_variations as $variation ) {
+			$best_match_count = 0;
+			foreach ( $product_variations as $variation ) {
 
-			$fb_retailer_id = WC_Facebookcommerce_Utils::get_fb_retailer_id(
-				wc_get_product(
-					$variation['variation_id']
-				)
-			);
+				$fb_retailer_id = WC_Facebookcommerce_Utils::get_fb_retailer_id(
+					wc_get_product(
+						$variation['variation_id']
+					)
+				);
 
-			// Check if currently processed variation exist in the catalog.
-			if ( ! in_array( $fb_retailer_id, $existing_catalog_variations_retailer_ids ) ) {
-				continue;
+				// Check if currently processed variation exist in the catalog.
+				if ( ! in_array( $fb_retailer_id, $existing_catalog_variations_retailer_ids ) ) {
+					continue;
+				}
+
+				$variation_attributes       = $this->get_product_variation_attributes( $variation );
+				$variation_attributes_count = count( $variation_attributes );
+				$matching_attributes_count  = count( array_intersect_assoc( $default_attributes, $variation_attributes ) );
+
+				// Check how much current variation matches the selected default attributes.
+				if ( $matching_attributes_count === $variation_attributes_count ) {
+					// We found a perfect match;
+					$default_variation = $existing_catalog_variations[ $fb_retailer_id ];
+					break;
+				} else if ( $matching_attributes_count > $best_match_count ) {
+					// We found a better match.
+					$default_variation = $existing_catalog_variations[ $fb_retailer_id ];
+				}
+
 			}
-
-			$variation_attributes       = $this->get_product_variation_attributes( $variation );
-			$variation_attributes_count = count( $variation_attributes );
-			$matching_attributes_count  = count( array_intersect_assoc( $default_attributes, $variation_attributes ) );
-
-			// Check how much current variation matches the selected default attributes.
-			if ( $matching_attributes_count === $variation_attributes_count ) {
-				// We found a perfect match;
-				$default_variation = $existing_catalog_variations[ $fb_retailer_id ];
-				break;
-			} else if ( $matching_attributes_count > $best_match_count ) {
-				// We found a better match.
-				$default_variation = $existing_catalog_variations[ $fb_retailer_id ];
-			}
-
 		}
-
-		return $default_variation;
+		
+		/**
+		 * Filter product group default variation.
+		 * This can be used to customize the choice of a default variation (e.g. choose one with the lowest price).
+		 *
+		 * @since 2.6.25
+		 * @param integer|null Facebook Catalog variation id.
+		 * @param \WC_Facebook_Product WooCommerce product.
+		 * @param string product group ID.
+		 * @param array List of available WC_Product variations.
+		 * @param array List of Product Item IDs indexed by the variation's retailer ID.
+		 */
+		return apply_filters(
+			'wc_facebook_product_group_default_variation',
+			$default_variation,
+			$woo_product,
+			$fb_product_group_id,
+			$product_variations,
+			$existing_catalog_variations
+		);
 	}
-
 
 	/**
 	 * Parses given product variation for it's attributes

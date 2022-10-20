@@ -1,89 +1,77 @@
 === Import WooCommerce ===
 Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
-Tags: update woocommerce, import variation products, import woocommerce, woocommerce csv, products import, import coupons
+Tags: WooCommerce, product import, coupon import, product feed, csv import, csv, WooCommerce import
 Requires at least: 5.0
-Tested up to: 5.8.1
-Stable tag: 1.6.6
-Version: 1.6.6
+Tested up to: 6.0
+Stable tag: 1.6.8
+Version: 1.6.8
 Requires PHP: 5.2.4
 Author: smackcoders
-Author URI: https://profiles.wordpress.org/smackcoders/
+Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
-Complete WooCommerce Product Import Suite add-on with 5 major add-on support
+Complete WooCommerce Product Import Suite add-on with five major add-on support
 
 == Description ==
 
-Import WooCommerce is an addon for ultimate csv importer plugin enables to WooCommerce Product import feature along with 5 major add-on support. Imports inline and featured image along with the imported module.
+Import WooCommerce is an addon for ultimate csv importer plugin. It enables Product import feature along with 5 major add-ons support. It also supports inline and featured images along with products.
 
-Note: You must install [CSV Importer & Exporter](https://wordpress.org/plugins/wp-ultimate-csv-importer/) before install/activate this addon
+Note: Install [WP Ultimate CSV Importer & Exporter](https://wordpress.org/plugins/wp-ultimate-csv-importer/) before install/activate this addon
 
 = Highlights =
-* Import post, page, woocommerce Only.
+* Import WooCommerce product feed.
 * Featured image from an external URL.
-* Auto mapping feature to map WP fields with CSV headers.
-* Detect duplicates with post content and post title.
+* Gallery images import 
+* Auto mapping feature to map CSV headers with required fields
+* Detect duplicates with content and post title.
 * Real time import log with both web view and Admin view option.
-* WooCommerce product import (simple, grouped, variable, external type products)
-* Gallery image import
-* WooCommerce Product Add-ons Import
-* WooCommerce Chained Products Import
-* WooCommerce Product Retailers Import
-* WooCommerce Returns and Warranty Request Import
-* WooCommerce Pre Order Import
-* WooCommerce Custom Attributes import
+* Product imports like simple, grouped, variable, external type products
+* Product Add-ons Import
+* Chained Products Import
+* Product Retailers Import
+* Returns and Warranty Request Import
+* Pre Order Import
+* Custom Attributes import
 
 = Import WooCommerce products =
 
-Import WooCommerce imports simple Product data in CSV file to your online eCommerce store. If the WP fields and field names in CSV file is same then it will be automapped.
+It can import Product data from CSV file to your online eCommerce store. If the WP fields and field names in CSV file is same then it will be auto mapped.
 
-WooCommerce CSV Import Tutorial – Eay steps using WP Ultimate CSV Importer
-
+WooCommerce CSV Import Tutorial 
 [youtube https://www.youtube.com/watch?v=b3Ix0WB3Bwg&feature=youtu.be]
 
 = Procedure =
 
 Step-1: Upload 
 
-* Upload the CSV to be imported.
+* Upload the CSV have product feed to get imported.
 * Click on 'Next' to proceed import. 
 
-Step-2: Mapping 
+Step-2: Mapping Section
 
-* The WP fields and CSV headers are listed, map the WP fields with the corresponding header. 
+* The WP fields and CSV headers are shown side by side as drop downs. Map the required fields to the corresponding CSV header. 
 
 Step-3: Import configurations 
 
-* To eliminate duplicate content, you can skip the records with similar content, title or both.
+* To avoid duplicate content, you can skip the records with similar content, title or both.
 * Specify the number of server requests based on the server configurations. 
 * Click on 'Import now' to proceed import. 
-* Now the log for the current import is generated with both Admin view and Webview.
+* Now the log for the current import created with both Admin view and Web view.
 
-= Supported thirdparty plugins = 
-WooCommerce - Products with categories, attributes, tags, and Images Import.
-WooCommerce Product Bundles Plugin.
+= Supported 3rd party plugins = 
+* Products with categories, attributes, tags, and Images Import.
+* Product Bundles Plugin.
 
-= Reason to go for  Ultimate CSV Importer PRO =
+= Reason to go for Ultimate CSV Importer PRO =
 
-Ultimate CSV Importer PRO is a package that allows you to import, update, schedule and export WooCommerce Products. The plugin supports few WooCommerce add-on’s such as WooCommerce chained products, WooCommerce pre-orders, WooCommerce retailer, WooCommerce products and WooCommerce returns and warranty. It also supports a number of third party plugin which makes it a all in one package. 
+The PRO plugin that allows you to import, update, schedule and export products. The plugin supports Chained products, Pre-orders, Retailer, products Returns and Warranty. It also supports many third party plugin which makes it a all in one package. 
 
 Buy the PRO version and unlock more features <a href="https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html">Buy Now</a>
 
-= Other Useful Plugins & Addons By Smackcoders =
-
-The Leads Builder for WordPress to capture your webforms as leads to one of the top ranking open source CRM, install the [WordPress Lead Form Data Collection to CRM](https://wordpress.org/plugins/wp-leads-builder-any-crm/) Plugin. Install one of the CRM of your choice with the additional add-ons listed below and keep both parent plugin and CRM addon activated. 
-* [Zoho CRM & Zoho CRM Plus](https://wordpress.org/plugins/wp-zoho-crm/)
-* [Salesforce](https://wordpress.org/plugins/wp-salesforce/)
-* [SugarCRM](https://wordpress.org/plugins/wp-sugar-free/)
-* [Freshsales](https://wordpress.org/plugins/wp-freshsales/)
-* [Vtiger CRM](https://wordpress.org/plugins/wp-tiger/)
-
-To know more about the premium bundled version, visit [WordPress Lead Form Data Collection to CRM with unlimited features](https://www.smackcoders.com/wp-leads-builder-any-crm-pro.html)
-
 = Helpful links =
 
-Try the demo [WP Ultimate CSV Importer PRO](https://demo.smackcoders.com/wp-ultimate-csv-importer/wp-admin) plugin to import all WooCommerce products along with WooCommerce add-ons. 
+Try the demo [WP Ultimate CSV Importer PRO](https://demo.smackcoders.com/wp-ultimate-csv-importer/wp-admin) plugin to import all WooCommerce products along with add-ons. 
 
 For technical support and feature request, visit <a href="https://www.smackcoders.com/support.html"> Smackcoders support </a> or <a href="mailto:support@smackcoders.com">mail us</a>.
 
@@ -97,54 +85,60 @@ Read the blog to know about our [latest WordPress add-on](https://www.smackcoder
 
 == Frequently Asked Questions ==
 
-1. Is there any limitation on file size? <br />
+1. Is there any limitation on file size? 
 The size of the file is based on the Upload size of your server configuration. The upload_max_filesize should be at least 2M. You can verify your system values in settings -> security and performance.
-   
-2. Can we include an external URL for image import? <br />
-Featured image can be imported from an external URL but inline image can be populated only through shortcode.
+ 
+2. Can we include an external URL for image import? 
+Featured image can be imported from an external URL but inline image can be populated only through short code.
 
-3. How to include images within the content? <br />
-Inline images in content can be included with shortcodes. Images in shortcode need to be uploaded with zip folder containing images with exact names mentioned in shortcode. 
+3. How to include images within the content? 
+Inline images in content can be included with short codes. Images in short code need to be uploaded with zip folder containing images with exact names mentioned in short code. 
 
-4. Why the import button doesn’t get enabled? <br />
+4. Why the import button doesn’t get enabled? 
 The import button will be enabled only after uploading the CSV file to be imported. If not enabled, verify whether the file is in UTF-8 format.
 
 == Screenshots ==
 1. CSV Upload section.
-2. Mapping section of WooCommerce products.
+2. Mapping section products feed.
 3. Import configuration section
 4. Log section with Admin and Web view.
 
 == Changelog ==
+= 1.6.8 =
+* Checked: WordPress 6.0 compatibility
+
+= 1.6.7 =
+* Checked: WordPress 5.9 compatibility
+
 = 1.6.6 =
-* Added: Import  support for latest woocommerce product bundle plugin-v6.12.4
+* Added: Import support for latest WooCommerce product bundle plugin-v6.12.4
 * Fixed: Dropbox link image issue
 
 = 1.6.5 =
-* Added: support for dropbox image import (products).
+* Added: support for drop box image import (products).
 * Checked: WordPress 5.8.1 compatibility.
 
 = 1.6.4 =
-* Added: Separate widget for woocommerce product attributes
+* Added: Separate widget for product attributes
 
 = 1.6.3 =
-* Added: Import support for Polylang for WooCommerce plugin.
+* Added: Import support for Polylang for WooCommerce.
 * Added: WordPress 5.8 compatibility
 
 = 1.6.2 =
 * Added: WordPress 5.7.2 compatibility
-* Fixed: Woocommerce regular price issue.
+* Fixed: Regular price issue.
 
 = 1.6.1 = 
 * Added: WordPress 5.7 compatibility
-* Fixed: WooCommerce visibility import supports both id and value.
+* Fixed: visibility import supports both id and value.
 
 = 1.6 =
 * Added: WordPress 5.6 compatibility
 * Added: PHP 8 compatibility
 
 = 1.5.9 =
-* Added: Extended import support for WooCommerce Product Bundle Fields.
+* Added: Extended import support for Product Bundle Fields.
 
 = 1.5.8 =
 * Added: Support for Variation Swatcher for WooCommerce Plugin.
@@ -154,7 +148,7 @@ The import button will be enabled only after uploading the CSV file to be import
 * Added: Support for WC Product Bundle Meta Fields Import.
 
 = 1.5.6 =
-* Added: Product_gallery_image import supports with existing media image-url,image name and ID.
+* Added: Product_gallery_image import supports with existing media image-URL, image name and ID.
 
 = 1.5.5 =
 * Checked: Compatibility for WordPress 5.3.2
@@ -163,12 +157,12 @@ The import button will be enabled only after uploading the CSV file to be import
 * Fixed: Minor issues and warnings
 
 = 1.5.3 =
-* Added: new api call to find plugin installed or not
+* Added: new API call to find plugin installed or not
 * Added: notice/alert for plugin not installed.
 
 = 1.5.2 =
-Improved: user interface and performance.
-Added: Latest woocommerce version 3.6.5 support
+* Improved: user interface and performance.
+* Added: Latest WooCommerce version 3.6.5 support
 
 = 1.5.1 =
 * Tested : WordPress compatibility 5.2.2
@@ -179,15 +173,15 @@ Added: Latest woocommerce version 3.6.5 support
 
 = 1.4 = 
 * Added: Real time import log with both web view and Admin view option.
-* Added: WooCommerce product import (simple, grouped, variable, external) and their field
+* Added: product import (simple, grouped, variable, external) and their field
 * Added: Gallery image import(using pipe line)
 * Added: Duplicate handling
-* Added: WooCommerce Product Add-ons Import
-* Added: WooCommerce Chained Products Import
-* Added: WooCommerce Product Retailers Import
-* Added: WooCommerce Returns and Warranty Request Import
-* Added: WooCommerce Pre Order Import
-* Added: WooCommerce Attribute support option
+* Added: Product Add-ons Import
+* Added: Chained Products Import
+* Added: Product Retailers Import
+* Added: Returns and Warranty Request Import
+* Added: Pre Order Import
+* Added: Attribute support option
 * Added: Allow authors/editors to import option
 
 = 1.3 = 
@@ -211,10 +205,16 @@ Added: Latest woocommerce version 3.6.5 support
 * Modified: Mapping section UI.
 * Fixed: Unwanted warnings. 
 
-= 1.0 =    
+= 1.0 =
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+= 1.6.8 = 
+* Upgrade now for latest changes
+
+= 1.6.7 = 
+* Upgrade now for latest changes
+
 = 1.6.6 = 
 * Upgrade now for latest changes
 
@@ -267,7 +267,7 @@ Added: Latest woocommerce version 3.6.5 support
 * Upgrade now for WordPress compatibility 4.8.1 and issue fixes.
 
 = 1.4=
-* Upgrade now for much improved woocommerce import features
+* Upgrade now for much improved WooCommerce import features
 
 = 1.3 = 
 * Upgrade now for WordPress 4.5.3 compatibility, Product Attribute name, Product & Post category import with comma separator and Post format issue fix.
@@ -281,5 +281,5 @@ Added: Latest woocommerce version 3.6.5 support
 = 1.0.1 =
 * Upgrade now for All in One SEO plugin support.
 
-= 1.0 =    
+= 1.0 =
 * Initial stable release version

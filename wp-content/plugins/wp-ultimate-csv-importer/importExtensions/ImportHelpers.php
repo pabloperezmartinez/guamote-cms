@@ -132,7 +132,7 @@ class ImportHelpers {
 	public function import_post_types($import_type, $importAs = null) {	
 		$import_type = trim($import_type);
 		
-		$module = array('Posts' => 'post', 'Pages' => 'page', 'Users' => 'user', 'Comments' => 'comments', 'Taxonomies' => $importAs, 'CustomerReviews' =>'wpcr3_review', 'Categories' => 'categories', 'Tags' => 'tags', 'eShop' => 'post', 'WooCommerce' => 'product', 'WPeCommerce' => 'wpsc-product','WPeCommerceCoupons' => 'wpsc-product', 'MarketPress' => 'product', 'MarketPressVariations' => 'mp_product_variation','WooCommerceVariations' => 'product', 'WooCommerceOrders' => 'product', 'WooCommerceCoupons' => 'product', 'WooCommerceRefunds' => 'product', 'CustomPosts' => $importAs);
+		$module = array('Posts' => 'post', 'Pages' => 'page', 'Users' => 'user', 'Comments' => 'comments', 'Taxonomies' => $importAs, 'CustomerReviews' =>'wpcr3_review', 'Categories' => 'categories', 'Tags' => 'tags', 'WooCommerce' => 'product', 'WPeCommerce' => 'wpsc-product','WPeCommerceCoupons' => 'wpsc-product','WooCommerceVariations' => 'product', 'WooCommerceOrders' => 'product', 'WooCommerceCoupons' => 'product', 'WooCommerceRefunds' => 'product', 'CustomPosts' => $importAs);
 		foreach (get_taxonomies() as $key => $taxonomy) {
 			$module[$taxonomy] = $taxonomy;
 		}
@@ -386,6 +386,42 @@ class ImportHelpers {
 			$response['updated'] = $updated + 1;
 
 		return $response;
+	}
+
+	public function validate_datefield($date,$field,$dateformat,$line_number){		
+		if(empty($date)){
+			return $date;
+		}
+		$core_instance = CoreFieldsImport::getInstance();
+		$index = "</br><b>Info about " . $field . "</b>";
+			//Validate the date
+			if(strtotime( $date )) {									
+				$date = date( $dateformat, strtotime( $date ) );				
+				}							
+			else {																											
+					//check the date format as mm-dd-yyyy (valid)
+					$date = str_replace(array('.','-'), '/', $date);
+					if(!strtotime($date)){
+						//Invalid date
+						//check the date format as 18/05/2022 (valid)
+						$date = str_replace('/','-',$date);
+						if(strtotime($date)){
+							//valid
+							$date = date( $dateformat, strtotime( $date ) );
+						}
+						else {
+							//Invalid							
+							$core_instance->detailed_log[$line_number][$index] = "Date format provided is wrong. Correct date format is Y-m-d" ;
+							$date = '';
+						}
+					}
+					else {											
+					//Valid date
+					$date = date( $dateformat, strtotime( $date ) );						
+					}						
+				}														
+		return $date;
+
 	}
 	
 }

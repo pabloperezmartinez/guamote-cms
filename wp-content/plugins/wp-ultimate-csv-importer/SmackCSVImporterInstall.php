@@ -28,22 +28,8 @@ class SmackCSVInstall {
 	public static function getInstance() {
 		if ( null == self::$instance ) {
 			self::$instance = new self;
-			self::$instance->doHooks();
 		}
 		return self::$instance;
-	}
-
-	/**
-	 * SmackCSVInstall constructor.
-	 */
-	public static function csvOptions(){
-		$callbackUrl['callbackurl']=site_url().'/wp-admin/admin.php?action=csv_options&show=settings';
-		echo json_encode($callbackUrl);
-		wp_die();
-	}
-
-	public function doHooks(){
-		add_action('wp_ajax_csv_options', array($this,'csvOptions'));
 	}
 
 	/** @var array DB updates that need to be run */
@@ -222,13 +208,6 @@ class SmackCSVInstall {
 	public static function remove_options() {
 		delete_option('ULTIMATE_CSV_IMP_VERSION');
 		delete_option('ULTIMATE_CSV_IMPORTER_UPGRADE_VERSION');
-	}
-
-	public static function showUpgradeNotification($currentPluginMetadata, $newPluginMetadata){
-		if (isset($newPluginMetadata->upgrade_notice) && strlen(trim($newPluginMetadata->upgrade_notice)) > 0){
-			echo '<p style="background-color: #d54e21; padding: 10px; color: #f9f9f9; margin-top: 10px"><strong>'.esc_html__('Important Upgrade Notice:','wp-ultimate-csv-importer').'</strong> ';
-			echo esc_html($newPluginMetadata->upgrade_notice), '</p>';
-		}
 	}
 
 	public static function important_upgrade_notice() {

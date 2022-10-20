@@ -33,12 +33,13 @@ class FtpUpload implements Uploads{
 	 * Upload file from FTP.
 	 */
     public function upload_function(){
-        $host_name = $_POST['HostName'];
-        $host_port = $_POST['HostPort'];
-        $host_username = $_POST['HostUserName'];
-        $host_password = $_POST['HostPassword'];
-        $host_path = $_POST['HostPath'];
-        $action = $_POST['action'];
+        check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
+        $host_name = sanitize_text_field($_POST['HostName']);
+        $host_port = intval($_POST['HostPort']);
+        $host_username = sanitize_text_field($_POST['HostUserName']);
+        $host_password = sanitize_text_field($_POST['HostPassword']);
+        $host_path = sanitize_text_field($_POST['HostPath']);
+        $action = sanitize_text_field($_POST['action']);
         update_option('sm_ftp_hostname', $host_name);
         update_option('sm_ftp_hostport', $host_port);
         update_option('sm_ftp_hostusername', $host_username);
@@ -195,6 +196,7 @@ class FtpUpload implements Uploads{
     }
 
     public function getFtpDetails(){
+        check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
         $result['HostName'] = get_option('sm_ftp_hostname');
         $result['HostPort'] = get_option('sm_ftp_hostport');
         $result['HostUserName'] = get_option('sm_ftp_hostusername');

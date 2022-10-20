@@ -32,14 +32,18 @@ class UrlUpload implements Uploads{
 	 * Upload file from URL.
 	 */
     public function upload_function(){
-
-        $file_url = $_POST['url'];
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
+		$file_url = esc_url_raw($_POST['url']);
+		$file_url = wp_http_validate_url($file_url);
+		if(!$file_url){					
+		$response['success'] = false;
+		$response['message'] = 'Download Failed.URL is not valid.';
+		echo wp_json_encode($response); 
+		die();
+		}
 		$response = [];
 		global $wpdb;
 		$file_table_name = $wpdb->prefix ."smackcsv_file_events";			
-			if(strstr($file_url, 'https://bit.ly/')){
-				$file_url = $this->unshorten_bitly_url($file_url);
-			}
 
 			$pub = substr($file_url, strrpos($file_url, '/') + 1);
                /*Added support for google addon & dropbox*/
@@ -129,42 +133,7 @@ class UrlUpload implements Uploads{
 					if(empty($file_extension)){
 						$file_extension = 'xml';
 					}
-					if($file_extension == 'zip'){
-						$zip_response = [];
-
-						$curlCh = curl_init();
-						curl_setopt($curlCh, CURLOPT_URL, $file_url);
-						curl_setopt($curlCh, CURLOPT_RETURNTRANSFER, true);
-						curl_setopt($curlCh, CURLOPT_FOLLOWLOCATION, true);
-						curl_setopt($curlCh, CURLOPT_FAILONERROR, true);
-						curl_setopt($curlCh, CURLOPT_MAXREDIRS, 10);
-						curl_setopt($curlCh, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-						curl_setopt($curlCh, CURLOPT_CUSTOMREQUEST,'GET');
-						curl_setopt($curlCh, CURLOPT_SSL_VERIFYPEER, false);
-						curl_setopt($curlCh, CURLOPT_SSL_VERIFYHOST, FALSE);
-					$curlData = curl_exec ($curlCh);
-
-						if(curl_error($curlCh)){
-						
-							$zip_response['success'] = false;
-							$zip_response['message'] = curl_error($curlCh);
-							
-						}else{
-							$path = $upload_dir. $event_key . '.zip';
-							$extract_path = $upload_dir . $event_key;
-
-							$file = fopen($path , "w+");
-							fputs($file, $curlData);
-							chmod($path, 0777);
-
-							$zip_response['success'] = true;
-							$zip_response['filename'] = $url_file_name;
-							$zip_response['file_type'] = 'zip';
-							$zip_response['info'] = $zip_instance->zip_upload($path , $extract_path);
-						}
-						echo wp_json_encode($zip_response); 
-						wp_die();
-					}
+				
 
 					$upload_dir_path = $upload_dir. $event_key;
                     if (!is_dir($upload_dir_path)) {
@@ -175,30 +144,27 @@ class UrlUpload implements Uploads{
 					$wpdb->insert( $file_table_name , array( 'file_name' => $url_file_name , 'hash_key' => $event_key , 'status' => 'Downloading','lock' => true ) );
 					$last_id = $wpdb->get_results("SELECT id FROM $file_table_name ORDER BY id DESC LIMIT 1",ARRAY_A);
 					$lastid=$last_id[0]['id']; 
-
-					$curlCh = curl_init();
-					curl_setopt($curlCh, CURLOPT_URL, $file_url);
-					curl_setopt($curlCh, CURLOPT_RETURNTRANSFER, true);
-					curl_setopt($curlCh, CURLOPT_FOLLOWLOCATION, true);
-					curl_setopt($curlCh, CURLOPT_FAILONERROR, true);
-					curl_setopt($curlCh, CURLOPT_MAXREDIRS, 10);
-					curl_setopt($curlCh, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-					curl_setopt($curlCh, CURLOPT_CUSTOMREQUEST,'GET');
-					curl_setopt($curlCh, CURLOPT_SSL_VERIFYPEER, false);
-					curl_setopt($curlCh, CURLOPT_SSL_VERIFYHOST, FALSE);
-			
-					$curlData = curl_exec ($curlCh);
-
-					if(curl_error($curlCh)){
-						
+		
+					$url_data = wp_safe_remote_get($file_url, array( 'timeout' => 30));							
+					if(is_wp_error($url_data)){
 						$response['success'] = false;
-						$response['message'] = curl_error($curlCh);
+						$response['message'] = 'Download Failed.URL not valid.';
+						echo wp_json_encode($response); 
+						die();
+					}
+					$rawdata =  wp_remote_retrieve_body($url_data);
+		
+					$http_code = wp_remote_retrieve_response_code($url_data);
+					if($http_code == 404){
+						$response['success'] = false;
+						$response['message'] = 'Download Failed';
 						echo wp_json_encode($response); 
 						$wpdb->get_results("UPDATE $file_table_name SET status='Download_Failed' WHERE id = '$lastid'");
-					}else{
+					}
+					else{
 						$path = $upload_dir. $event_key .'/'.$event_key;
 						$file = fopen($path , "w+");
-						fputs($file, $curlData);
+						fputs($file, $rawdata);
 						chmod($path, 0777);
 
 						$validate_file = $validate_instance->file_validation($path , $file_extension );
@@ -227,7 +193,7 @@ class UrlUpload implements Uploads{
 							$wpdb->get_results("UPDATE $file_table_name SET status='Download Failed',`lock`=true WHERE id = '$lastid'");
 						}
 					}
-					curl_close ($curlCh);
+					
 				}else{
 					$response['success'] = false;
                     $response['message'] = "Please create Upload folder with writable permission";
@@ -256,19 +222,6 @@ class UrlUpload implements Uploads{
 		return $file_explode[1];
 	}
 
-	public function unshorten_bitly_url($url) {
-		$ch = curl_init($url);
-		curl_setopt_array($ch, array(
-			CURLOPT_FOLLOWLOCATION => TRUE, 
-			CURLOPT_RETURNTRANSFER => TRUE,
-			CURLOPT_SSL_VERIFYHOST => FALSE, // suppress certain SSL errors
-			CURLOPT_SSL_VERIFYPEER => FALSE, 
-		));
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		curl_exec($ch);
-		$url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-		curl_close($ch);
-		return $url;
-	}
+
 
 }

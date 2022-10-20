@@ -60,9 +60,6 @@ class PostExport extends ExportExtension{
 		} elseif ($module == 'WooCommerceOrders') {
 			$module = 'shop_order';
 		}
-		elseif ($module == 'Marketpress') {
-			$module = 'product';
-		}
 		elseif ($module == 'WooCommerceCoupons') {
 			$module = 'shop_coupon';
 		}
@@ -159,15 +156,12 @@ class PostExport extends ExportExtension{
 			if($conditions['specific_period']['from'] == $conditions['specific_period']['to']){
 				$get_post_ids .= " and post_date >= '" . $conditions['specific_period']['from'] . "'";
 			}else{
-				$get_post_ids .= " and post_date >= '" . $conditions['specific_period']['from'] . "' and post_date <= '" . $conditions['specific_period']['to'] . "'";
+				$get_post_ids .= " and post_date >= '" . $conditions['specific_period']['from'] . "' and post_date <= '" . $conditions['specific_period']['to'] . " 23:00:00'";
 			}
 		}
-		if($module == 'eshop')
-			$get_post_ids .= " and pm.meta_key = '_eshop_product'";
 		if($module == 'woocommerce')
 			$get_post_ids .= " and pm.meta_key = '_sku'";
-		// if($module == 'marketpress')
-		// 	$get_post_ids .= " and pm.meta_key = 'mp_sku'";
+		
 		if($module == 'wpcommerce')
 			$get_post_ids .= " and pm.meta_key = '_wpsc_sku'";
 
@@ -183,12 +177,34 @@ class PostExport extends ExportExtension{
 		}
 		//WpeCommercecoupons
 		$get_total_row_count = $wpdb->get_col($get_post_ids);
-		self::$export_instance->totalRowCount = count($get_total_row_count);
-		//$offset = self::$export_instance->offset;
-		//$limit = self::$export_instance->limit;
-		$offset_limit = " order by ID asc limit $offset, $limit";
-		$query_with_offset_limit = $get_post_ids . $offset_limit;
-		$result = $wpdb->get_col($query_with_offset_limit);
+		if(!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') {
+			if($conditions['specific_period']['from'] == $conditions['specific_period']['to']){
+				$result = array();
+				foreach($get_total_row_count as $result_value){
+					$get_post_date_time = $wpdb->get_results( $wpdb->prepare("SELECT post_date FROM {$wpdb->prefix}posts WHERE id=$result_value") ,ARRAY_A);
+					$get_post_date = date("Y-m-d",strtotime($get_post_date_time[0]['post_date'] ));
+					if($get_post_date == $conditions['specific_period']['from']){
+						$get_post_date_value[] = $result_value;
+					}		
+				}
+				self::$export_instance->totalRowCount = count($get_post_date_value);
+				$result = $get_post_date_value;
+			}
+			else{
+				self::$export_instance->totalRowCount = count($get_total_row_count);
+				$offset_limit = " order by ID asc limit $offset, $limit";
+				$query_with_offset_limit = $get_post_ids . $offset_limit;
+				$result = $wpdb->get_col($query_with_offset_limit);
+			}
+		}
+		else{
+			self::$export_instance->totalRowCount = count($get_total_row_count);
+			//$offset = self::$export_instance->offset;
+			//$limit = self::$export_instance->limit;
+			$offset_limit = " order by ID asc limit $offset, $limit";
+			$query_with_offset_limit = $get_post_ids . $offset_limit;
+			$result = $wpdb->get_col($query_with_offset_limit);
+		}
 		// Get sticky post alone on the specific post status
 		if(isset($conditions['specific_period']['is_check']) && isset($conditions['specific_status']['is_check']) && $conditions['specific_status']['is_check'] == 'true') {
 			if(isset($conditions['specific_status']['status']) && $conditions['specific_status']['status'] == 'Sticky') {
@@ -205,7 +221,7 @@ class PostExport extends ExportExtension{
 
 	public function import_post_types($import_type, $importAs = null) {	
 		$import_type = trim($import_type);
-		$module = array('Posts' => 'post', 'Pages' => 'page', 'Users' => 'user', 'Comments' => 'comments', 'Taxonomies' => $importAs, 'CustomerReviews' =>'wpcr3_review', 'Categories' => 'categories', 'Tags' => 'tags', 'eShop' => 'post', 'WooCommerce' => 'product', 'WPeCommerce' => 'wpsc-product','WPeCommerceCoupons' => 'wpsc-product', 'Marketpress' => 'product', 'MarketPressVariations' => 'mp_product_variation','WooCommerceVariations' => 'product', 'WooCommerceOrders' => 'product', 'WooCommerceCoupons' => 'product', 'WooCommerceRefunds' => 'product', 'CustomPosts' => $importAs);
+		$module = array('Posts' => 'post', 'Pages' => 'page', 'Users' => 'user', 'Comments' => 'comments', 'Taxonomies' => $importAs, 'CustomerReviews' =>'wpcr3_review', 'Categories' => 'categories', 'Tags' => 'tags', 'WooCommerce' => 'product', 'WPeCommerce' => 'wpsc-product','WPeCommerceCoupons' => 'wpsc-product','WooCommerceVariations' => 'product', 'WooCommerceOrders' => 'product', 'WooCommerceCoupons' => 'product', 'WooCommerceRefunds' => 'product', 'CustomPosts' => $importAs);
 		foreach (get_taxonomies() as $key => $taxonomy) {
 			$module[$taxonomy] = $taxonomy;
 		}
@@ -225,7 +241,7 @@ class PostExport extends ExportExtension{
 	public function getPostsMetaDataBasedOnRecordId ($id, $module, $optionalType) {
 
 		global $wpdb;
-		$typeOftypesField = NULL; $checkRep = NULL; $allacf= NULL; $alltype = NULL; $parent = NULL; $typesf= NULL;
+		$typeOftypesField = NULL; $checkRep = NULL; $allacf= NULL; $alltype = NULL; $parent = NULL; $typesf= NULL;$jet_metafields=NULL;
 		if($module == 'Users'){
 			$query = $wpdb->prepare("SELECT user_id,meta_key,meta_value FROM {$wpdb->prefix}users wp JOIN {$wpdb->prefix}usermeta wpm ON wpm.user_id = wp.ID where meta_key NOT IN (%s,%s) AND ID=%d", '_edit_lock', '_edit_last', $id);
 		}else if($module == 'Categories' || $module == 'Taxonomies' || $module == 'Tags'){
@@ -287,11 +303,122 @@ class PostExport extends ExportExtension{
 
 		$result = $wpdb->get_results($query);
 
+		// jeteng fields
+		if(is_plugin_active('jet-engine/jet-engine.php')){
+
+			$jetEnginefields = $wpdb->get_results("SELECT id, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = '$optionalType' AND status IN ('publish','built-in')", ARRAY_A);
+			$jetEnginefields[0]['meta_fields']=isset($jetEnginefields[0]['meta_fields'])?$jetEnginefields[0]['meta_fields']:'';
+
+			$unserializedMeta = maybe_unserialize($jetEnginefields[0]['meta_fields']);
+			$unserializedMeta=isset($unserializedMeta)?$unserializedMeta:'';
+
+			if(is_array($unserializedMeta)){
+				foreach($unserializedMeta as $jet_key => $jetValue){
+					$jetFieldLabel = $jetValue['title'];
+					$jetFieldType = $jetValue['type'];
+					if($jetFieldType != 'repeater' && $jetFieldType != 'media' && $jetFieldType != 'gallery' && $jetFieldType != 'posts' && $jetFieldType != 'html' ){					
+						$jetFieldNameArr[] = $jetValue['name'];
+					}
+					else{
+						$jetFieldNameArr[] = $jetValue['name'];
+						$fields=$jetValue['repeater-fields'];
+						if(is_array($fields)){
+							foreach($fields as $repFieldKey => $repFieldVal){
+								$jetFieldName[] = $repFieldVal['name'];
+
+							}
+						}
+					}
+				}	
+			}
+
+			if(isset($jetFieldName) && is_array($jetFieldName) ){
+				if(is_array($jetFieldNameArr)){
+					$jetCPTFieldsName=array_merge($jetFieldNameArr,$jetFieldName);
+				}
+				else{
+					$jetCPTFieldsName= $jetFieldName;
+				}
+
+			}
+			else{
+				$jetFieldNameArr = isset($jetFieldNameArr) ? $jetFieldNameArr : '';
+				$jetCPTFieldsName= $jetFieldNameArr;
+			}
+
+			//jeteng metabox fields
+
+			global $wpdb;	
+			//$getMetaFields = $wpdb->get_results( $wpdb->prepare("SELECT option_value FROM {$wpdb->prefix}options WHERE option_name='jet_engine_meta_boxes'"),ARRAY_A);
+			$getMetaFields = $wpdb->get_results( $wpdb->prepare("SELECT option_value FROM {$wpdb->prefix}options WHERE option_name=%s",'jet_engine_meta_boxes'),ARRAY_A);			
+			if(!empty($getMetaFields)){
+				$unserializedMeta = maybe_unserialize($getMetaFields[0]['option_value']);
+			}
+			else{
+				$unserializedMeta = '';
+			}
+
+			if(is_array($unserializedMeta)){
+				$arraykeys = array_keys($unserializedMeta);
+
+				foreach($arraykeys as $val){
+					$values = explode('-',$val);
+					$v = $values[1];
+				}
+			}
+
+
+			$jetMetaFieldName = [];
+			if(isset($v)){
+				for($i=1 ; $i<=$v ; $i++){
+					$unserializedMeta['meta-'.$i]= isset($unserializedMeta['meta-'.$i])? $unserializedMeta['meta-'.$i] : '';
+					$fields= $unserializedMeta['meta-'.$i];					
+					if(!empty($fields)){
+						foreach($fields['meta_fields'] as $jet_key => $jetValue){
+							if($jetValue['type'] != 'repeater'){
+								$jetMetaFieldName[] = $jetValue['name'];
+							}
+							else{
+								$jetMetaFieldName[] = $jetValue['name'];
+								$jetRepFields = $jetValue['repeater-fields'];
+								foreach($jetRepFields as $jetRepKey => $jetRepVal){
+									$jetRepFieldName[] = $jetRepVal['name'];
+								}
+							}
+						}
+					}
+
+				}
+			}	
+			if( isset($jetRepFieldName) && is_array($jetRepFieldName)){
+				if(is_array($jetMetaFieldName)){
+					$jetFName = array_merge($jetMetaFieldName,$jetRepFieldName);
+				}
+				else{
+					$jetFName= $jetRepFieldName;
+				}
+			}
+			else{
+				$jetFName= $jetMetaFieldName;
+			}
+		}
+		else{
+			$jetCPTFieldsName =$jetFName= $jet_tax_fields_name = '';
+		}
+
+		//added for metabox plugin fields
+		if(is_plugin_active('meta-box/meta-box.php')){
+			$metabox_import_type = self::import_post_types($module, $optionalType);
+			$metabox_fields = \rwmb_get_object_fields( $metabox_import_type ); 
+		}
+		else{
+			$metabox_fields = [];
+		}
+
 		if(!empty($result)) {
 
 			foreach($result as $key => $value) {
-				$this->getCustomFieldValue($id, $value, $checkRep, $allacf, $typeOftypesField, $alltype, $parent, $typesf, $group_unset , $optionalType , self::$export_instance->allpodsfields);
-					
+
 				if($value->meta_key == 'rank_math_schema_BlogPosting'){
 					$rank_value=$value->meta_value;	
 					$rank_math=unserialize($rank_value)	;
@@ -305,7 +432,7 @@ class PostExport extends ExportExtension{
 					$rank_math_redirections=$result[0];
 					$url_to=$rank_math_redirections->url_to;
 					$header_code=$rank_math_redirections->header_code;
-										
+
 					self::$export_instance->data[$id]['headline'] = $headline;
 					self::$export_instance->data[$id]['schema_description'] = $schema_description;
 					self::$export_instance->data[$id]['article_type'] = $article_type;
@@ -320,6 +447,124 @@ class PostExport extends ExportExtension{
 					$max_image_preview=$rank_robots['max-image-preview'];
 					$rank_math_advanced_robots=$max_snippet.','.$max_video_preview.','.$max_image_preview;
 					self::$export_instance->data[$id]['rank_math_advanced_robots'] = $rank_math_advanced_robots;
+				}
+				if((isset($value->meta_key) && is_array($jetFName))){
+					if(in_array($value->meta_key,$jetFName)){
+						//$getMetaFields = $wpdb->get_results( $wpdb->prepare("SELECT option_value FROM {$wpdb->prefix}options WHERE option_name='jet_engine_meta_boxes'"),ARRAY_A);
+						$getMetaFields = $wpdb->get_results( $wpdb->prepare("SELECT option_value FROM {$wpdb->prefix}options WHERE option_name=%s",'jet_engine_meta_boxes'),ARRAY_A);
+						$getMetaFields[0]['option_value'] = isset($getMetaFields[0]) ? $getMetaFields[0]['option_value'] : '';
+						$unserializedMeta = maybe_unserialize($getMetaFields[0]['option_value']);
+						//$count =count($unserializedMeta);
+						if(is_array($unserializedMeta)){
+							$arraykeys = array_keys($unserializedMeta);
+
+							foreach($arraykeys as $val){
+								$values = explode('-',$val);
+								$v = $values[1];
+							}
+						}
+
+
+
+						for($i=1 ; $i<=$v ; $i++){
+							$unserializedMeta['meta-'.$i] = isset($unserializedMeta['meta-'.$i])? $unserializedMeta['meta-'.$i] :'';
+							$fields = $unserializedMeta['meta-'.$i];
+							if(!empty($fields)){
+								$jet_metatypes=array();
+								$jet_reptype=array();
+								foreach($fields['meta_fields'] as $jet_key => $jetValue){
+									$jetFieldLabel = $jetValue['title'];
+									$jetFNames = $jetValue['name'];
+									$jetFieldType = $jetValue['type'];
+									if($jetFieldType != 'repeater'){
+
+										$jet_metafields[$jetFNames]=$jetFNames;
+
+										$jet_metatypes[$jetFNames] = $jetFieldType;
+
+									}
+									else{
+										$jet_metafields[$jetFNames]=$jetFNames;
+										$jet_metatypes[$jetFNames] = $jetFieldType;
+										$repfields=$jetValue['repeater-fields'];
+										$jet_repfield=array();
+										//$jet_reptype=array();
+										foreach($repfields as $repFieldKey => $repFieldVal){
+											$jetRepFields_label = $repFieldVal['name'];
+											$jetRepFields_type  = $repFieldVal['type'];
+
+											$jet_repfield[$jetRepFields_label] = $jetRepFields_label;
+											$jet_reptype[$jetRepFields_label]  = $jetRepFields_type;
+										}
+									}		
+								}
+							}
+
+							self::$export_instance->jet_metafields = $jet_metafields;
+							self::$export_instance->jet_metatypes = $jet_metatypes;
+							if(!empty($jet_repfield)){
+								self::$export_instance->jet_repfield = $jet_repfield;
+								self::$export_instance->jet_reptype  = $jet_reptype;
+							}
+							else{
+								$jet_repfield = '';
+								$jet_reptype = '';
+							}
+							$this->getCustomFieldValue($id, $value, $checkRep, $allacf, $typeOftypesField, $alltype, $jet_metafields, $jet_metatypes, $jet_repfield, $jet_reptype,$parent, $typesf, $group_unset , $optionalType , self::$export_instance->allpodsfields, $metabox_fields, $module);
+						}	
+					}
+				}
+				if(is_array($jetCPTFieldsName)&& isset($value->meta_key)){
+					if(in_array($value->meta_key,$jetCPTFieldsName)){
+						$jetEnginefields = $wpdb->get_results("SELECT id, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = '$optionalType' AND status IN ('publish','built-in')", ARRAY_A);
+
+						if(!empty($jetEnginefields)){
+							$unserializedMeta = maybe_unserialize($jetEnginefields[0]['meta_fields']);
+						}
+						else{
+							$unserializedMeta = '';
+						}
+						$jetTypes=array();
+						$jet_rep_cpttypes=array();
+						foreach($unserializedMeta as $jet_key => $jetValue){
+							$jetFieldLabel = $jetValue['title'];
+							$jet_cptfield_names = $jetValue['name'];
+							$jetFieldType = $jetValue['type'];
+							if($jetFieldType != 'repeater'){
+								$jet_cptfields[$jet_cptfield_names]=$jet_cptfield_names;
+								$jetTypes[$jet_cptfield_names] = $jetFieldType;
+							}
+							else{
+								$jet_cptfields[$jet_cptfield_names]=$jet_cptfield_names;
+								$jetTypes[$jet_cptfield_names] = $jetFieldType;
+								$fields=$jetValue['repeater-fields'];
+								foreach($fields as $repFieldKey => $repFieldVal){
+									$jet_rep_cptfields_label = $repFieldVal['name'];
+									$jet_rep_cptfields_type  = $repFieldVal['type'];
+									$jet_rep_cptfields[$jet_rep_cptfields_label] = $jet_rep_cptfields_label;
+									$jet_rep_cpttypes[$jet_rep_cptfields_label]  = $jet_rep_cptfields_type;
+								}
+							}
+
+						}
+						self::$export_instance->jet_cptfields = $jet_cptfields;
+						self::$export_instance->jet_types = $jetTypes;
+						if(isset($jet_rep_cptfields)){
+							self::$export_instance->jet_rep_cptfields = $jet_rep_cptfields;
+							self::$export_instance->jet_rep_cpttypes  = $jet_rep_cpttypes;
+						}
+						else{
+							$jet_rep_cptfields = '';
+							$jet_rep_cpttypes = '';
+						}
+						$this->getCustomFieldValue($id, $value, $checkRep, $allacf, $typeOftypesField, $alltype, $jet_cptfields, $jetTypes, $jet_rep_cptfields, $jet_rep_cpttypes,  $parent, $typesf, $group_unset , $optionalType , self::$export_instance->allpodsfields, $metabox_fields, $module);
+					}
+				}
+				else{
+					$jet_fields = $jetFieldType = $jetRepFields = $jet_rep_types = '';
+					$typesf=isset($typesf)?$typesf:'';
+					$jetTypes=isset($jetTypes)?$jetTypes:''; 
+					$this->getCustomFieldValue($id, $value, $checkRep, $allacf, $typeOftypesField, $alltype, $jet_fields , $jetTypes, $jetRepFields, $jet_rep_types, $parent, $typesf, $group_unset , $optionalType , self::$export_instance->allpodsfields ,$metabox_fields, $module);
 				}
 			}
 		}
@@ -340,8 +585,7 @@ class PostExport extends ExportExtension{
 		return $pods_fields;
 	}
 
-	public function getCustomFieldValue($id, $value, $checkRep, $allacf, $typeOftypesField, $alltype, $parent, $typesf, $group_unset , $optionalType , $pods_type){
-
+	public function getCustomFieldValue($id, $value, $checkRep, $allacf, $typeOftypesField, $alltype, $jet_fields, $jetTypes, $jetRepFields, $jet_rep_types, $parent, $typesf, $group_unset , $optionalType , $pods_type, $metabox_fields, $module){
 		global $wpdb;
 		$taxonomies = get_taxonomies();
 		$down_file = false;
@@ -362,7 +606,7 @@ class PostExport extends ExportExtension{
 				self::$export_instance->data[$id]['downloadable_files'] = rtrim($down_file,"|");
 			}
 		}
-		elseif($value->mta_key == '_downloadable'){
+		elseif($value->meta_key == '_downloadable'){
 			self::$export_instance->data[$id]['downloadable'] =  $value->meta_value;
 		}
 		elseif($value->meta_key == '_upsell_ids'){
@@ -383,7 +627,7 @@ class PostExport extends ExportExtension{
 				foreach($cross_selldata as $cross_selldata_value){
 					$cross_selldata_query = $wpdb->prepare("SELECT post_title FROM {$wpdb->prefix}posts where id = %d", $cross_selldata_value);
 					$cross_selldata_value=$wpdb->get_results($cross_selldata_query);
-					
+
 					$cross_selldata_item[] = $cross_selldata_value[0]->post_title;
 				}
 				$cross_sellids = implode(',',$cross_selldata_item);
@@ -395,13 +639,13 @@ class PostExport extends ExportExtension{
 			if(!empty($bundleselldata) && is_array($bundleselldata)){
 				$bundsell = [];
 				foreach($bundleselldata as $bundle_id){
-				   	$bundleids = $wpdb->get_results("SELECT post_title FROM {$wpdb->prefix}posts WHERE post_type = 'product' AND ID = '$bundle_id'");
-						foreach($bundleids as $bundid){
-							$bundsell[] = $bundid->post_title;
-						}
+					$bundleids = $wpdb->get_results("SELECT post_title FROM {$wpdb->prefix}posts WHERE post_type = 'product' AND ID = '$bundle_id'");
+					foreach($bundleids as $bundid){
+						$bundsell[] = $bundid->post_title;
+					}
 				}
 				$value->meta_value = implode(',',$bundsell);
-			    self::$export_instance->data[$id]['_wc_pb_bundle_sell_ids'] =  $value->meta_value;
+				self::$export_instance->data[$id]['_wc_pb_bundle_sell_ids'] =  $value->meta_value;
 			}
 		}
 		elseif($value->meta_key == '_children'){
@@ -417,6 +661,8 @@ class PostExport extends ExportExtension{
 					$attachment = wp_get_attachment_image_src($v);
 					$attach[$k] = $attachment[0];
 				}
+
+				$gallery_data = '';
 				foreach($attach as $values){
 					$gallery_data .= $values.'|';
 				}
@@ -427,10 +673,26 @@ class PostExport extends ExportExtension{
 				self::$export_instance->data[$id]['product_image_gallery'] = $attachment[0];
 			}
 		}elseif($value->meta_key == '_sale_price_dates_from'){
-			self::$export_instance->data[$id]['sale_price_dates_from'] = date('Y-m-d',$value->meta_value);
+			$sales_price_date_from_value = '';
+			if(!empty($value->meta_value)){
+				$sales_price_date_from_value = date('Y-m-d',$value->meta_value);
+			}
+			self::$export_instance->data[$id]['sale_price_dates_from'] = $sales_price_date_from_value;
+		}
+		elseif($value->meta_key == '_lp_faqs'){
+			$faqs=$value->meta_value;
+			$unserialize_faq_value=unserialize($faqs);
+			foreach($unserialize_faq_value as $faq_key=>$faq_value){
+				$faqs_value .= $faq_value[0].','.$faq_value[1].'|';
+			}
+			self::$export_instance->data[$id][ $value->meta_key ] = rtrim($faqs_value,'|');
 		}
 		elseif($value->meta_key == '_sale_price_dates_to'){
-			self::$export_instance->data[$id]['sale_price_dates_to'] = date('Y-m-d',$value->meta_value);
+			$sales_price_dates_value = '';
+			if(!empty($value->meta_value)){
+				$sales_price_dates_value = date('Y-m-d',$value->meta_value);
+			}
+			self::$export_instance->data[$id]['sale_price_dates_to'] = $sales_price_dates_value;
 		}else {
 
 			// Mari commented this if statement
@@ -443,8 +705,8 @@ class PostExport extends ExportExtension{
 				$repeaterOfrepeater = false;
 				$getType = $alltype[$value->meta_key];
 				if(empty($getType)){
-					$temp_fieldname = array_search($value->meta_key, $allacf);
-					$getType = $alltype[$temp_fieldname];
+					$tempFieldname = array_search($value->meta_key, $allacf);
+					$getType = $alltype[$tempFieldname];
 				}
 
 				if ($getType == 'flexible_content' || $getType == 'repeater') { 
@@ -557,12 +819,79 @@ class PostExport extends ExportExtension{
 					self::$export_instance->data[$id][ $value->meta_key ] = self::$export_instance->returnMetaValueAsCustomerInput($value->meta_value);
 				}
 			}
-			elseif (isset($typesf) && in_array($value->meta_key, $typesf)) {
+			elseif(is_array($jet_fields) && in_array($value->meta_key, $jet_fields) && !empty($value->meta_value)){
+				$getjetType = isset($jetTypes[$value->meta_key]) ? $jetTypes[$value->meta_key] : '';
+				if(empty($getjetType)){
+					$tempFieldname = array_search($value->meta_key, $jet_fields);
+					$getjetType = isset($jetTypes[$tempFieldname]) ? $jetTypes[$tempFieldname] : '';
+				}				
+
+				if($getjetType == 'checkbox' && is_string($value->meta_value)){
+					$value->meta_value = unserialize($value->meta_value);
+					$check = '';
+					foreach($value->meta_value as $key => $metvalue){
+						if(is_numeric($key)){
+							$check .= $metvalue.',';	
+							$rcheck = substr($check,0,-1);
+							self::$export_instance->data[$id][ $value->meta_key ] = $rcheck;
+						}
+						else{
+							if($metvalue == 'true'){
+
+								$exp_value[] = $key;
+							}
+							if(isset($exp_value) && is_array($exp_value)){
+								$value->meta_value = implode(',',$exp_value );
+							}
+
+							self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
+						}
+
+					}
+
+				}
+				elseif($getjetType == 'select'){					
+					if(is_serialized($value->meta_value)){
+						$value->meta_value = unserialize($value->meta_value);
+						foreach($value->meta_value as $metkey => $metselectvalue){
+							$select[] = $metselectvalue;
+							$value->meta_value = implode(',',$select );	
+							self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
+						}						
+					}
+					else{
+						self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;						
+					}															
+				}
+				elseif($getjetType == 'date'){
+					if(!empty($value->meta_value)){
+						if(strpos($value->meta_value, '-') !== FALSE){
+						}else{
+							$value->meta_value = date('Y-m-d', $value->meta_value);
+						}
+					}
+					self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
+				}
+				elseif($getjetType == 'datetime-local'){
+					if(!empty($value->meta_value)){
+						if(strpos($value->meta_value, '-') !== FALSE){
+						}else{
+							$value->meta_value = date('Y-m-d H:i', $value->meta_value);
+						}
+						$value->meta_value = str_replace(' ', 'T', $value->meta_value);
+					}
+					self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
+				}
+				else{	
+					self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
+				}								
+			}
+			elseif (!empty($typesf) && in_array($value->meta_key, $typesf)) {
 				$typeoftype = $typeOftypesField[$value->meta_key];
 				if(is_serialized($value->meta_value)){
-					$typefileds = unserialize($value->meta_value);
+					$typeFileds = unserialize($value->meta_value);
 					$typedata = "";
-					foreach ($typefileds as $key2 => $value2) {
+					foreach ($typeFileds as $key2 => $value2) {
 						if(is_array($value2)){
 							foreach ($value2 as $keytypeOftypesField3 => $value3) {
 								$typedata .= $value3.',';
@@ -615,14 +944,14 @@ class PostExport extends ExportExtension{
 					}
 				}
 				//TYPES Allow multiple-instances of this field
-			}elseif(in_array($value->meta_key, $group_unset) && is_serialized($value->meta_value)) {
+			}elseif(!empty($group_unset) && in_array($value->meta_key, $group_unset) && is_serialized($value->meta_value)) {
 				$unser = unserialize($value->meta_value);
 				$data = "";
 				foreach ($unser as $key4 => $value4) 
 					$data .= $value4.',';
 				self::$export_instance->data[$id][ $value->meta_key ] = substr($data, 0, -1);
 			}
-			elseif(in_array($value->meta_key , $pods_type)){	
+			elseif(!empty($pods_type) && in_array($value->meta_key , $pods_type)){	
 				if(!isset(self::$export_instance->data[$id][$value->meta_key])){
 					if(in_array($optionalType , $taxonomies)){
 						$pods_file_data = get_term_meta($id,$value->meta_key);
@@ -631,10 +960,29 @@ class PostExport extends ExportExtension{
 					}
 
 					$pods_value = '';
-					foreach($pods_file_data as $pods_file_value){	
+					foreach($pods_file_data as $pods_file_value){
 						if(!empty($pods_file_value)){
 							if(is_array($pods_file_value)){
-								$pods_value .= $pods_file_value['guid'] . ',';
+								$pods_file_value['post_type']=isset($pods_file_value['post_type'])?$pods_file_value['post_type']:'';
+								$posts_type=$pods_file_value['post_type'];
+								if($posts_type=='attachment'){
+									$pods_value .= $pods_file_value['guid'] . ',';
+								}
+								elseif($posts_type!=='attachment'){
+									$pods_file_value['guid']=isset($pods_file_value['guid'])?$pods_file_value['guid']:'';
+									$p_guid=$pods_file_value['guid'];
+									$pod_tit =  $wpdb->get_results("SELECT post_title FROM {$wpdb->prefix}posts where guid='$p_guid'");	
+									if(!empty($pod_tit)){
+										foreach($pod_tit as $pods_title){
+											$pods_title_value=$pods_title->post_title;
+											$pods_value .= $pods_title_value . ',';
+										}
+									}
+									else{
+										$podstaxval = $pods_file_value['name'];
+										$pods_value .= $podstaxval. ',';
+									}
+								}
 							}else{
 								$pods_value .= $pods_file_value . ',';
 							}
@@ -644,14 +992,73 @@ class PostExport extends ExportExtension{
 				}
 			}
 
+			elseif(is_array($metabox_fields) && array_key_exists($value->meta_key, $metabox_fields)){
+				$get_metabox_fieldtype = $metabox_fields[$value->meta_key]['type'];
+
+				if($get_metabox_fieldtype == 'select' || $get_metabox_fieldtype == 'select_advanced' || $get_metabox_fieldtype == 'checkbox_list' || $get_metabox_fieldtype == 'text_list' || $get_metabox_fieldtype == 'file_advanced'){
+
+					$metabox_metakey = $value->meta_key;
+					if($module == 'Users'){
+						$get_metabox_values = $wpdb->get_results("SELECT meta_value FROM {$wpdb->prefix}usermeta WHERE meta_key = '$metabox_metakey' AND user_id = $id ", ARRAY_A);
+					}else if($module == 'Categories' || $module == 'Taxonomies' || $module == 'Tags'){
+						$get_metabox_values = $wpdb->get_results("SELECT meta_value FROM {$wpdb->prefix}termmeta WHERE meta_key = '$metabox_metakey' AND term_id = $id ", ARRAY_A);
+					}else{	
+						$get_metabox_values = $wpdb->get_results("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE meta_key = '$metabox_metakey' AND post_id = $id ", ARRAY_A);
+					}
+
+					$metabox_values = array_column($get_metabox_values, 'meta_value');
+					if($get_metabox_fieldtype == 'file_advanced' || $get_metabox_fieldtype == 'image_advanced'){
+						$get_metabox_file_url = [];
+						foreach($metabox_values as $metavalue){
+							$get_metabox_file_url[] = $wpdb->get_var("SELECT guid FROM {$wpdb->prefix}posts WHERE ID = $metavalue AND post_type = 'attachment' ");
+						}
+
+						$metabox_file_value = implode(',', $get_metabox_file_url);
+						self::$export_instance->data[$id][ $value->meta_key ] = $metabox_file_value;
+					}
+					else{
+						$metabox_value = implode(',', $metabox_values);
+						self::$export_instance->data[$id][ $value->meta_key ] = $metabox_value;
+					}
+				}
+
+				elseif($get_metabox_fieldtype == 'fieldset_text'){
+					$fieldset_values = unserialize($value->meta_value);
+					$fieldset_value = implode(',', array_values($fieldset_values));
+					self::$export_instance->data[$id][ $value->meta_key ] = $fieldset_value;
+				}
+
+				elseif($get_metabox_fieldtype == 'post' || $get_metabox_fieldtype == 'taxonomy' || $get_metabox_fieldtype == 'user'){
+					if($get_metabox_fieldtype == 'post'){
+						$get_metabox_titles = $wpdb->get_var("SELECT post_title FROM {$wpdb->prefix}posts WHERE ID = $value->meta_value ");
+					}
+					elseif($get_metabox_fieldtype == 'taxonomy' || $get_metabox_fieldtype == 'taxonomy_advanced'){
+						$get_metabox_titles = $wpdb->get_var("SELECT name FROM {$wpdb->prefix}terms WHERE term_id = $value->meta_value ");
+					}
+					elseif($get_metabox_fieldtype == 'user'){
+						$get_metabox_titles = $wpdb->get_var("SELECT user_login FROM {$wpdb->prefix}users WHERE ID = $value->meta_value ");
+					}
+					self::$export_instance->data[$id][ $value->meta_key ] = $get_metabox_titles;
+				}
+
+				elseif($get_metabox_fieldtype == 'image' || $get_metabox_fieldtype == 'file'){
+					$upload_values = $value->meta_value;
+					$upload_value = $wpdb->get_var("SELECT guid FROM {$wpdb->prefix}posts WHERE ID = $upload_values AND post_type = 'attachment' ");
+					self::$export_instance->data[$id][ $value->meta_key ] = $upload_value;
+				}
+				else{
+					self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
+				}
+			}
+
 			else{
 				self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
 			}
 
-			if(preg_match('/wpcf-/',$value->meta_key)){
-				$value->meta_key = preg_replace('/wpcf-/','', $value->meta_key );
-				self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
-			}
+			// if(preg_match('/wpcf-/',$value->meta_key)){
+			// 	$value->meta_key = preg_replace('/wpcf-/','', $value->meta_key );
+			// 	self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
+			// }
 		}
 	}
 
@@ -697,7 +1104,7 @@ class PostExport extends ExportExtension{
 	public function FetchCategories($module,$optionalType,$mode = null) {
 		$headers = self::$export_instance->generateHeaders($module, $optionalType);
 		$get_all_terms = get_categories('hide_empty=0');
-		self::$export_instance->totalRowCount = count($get_all_terms);
+		self::$export_instance->totalRowCount = count($get_all_terms);	
 		if(!empty($get_all_terms)) {
 			foreach( $get_all_terms as $termKey => $termValue ) {
 				$termID = $termValue->term_id;
@@ -715,6 +1122,8 @@ class PostExport extends ExportExtension{
 				self::$export_instance->data[$termID]['description'] = $termDesc;
 				self::$export_instance->data[$termID]['parent'] = $termParent;
 				self::$export_instance->data[$termID]['TERMID'] = $termID;
+
+				self::$export_instance->getWPMLData($termID,$optionalType,$module);
 
 				$this->getPostsMetaDataBasedOnRecordId ($termID, $module, $optionalType);
 
@@ -788,7 +1197,7 @@ class PostExport extends ExportExtension{
 				self::$export_instance->data[$termID]['description'] = $termDesc;
 
 				$this->getPostsMetaDataBasedOnRecordId ($termID, $module, $optionalType);
-
+				self::$export_instance->getWPMLData($termID,$optionalType,$module);
 				if(in_array('wordpress-seo/wp-seo.php', self::$export_instance->get_active_plugins())) {
 					$seo_yoast_taxonomies = get_option( 'wpseo_taxonomy_meta' );
 					if ( isset( $seo_yoast_taxonomies['post_tag'] ) ) {

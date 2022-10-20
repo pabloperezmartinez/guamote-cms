@@ -71,11 +71,11 @@ class TermsandTaxonomiesImport {
                     $default_category_details = get_term_by('id', $default_category_id , 'category');
                     
 					//Remove Default Category
-                    $categories = wp_get_object_terms($pID, 'category');
+                    $categories = wp_get_object_terms($pID, 'category');					
             
 					if (count($categories) > 1) {
-						foreach ($categories as $key => $category) {
-							if ($category->name == $default_category_details->name ) {
+						foreach ($categories as $key => $category) {							
+							if ((!empty($category) && !empty($default_category_details)) && $category->name == $default_category_details->name ) {
 								wp_remove_object_terms($pID, $default_category_details->name , 'category');
 							}
 						}
@@ -98,8 +98,6 @@ class TermsandTaxonomiesImport {
 					$tag_name = 'product_tag';
 					break;
 				case 'product_category':
-					if($type === 'MarketPress Product')
-						$category_name = 'product_category';
 					if($type == 'WooCommerce Product')
 						$category_name = 'product_cat';
 					if($type == 'WPeCommerce Products')

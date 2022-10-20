@@ -11,7 +11,7 @@
  * @wordpress-plugin
  * Plugin Name: Import Woocommerce
  * Description: Import your WordPress Post, Page and Simple WooCommerce Product with Import Woocommerce. 
- * Version: 1.6.6
+ * Version: 1.6.8
  * Text Domain: import-woocommerce
  * Domain Path: /languages
  * Author: smackcoders
@@ -53,7 +53,7 @@ class WooComCSVHandler extends ImportHelpers {
 	private static $instance = null;
 	private static $install = null ;
 
-	public $version = '1.6.6';
+	public $version = '1.6.8';
 
 	public function __construct(){ 							   
 		$this->plugin = Plugin::getInstance();

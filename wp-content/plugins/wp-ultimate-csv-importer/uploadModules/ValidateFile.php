@@ -253,8 +253,9 @@ class ValidateFile {
         $import_record_post = array_keys($get_post);
     
         $get_type = $extension_instance->set_post_types($hashkey , $filename);
-    
+        $import_record_taxonomy = array('category','post_tag');
         $result['Post Type'] = $import_record_post;
+        $result['Taxonomy'] = $import_record_taxonomy;
         $result['selected type'] = $get_type;
     
         return $result;

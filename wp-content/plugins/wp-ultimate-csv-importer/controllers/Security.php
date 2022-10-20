@@ -42,6 +42,7 @@ class Security {
 	}
 
 	public function activeAddons(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$result = array();
 		if(is_plugin_active('wp-ultimate-exporter/wp-ultimate-exporter.php') ){
 			$result['exporter'] = true;
@@ -71,6 +72,7 @@ class Security {
 	}
 
 	public  function securityPerformance(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		global $wpdb,$wp_version;
 		$result['post_max_size'] = ini_get('post_max_size');
 		$result['auto_append_file'] = ini_get('auto_append_file');
@@ -101,8 +103,6 @@ class Security {
 		}
 		$result['wp_version'] = $wp_version;
 		$result['db_version'] = $wpdb->db_version();
-		$result['server_software'] = $_SERVER[ 'SERVER_SOFTWARE' ];
-		$result['http_agent'] = $_SERVER['HTTP_USER_AGENT'];
 		$result['db_prefix'] = $wpdb->prefix;
 		$result['wp_memory_limit'] = (int) ini_get('memory_limit');
 		if(is_multisite()){

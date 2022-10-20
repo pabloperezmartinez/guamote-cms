@@ -43,24 +43,24 @@ class TermsAndTaxonomies extends ExtensionHandler{
 			}
 		}
 			
-		if(function_exists('wc_get_attribute_taxonomies')){
-			$get_pro_attr = wc_get_attribute_taxonomies();
+		// if(function_exists('wc_get_attribute_taxonomies')){
+		// 	$get_pro_attr = wc_get_attribute_taxonomies();
 			
-            foreach($get_pro_attr as $value){	
-                $attr_name = $value->attribute_name;
-				$attribute = 'pa_'.$attr_name;	
-                if(in_array($attribute , $taxonomies));
-                {	
-					$search_attr = array_search($attribute , $taxonomies);
-					if($taxonomies[$search_attr] != 'category' && $taxonomies[$search_attr] != 'product_cat' ){
-						unset($taxonomies[$search_attr]);
-					}
-				}	
-            }
-        }else{
-            #TODO
-		}
-		
+        //     foreach($get_pro_attr as $value){	
+        //         $attr_name = $value->attribute_name;
+		// 		$attribute = 'pa_'.$attr_name;	
+        //         if(in_array($attribute , $taxonomies));
+        //         {	
+		// 			$search_attr = array_search($attribute , $taxonomies);
+		// 			if($taxonomies[$search_attr] != 'category' && $taxonomies[$search_attr] != 'product_cat' ){
+		// 				unset($taxonomies[$search_attr]);
+		// 			}
+		// 		}	
+        //     }
+        // }else{
+        //     #TODO
+		// }
+
 		if(!empty($taxonomies)) {
 			
 			$temp = 0;

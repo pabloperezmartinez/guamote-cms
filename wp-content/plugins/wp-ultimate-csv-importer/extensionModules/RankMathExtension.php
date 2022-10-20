@@ -114,7 +114,7 @@ class RankMathExtension extends ExtensionHandler{
 				return false;
 			}
 			$import_type = $this->import_name_as($import_type);
-			if($import_type == 'Posts' || $import_type == 'Pages' || $import_type == 'CustomPosts' || $import_type == 'event' || $import_type == 'event-recurring' || $import_type == 'location' || $import_type == 'WooCommerce' ||  $import_type =='WooCommerceattribute' || $import_type =='WooCommercetags' || $import_type == 'MarketPress' || $import_type == 'WPeCommerce' || $import_type == 'eShop' || $import_type == 'Taxonomies' || $import_type == 'Tags' || $import_type == 'Categories' ) {	
+			if($import_type == 'Posts' || $import_type == 'Pages' || $import_type == 'CustomPosts' || $import_type == 'event' || $import_type == 'event-recurring' || $import_type == 'location' || $import_type == 'WooCommerce' ||  $import_type =='WooCommerceattribute' || $import_type =='WooCommercetags' || $import_type == 'WPeCommerce' || $import_type == 'Taxonomies' || $import_type == 'Tags' || $import_type == 'Categories' ) {	
 				return true;
 			}
 			if($import_type == 'ticket'){

@@ -1,48 +1,76 @@
 === User Import with meta ===
 Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
-Tags: 
+Tags: meta data, users, Import customers, migration, meta, wp user, member 
 Requires at least: 5.0
-Tested up to: 5.8
-Stable tag: 1.2.8
-Version: 1.2.8
+Tested up to: 6.0
+Stable tag: 1.3
+Version: 1.3
 Author: smackcoders
-Author URI: http://profiles.wordpress.org/smackcoders/
+Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
 Import users with meta details as CSV spreadsheet 
 
 == Description ==
 
-Import users with meta details, custom fields, woocommerce shipping details etc., as CSV spreadsheet 
+Import users with meta data details, custom fields, WooCommerce shipping details etc., as CSV spreadsheet 
+
+Imp. Note: This plugin is an add-on. So install [WP Ultimate CSV Importer](https://wordpress.org/plugins/wp-ultimate-csv-importer/) plugin first is must to proceed further. 
+
+= Try our demo sites =
+* [Free plugin demo site](https://demo.smackcoders.com/ultimatecsvimporter/wp-admin/admin.php?page=com.smackcoders.csvimporternew.menu).
+* [ Pro Plugin demo site](https://demo.smackcoders.com/wordpress/wp-admin/admin.php?page=sm-uci-dashboard).
+
+Please show your support for giving it a [rating](https://wordpress.org/support/view/plugin-reviews/wp-ultimate-exporter?rate=5#postform) :)
+
 
 = Highlights =
 * Import any number of user through CSV files only.
-* Import Users with Default Custom Fields.
-* Import users with WP-Members.
-* Import Users with Billing and Shipping Informations(BSI).
+* Import Users data with Default Custom Fields.
+* Import member users with WP-Members.
+* Import customers with Billing and Shipping Informations(BSI).
 * If user password column is empty we will create random password as well as send password through email
 
-= Other Useful Plugins & Addons By Smackcoders =
+=  HOW TO PROCEED =
 
-The Leads Builder for WordPress to capture your webforms as leads to one of the top ranking open source CRM, install the [WordPress Lead Form Data Collection to CRM](https://wordpress.org/plugins/wp-leads-builder-any-crm/) Plugin. Install one of the CRM of your choice with the additional add-ons listed below and keep both parent plugin and CRM addon activated. 
-* [Zoho CRM & Zoho CRM Plus](https://wordpress.org/plugins/wp-zoho-crm/)
-* [Salesforce](https://wordpress.org/plugins/wp-salesforce/)
-* [SugarCRM](https://wordpress.org/plugins/wp-sugar-free/)
-* [Freshsales](https://wordpress.org/plugins/wp-freshsales/)
-* [Vtiger CRM](https://wordpress.org/plugins/wp-tiger/)
+= Step-1: Module Selection =
+* Go to the import tab
+* ensure that the Import User add on plugim is installed and activated 
+* browse and uplaod the csv with user data
 
-To know more about the premium bundled version, visit [WordPress Lead Form Data Collection to CRM with unlimited features](https://www.smackcoders.com/wp-leads-builder-any-crm-pro.html)
+= Step-2: Mapping =
+* validate the uploaded file and proceed to next step
+* map the headers with relevant wp user meta data fields 
+* that's it, click to import the file
+
+= Supported Modules To Export =
+* Core Module - Post, Page, Custom Post, Category, Tags, Users, Customer Reviews.
+* eCommerce Products – WooCommerce, MarketPress, WP e-Commerce.
+* SEO field - All in One SEO and Yoast SEO.
+* Custom fields – Toolset Types, ACF, CMB2, CustomPress, Custom Fields Suite, Pods, CCTM.
+* Custom Post – Types, CMB2, CustomPress, Pods, CPT UI, CCTM.
+
+= Supported 3rd Party Plugins = 
+* BBPress Plugin - Topic, Reply, and Forum Export.
+* LearnPress Plugin - Courses, Lessons, Quizzes, Orders and Questions Export.
+* WooCommerce - Products with categories, attributes, tags, and Images Export.
+* All in One SEO Plugin - .SEO Fields Export.
+* WP Customer Reviews – Reviews Export.
+* MultiLanguage by Websoft.
+* WooCommerce Product Bundles Plugin.
+
+
 
 
 = Helpful links =
 
+If you need a WordPress import & export tool, you can check on our [WP Ultimate CSV Importer](https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html?utm_source=WpOrg&utm_medium=Readme&utm_campaign=ListingTraffic) for advanced features.
+
+
+Read the blog to know about our [latest WordPress add-on](https://www.smackcoders.com/blog/category/wordpress-products?utm_source=wordpress&utm_medium=readme&utm_campaign=free_exporter) updates.
+
 Visit [Smackcoders](https://www.smackcoders.com) to explore more WordPress products. You can write to us your comments, feedback at [support@smackcoders.com](mailto:support@smackcoders.com)
-
-
-Get to know about other WordPress addons and latest product update news at [www.smackcoders.com/blogs.html](https://www.smackcoders.com/blog/category/wordpress-products)
-
-
 
 == Installation ==
 
@@ -59,9 +87,15 @@ Get to know about other WordPress addons and latest product update news at [www.
 
 == Frequently Asked Questions == 
 1. What user import can do?
-User import with all meta details can be imported using this addon like WooCommerce 
+User meta data with all details in bulk can be imported using this addon like WooCommerce Cutsomers, shipping & billing info, wp users, members and even user custom fields.
 
 == Changelog ==
+= 1.3 =
+* Checked: Compatibility for WordPress 6.0
+
+= 1.2.9 =
+* Checked: Compatibility for WordPress 5.9
+
 = 1.2.8 =
 * Fixed: Plugin activation conflict - file missing issue
 
@@ -102,6 +136,12 @@ User import with all meta details can be imported using this addon like WooComme
 * Initial stable release version.
 
 == Upgrade Notice ==
+= 1.3 =
+* Upgrade for latest changes
+
+= 1.2.9 =
+* Upgrade for latest changes
+
 = 1.2.8 =
 * Upgrade for latest changes
 

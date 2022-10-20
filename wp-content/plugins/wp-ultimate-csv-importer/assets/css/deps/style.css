@@ -968,6 +968,7 @@ Author: Mohamed Fariz
 }
 .wp-ultimate-csv-importer .mb30 {
   margin-bottom: 30px !important;
+  padding : 16px;
 }
 .wp-ultimate-csv-importer .ml30 {
   margin-left: 30px !important;
@@ -2653,7 +2654,9 @@ Author: Mohamed Fariz
   background: #0073aa;
 }
 .wp-ultimate-csv-importer .Toastify .Toastify__toast-body {
-  padding: 10px 50px;
+  /* padding: 10px 50px; */
+  padding: 10px 10px;
+  height: 80px;
 }
 .wp-ultimate-csv-importer .Toastify__toast.Toastify__toast--success,
 .wp-ultimate-csv-importer .Toastify__toast.Toastify__toast--error,
@@ -2683,7 +2686,7 @@ Author: Mohamed Fariz
   border-top: 4px solid #f56565 !important;
   border-radius: 6px;
 }
-.wp-ultimate-csv-importer .Toastify__toast--error::before {
+/* .wp-ultimate-csv-importer .Toastify__toast--error::before {
   position: absolute;
   width: 32px;
   height: 32px;
@@ -2691,14 +2694,14 @@ Author: Mohamed Fariz
   content: " ";
   top: 25px;
   left: 10px;
-}
+} */
 .wp-ultimate-csv-importer .Toastify__toast--info {
   background: #ebf8ff !important;
   color: #2b6cb0 !important;
   border-top: 4px solid #4299e1 !important;
   border-radius: 6px;
 }
-.wp-ultimate-csv-importer .Toastify__toast--info::before {
+/* .wp-ultimate-csv-importer .Toastify__toast--info::before {
   position: absolute;
   width: 32px;
   height: 32px;
@@ -2706,7 +2709,7 @@ Author: Mohamed Fariz
   content: " ";
   top: 25px;
   left: 10px;
-}
+} */
 .wp-ultimate-csv-importer .loader {
   width: 30px;
   height: 30px;

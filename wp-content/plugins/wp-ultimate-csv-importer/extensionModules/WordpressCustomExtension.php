@@ -84,6 +84,48 @@ class WordpressCustomExtension extends ExtensionHandler{
             $pods[] = $pods_fields->post_name;  
         }
   
+        if(is_plugin_active('meta-box/meta-box.php')){
+            $metabox_fields = [];
+            $import_as = $this->import_post_types($import_types);
+            $get_metabox_fields = \rwmb_get_object_fields( $import_as );
+            $metabox_fields = array_keys($get_metabox_fields);
+        }
+        else{
+            $metabox_fields = '';
+        }
+
+        $jet_cpt = [];
+        $jet_meta_field = [];
+        if(is_plugin_active('jet-engine/jet-engine.php')){
+            $get_jet_cpt_fields = $wpdb->get_results("SELECT meta_fields FROM {$wpdb->prefix}jet_post_types where slug = '".$module."'");
+            foreach($get_jet_cpt_fields as $jet_cpt_fields){
+                $jet_cpt_fields = $jet_cpt_fields->meta_fields;
+                $unserialize_jet_cpt = unserialize($jet_cpt_fields);
+            }
+
+            if(is_array($unserialize_jet_cpt)){
+                foreach($unserialize_jet_cpt as $jet_cpt_field){
+                    $jet_cpt[] = $jet_cpt_field['name'];  
+                }
+            }
+            
+        
+            $jet_field  = [];
+            $jet_fields = $wpdb->get_results("SELECT option_value FROM {$wpdb->prefix}options where option_name ='jet_engine_meta_boxes'");    
+            foreach($jet_fields as $jetfield){
+                $jet_field_value = $jetfield->option_value;
+                $unserialize_jet_field_value = unserialize($jet_field_value);
+            }
+            foreach($unserialize_jet_field_value as $jet_fields_value){
+                $jet_field [] = $jet_fields_value['meta_fields'];
+            }
+            foreach($jet_field as $j_field){
+                foreach($j_field as $jfield){
+                    $jet_meta_field[] = $jfield['name'];
+                }
+            }
+        }
+    
         $commonMetaFields = array();
         
         if($module != 'user') { 
@@ -104,13 +146,22 @@ class WordpressCustomExtension extends ExtensionHandler{
                 }
                 $pods_not_like_query = 'AND ' . rtrim($pods_not_like_query, 'AND ');
             }
+
+            //query to remove all metabox fields from meta
+            $metabox_not_like_query = '';
+            if(!empty($metabox_fields)){
+                foreach($metabox_fields as $metabox_name){
+                    $metabox_not_like_query .= "meta_key NOT LIKE '%{$metabox_name}%' AND ";
+                }
+                $metabox_not_like_query = 'AND ' . rtrim($metabox_not_like_query, 'AND ');
+            }
          
             $keys = $wpdb->get_col( "SELECT pm.meta_key FROM {$wpdb->prefix}posts p
                                     JOIN {$wpdb->prefix}postmeta pm
                                     ON p.ID = pm.post_id
                                     WHERE p.post_type = '{$module}' AND NOT p.post_status = 'trash'
                                     GROUP BY meta_key
-                                    HAVING meta_key NOT LIKE '\_%' and meta_key NOT LIKE 'rank_%'and meta_key NOT LIKE 'field_%' and meta_key NOT LIKE 'wpcf-%' and meta_key NOT LIKE 'wpcr3_%' and meta_key NOT LIKE '%pods%' and meta_key NOT LIKE '%group_%' and meta_key NOT LIKE '%repeat_%' and meta_key NOT LIKE 'mp_%' $acf_not_like_query $pods_not_like_query
+                                    HAVING meta_key NOT LIKE '\_%' and meta_key NOT LIKE 'rank_%'and meta_key NOT LIKE 'field_%' and meta_key NOT LIKE 'wpcf-%' and meta_key NOT LIKE 'wpcr3_%' and meta_key NOT LIKE '%pods%' and meta_key NOT LIKE '%group_%' and meta_key NOT LIKE '%repeat_%' and meta_key NOT LIKE 'mp_%' $acf_not_like_query $pods_not_like_query $metabox_not_like_query
                                     ORDER BY meta_key" );
                                     
         } else {
@@ -125,7 +176,7 @@ class WordpressCustomExtension extends ExtensionHandler{
         }
 
         foreach ($keys as $val) {
-            if(!in_array($val , $acf_values) && !empty($val) && !in_array($val , $pods) && !in_array($val , $acf)){
+            if(!in_array($val , $acf_values) && !empty($val) && !in_array($val , $pods) && !in_array($val , $acf) && !in_array($val,$jet_cpt) && !in_array($val,$jet_meta_field)){
                 $commonMetaFields['CORECUSTFIELDS'][$val]['label'] = $val;
                 $commonMetaFields['CORECUSTFIELDS'][$val]['name'] = $val;
             }

@@ -132,47 +132,50 @@ class AllInOneSeoImport
             }
             global $wpdb;
             $aioseo_table_name = $wpdb->prefix . "aioseo_posts";
-            $og_title = $data_array['og_title'];
-            $og_description = $data_array['og_description'];
-            $canonical_url = $data_array['custom_link'];
-            $og_image_type = $data_array['og_image_type'];
-            $og_video = $data_array['og_video'];
-            $og_object_type = $data_array['og_object_type'];
-            $og_article_section = $data_array['og_article_section'];
-            $value['label'] = $data_array['og_article_tags'];
-            $name['value'] = $data_array['og_article_tags'];
+            $og_title = isset($data_array['og_title']) ? $data_array['og_title'] : '';
+            $og_description = isset($data_array['og_description'])?$data_array['og_description']:'';
+            $canonical_url = isset($data_array['custom_link']) ? $data_array['custom_link'] : '';
+            $og_image_type = isset($data_array['og_image_type']) ? $data_array['og_image_type'] : '';
+            $og_video = isset($data_array['og_video']) ? $data_array['og_video'] : '';
+            $og_object_type = isset($data_array['og_object_type']) ? $data_array['og_object_type'] : '';
+            $og_article_section = isset($data_array['og_article_section'])?$data_array['og_article_section']:'';
+            $value['label'] = isset($data_array['og_article_tags'])?$data_array['og_article_tags']:'';
+            $name['value'] = isset($data_array['og_article_tags'])?$data_array['og_article_tags']:'';
             $obj_merged = (object)array_merge((array)$value, (array)$name);
             $article_tags = wp_json_encode($obj_merged);
+            $og_article_tags = '';
             $og_article_tags .= '[' . $article_tags . ']';
-            $twitter_use_og = $data_array['twitter_use_og'];
-            $twitter_card = $data_array['twitter_card'];
-            $twitter_image_type = $data_array['twitter_image_type'];
-            $twitter_title = $data_array['twitter_title'];
-            $twitter_description = $data_array['twitter_description'];
-            $robots_default = $data_array['robots_default'];
-            $robots_noindex = $data_array['noindex'];
-            $robots_noarchive = $data_array['robots_noarchive'];
-            $robots_nosnippet = $data_array['robots_nosnippet'];
-            $robots_nofollow = $data_array['nofollow'];
-            $robots_noimageindex = $data_array['robots_noimageindex'];
-            $robots_noodp = $data_array['noodp'];
-            $robots_notranslate = $data_array['robots_notranslate'];
-            $robots_max_snippet = $data_array['robots_max_snippet'];
-            $robots_max_videopreview = $data_array['robots_max_videopreview'];
-            $robots_max_imagepreview = $data_array['robots_max_imagepreview'];
-            $title = $data_array['aioseo_title'];
-            $description = $data_array['aioseo_description'];
-            $keyphrases_val['keyphrase'] = $data_array['keyphrases'];
+            $twitter_use_og = isset($data_array['twitter_use_og'])?$data_array['twitter_use_og']:'';
+            $twitter_card = isset($data_array['twitter_card']) ? $data_array['twitter_card'] : '';
+            $twitter_image_type = isset($data_array['twitter_image_type']) ? $data_array['twitter_image_type'] : '';
+            $twitter_title = isset($data_array['twitter_title']) ? $data_array['twitter_title'] : '';
+            $twitter_description = isset($data_array['twitter_description']) ? $data_array['twitter_description'] : '';
+            $robots_default = isset($data_array['robots_default'])?$data_array['robots_default']:'';
+            $robots_noindex = isset($data_array['noindex'])?$data_array['noindex']:'';
+            $robots_noarchive = isset($data_array['robots_noarchive']) ? $data_array['robots_noarchive'] : '';
+            $robots_nosnippet = isset($data_array['robots_nosnippet']) ? $data_array['robots_nosnippet'] : '';
+            $robots_nofollow = isset($data_array['nofollow'])?$data_array['nofollow']:'';
+            $robots_noimageindex = isset($data_array['robots_noimageindex'])?$data_array['robots_noimageindex']:'';
+            $robots_noodp = isset($data_array['noodp']) ? $data_array['noodp'] : '';
+            $robots_notranslate = isset($data_array['robots_notranslate']) ? $data_array['robots_notranslate'] : '';
+            $robots_max_snippet = isset($data_array['robots_max_snippet']) ? $data_array['robots_max_snippet'] : '';
+            $robots_max_videopreview = isset($data_array['robots_max_videopreview']) ? $data_array['robots_max_videopreview'] : '';
+            $robots_max_imagepreview = isset($data_array['robots_max_imagepreview']) ? $data_array['robots_max_imagepreview'] : '' ;
+            $title = isset($data_array['aioseo_title']) ? $data_array['aioseo_title'] : '';
+            $description = isset($data_array['aioseo_description']) ? $data_array['aioseo_description'] : '';
+            $keyphrases_val['keyphrase'] = isset($data_array['keyphrases']) ? $data_array['keyphrases'] : '';
             $keyphras['focus'] = (object)(array)$keyphrases_val;
             $keyphrass = wp_json_encode($keyphras);
             $keyphrases = $keyphrass;
+			$twitter_image_custom_fields = '';
+			$og_image_custom_fields = '';
             if ($twitter_image_type == 'custom')
             {
-                $twitter_image_custom_fields = $data_array['twitter_image_custom_fields'];
+                $twitter_image_custom_fields = isset($data_array['twitter_image_custom_fields'])?$data_array['twitter_image_custom_fields']:'';
             }
             if ($og_image_type == 'custom')
             {
-                $og_image_custom_fields = $data_array['og_image_custom_fields'];
+                $og_image_custom_fields = isset($data_array['og_image_custom_fields'])?$data_array['og_image_custom_fields']:'';
             }
             $wpdb->get_results("INSERT INTO $aioseo_table_name
 				(post_id,og_title ,og_description,canonical_url,og_image_type,og_video,og_object_type,og_article_section,
@@ -334,6 +337,4 @@ class AllInOneSeoImport
 
         return $createdFields;
     }
-
 }
-

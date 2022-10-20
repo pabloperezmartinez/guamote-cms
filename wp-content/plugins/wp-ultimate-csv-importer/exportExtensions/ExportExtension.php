@@ -49,6 +49,7 @@ class ExportExtension {
 	}
 
 	public function checkExport(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		if(\is_plugin_active('wp-ultimate-exporter/wp-ultimate-exporter.php')){
 			$result['success'] =true;
 		}
@@ -60,18 +61,15 @@ class ExportExtension {
 	}
 
 	public function totalRecords(){
-
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		global $wpdb,$post_export_class;
 		$module = sanitize_text_field($_POST['module']);
-		$optionalType = sanitize_text_field($_POST['optionalType']);
+		$optionalType = isset($_POST['optionalType']) ? sanitize_text_field($_POST['optionalType']) : '';
 		if ($module == 'WooCommerceOrders') {
 			$module = 'shop_order';
 		}
 		elseif ($module == 'WooCommerceCoupons') {
 			$module = 'shop_coupon';
-		}
-		elseif ($module == 'Marketpress') {
-			$module = 'product';
 		}
 		elseif ($module == 'WooCommerceRefunds') {
 			$module = 'shop_order_refund';

@@ -45,7 +45,7 @@ if ( !defined( 'ABSPATH' ) ) {
     <div class="row">
     <section class="music">
     <div class="logo">
-    <img src="https://cdn.smackcoders.com/wp-content/uploads/2018/03/CSV-Importer-Logo.png" alt="Paris" style="max-width: 16%;margin-top: 10px;margin-right: 0px;">
+    <img src="<?php echo esc_url(plugins_url('assets/images/wp-ultimate-csv-importer.png',__FILE__));?>" alt="Paris" style="margin-top: 10px;width: 52px;">
       <h1>WP ULTIMATE CSV IMPORTER</h1>
   </div>
       <h2><a href="https://wordpress.org/plugins/import-users/" target="_blank">IMPORT USERS</a></h2><span class="slider"><input type="checkbox" name="offline" id="offline" value="Users" <?php echo esc_attr($user_checked); ?>><label for="offline"></label></span>
@@ -299,11 +299,11 @@ section span  {
 
 </style>
 
-<script>
+<!--<script>
 
   jQuery(document).ready(function(){
       document.getElementById('click_get_started').onclick = function () { 
-       jQuery(this).html('<img src="<?php echo esc_url($gif);?>" />');
+       jQuery(this).html('<img src="<?php echo esc_url(plugins_url('assets/images/ajax-loaders.gif',dirname(__FILE__,2)));?>" />');
         var addons = [];
         
         jQuery.each(jQuery("input[name='offline']:checked"), function(){
@@ -329,12 +329,13 @@ section span  {
             }
             jQuery.ajax({
               type: 'POST',
-              url: ajaxurl,
+              url: smack_nonce_object.url,
               data: {
                 'action' : 'install_plugins',
                 'addons' : value,
                 'last_iteration' : last_iteration,
                 'all_addons' : addons,
+                'securekey' : smack_nonce_object.nonce,
               },
 
               success: function(data){
@@ -367,4 +368,4 @@ section span  {
       }
   });
   
-</script>
+</script>-->

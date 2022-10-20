@@ -18,8 +18,9 @@ class LogManager {
 	private $log_file, $fp;
 	
 	public function __construct(){
-		add_action('wp_ajax_display_log',array($this,'display_log'));
-		add_action('wp_ajax_download_log',array($this,'download_log'));
+		add_action('wp_ajax_display_log',array($this,'display_log'));		
+		add_action('wp_ajax_download_log',array($this,'download_log'));		
+		add_action('wp_ajax_delete_log',array($this,'delete_log'));	
     }
 
     public static function getInstance() {
@@ -124,13 +125,14 @@ class LogManager {
 	/**
 	 * Retrieves and display the file events history.
 	 */
-	public function display_log(){
+	public function display_log(){	
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		global $wpdb;
 		$response = [];
 		$logInfo = [];
 		$value = [];
-
-		$logInformation = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}smackuci_events ORDER BY id DESC");
+		
+		$logInformation = $wpdb->get_results("select * from {$wpdb->prefix}smackuci_events where deletelog = 0 order by id desc ");
 		if(empty($logInformation)){
 			$response['success'] = false;
 			$response['message'] = "No logs Found";
@@ -160,11 +162,47 @@ class LogManager {
 		wp_die();
 	}
 
+	/**
+	 * Delete the Logs
+	 */
+	public static function delete_log(){				
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
+		global $wpdb;		
+		$smack_instance = SmackCSV::getInstance();
+		$filename = sanitize_text_field($_POST['filename']);
+		$revision = sanitize_text_field($_POST['revision']);		
+		$upload_path = $smack_instance->create_upload_dir();
+		$get_details = $wpdb->get_results($wpdb->prepare("select id,eventKey from {$wpdb->prefix}smackuci_events where revision = %d and original_file_name = %s", $revision, $filename));		
+		
+		if(	!empty( $get_details)) {
+			foreach($get_details as $records){
+				$logPath = $upload_path . $records->eventKey . '/' . $records->eventKey . '.html';
+				if(file_exists($logPath))
+				{
+					array_map('unlink', glob("$logPath"));
+				}
+				else {
+					$response['message'] = "File not available.Kindly refresh the page.";
+					echo wp_json_encode($response);
+					wp_die();
+				}
+				$wpdb->update($wpdb->prefix.'smackuci_events',array('deletelog' => true),array('id' => $records->id));
+			}
+			$response['message'] = "Deleted Successfully";
+		}
+		else {
+			$response['message'] = "Record not found";
+		}
+		
+		echo wp_json_encode($response);
+		wp_die();
+	}
 
 	/**
 	 * Downloads file event log.
 	 */
 	public function download_log(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		global $wpdb;
        
         $response = [];
@@ -205,7 +243,7 @@ class LogManager {
 	 * @param  string $file_name - File name
 	 * @param  string $total_rows - Total rows in file
 	 */
-    public function manage_records($hash_key ,$selected_type , $file_name , $total_rows){
+    public function manage_records($hash_key ,$selected_type , $file_name , $total_rows){		
         global $wpdb;
         $log_table_name = $wpdb->prefix ."import_detail_log";
 
@@ -247,9 +285,26 @@ class LogManager {
         $get_data =  $wpdb->get_results("SELECT skipped , created , updated FROM $log_table_name WHERE hash_key = '$hash_key' ");
 			$skipped_count = $get_data[0]->skipped;
 			$created_count = $get_data[0]->created;
-			$updated_count = $get_data[0]->updated;
+			$updated_count = $get_data[0]->updated;		
+			$processed = $created_count + $updated_count + $skipped_count;
+			if($processed > $total_rows)	
+				$processed = $created_count;
 
 		$smack_uci_table = $wpdb->prefix."smackuci_events";
+
+		$getid = $wpdb->get_results("SELECT distinct( id ) from {$wpdb->prefix}smackuci_events where import_type = '$import_type' and eventKey = '$hash_key'",ARRAY_A);		
+		if(!empty($getid)){
+			$wpdb->update($smack_uci_table, array(
+				'created' => "{$created_count}",
+				'updated' => "{$updated_count}",
+				'skipped' => "{$skipped_count}",
+				'processed' => "{$processed}",
+				'last_activity' => "{$imported_on}",
+				), 
+				array('id' => $getid[0]['id'])
+			);
+		}
+		else {
         $wpdb->insert($smack_uci_table, array(
             'revision' => $revision,
             'name' => "{$name}",
@@ -270,7 +325,8 @@ class LogManager {
             'year' => $year
         ),
             array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%s','%s','%s')
-        );
+		);
+	}
     }
 
 }

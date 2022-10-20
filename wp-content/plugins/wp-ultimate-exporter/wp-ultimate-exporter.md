@@ -4,10 +4,10 @@ Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
 Tags: WordPress exporter, wp exporter, CSV, exporter, all export, export, csv export
 Requires at least: 5.0
-Tested up to: 5.8
+Tested up to: 6.0
 Requires PHP: 5.2.4
-Stable tag: 1.6.3
-Version: 1.6.3
+Stable tag: 1.7.5
+Version: 1.7.5
 Author: smackcoders
 Author URI: https://profiles.wordpress.org/smackcoders/
 License: GPLv2 or later
@@ -102,6 +102,18 @@ Yes, you can export all Custom Post listed in the drop down.
 No, there is no limitation on the records exported.
 
 ## Changelog
+### 1.7.2
+
+- Checked: Compatibility for WordPress 5.9.3
+- Added: Export Support for WP Job Manager Plugin.
+
+### 1.7.1
+
+- Checked: Compatibility for WordPress 5.9
+
+### 1.7 
+* Added: Export support for latest LearnPress-LMS plugin-V4.1.4.1:Courses,Lessons,Quizzes,Orders and Questions. 
+
 ### 1.6.3
 - Added: Export support for latest woocommerce product bundle plugin fields 
 
@@ -228,6 +240,17 @@ No, there is no limitation on the records exported.
 - Initial release version. Tested and found to work well without any issues.
 
 ## Upgrade Notice
+### 1.7.2
+
+- Upgrade now for newly added features.
+### 1.7.1
+
+- Upgrade now for newly added features.
+
+### 1.7
+
+- Upgrade now for newly added features.
+
 ### 1.6.3
 
 - Upgrade now for newly added features.

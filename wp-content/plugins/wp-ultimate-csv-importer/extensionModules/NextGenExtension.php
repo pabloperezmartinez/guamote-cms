@@ -53,7 +53,7 @@ class NextGenExtension extends ExtensionHandler{
 			}
 
 			$import_type = $this->import_name_as($import_type);
-			if($import_type == 'Posts' || $import_type == 'Pages' || $import_type == 'WooCommerce' || $import_type == 'MarketPress' || $import_type == 'WPeCommerce' || $import_type == 'eShop' || $import_type =='CustomPosts' ) {
+			if($import_type == 'Posts' || $import_type == 'Pages' || $import_type == 'WooCommerce' || $import_type == 'WPeCommerce' || $import_type =='CustomPosts' ) {
 				return true;
 			}
 			else{

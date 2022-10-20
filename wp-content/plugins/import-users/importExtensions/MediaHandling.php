@@ -22,10 +22,10 @@ class MediaHandling{
 		require_once(ABSPATH . 'wp-admin/includes/file.php');
 		add_action('wp_ajax_image_options', array($this , 'imageOptions'));
 		add_action('wp_ajax_delete_image' , array($this , 'deleteImage'));
-		add_action('wp_ajax_media_report' , array($this , 'mediaReport'));
 	}
 
-	public static function imageOptions(){		
+	public static function imageOptions(){	
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');	
 		$media_settings['use_ExistingImage'] = sanitize_text_field($_POST['use_ExistingImage']);
 		$media_settings['overwriteImage'] = sanitize_text_field($_POST['overwriteImage']);
 		$media_settings['title'] = sanitize_text_field($_POST['title']);
@@ -60,6 +60,7 @@ class MediaHandling{
 	}
 
 	public function deleteImage(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$image = sanitize_text_field($_POST['image']);
 		$media_dir = wp_get_upload_dir();
 		$names = glob($media_dir['path'].'/'.'*.*');
@@ -135,30 +136,6 @@ class MediaHandling{
 			}
 		}
 		return $attach_id;
-	}
-
-	public function mediaReport(){
-		global $wpdb;
-		$list_of_images = $wpdb->get_results("select * from {$wpdb->prefix}ultimate_csv_importer_media GROUP BY `hash_key`,`image_type` ",ARRAY_A);
-		foreach( $list_of_images as $list_key => $list_val )
-		{
-			if(!empty($list_val['hash_key'])){
-				$file_name = $wpdb->get_results("select file_name from {$wpdb->prefix}smackcsv_file_events where hash_key = '{$list_val['hash_key']}'",ARRAY_A);
-			}
-			$filename[$list_key]= $file_name[0]['file_name'];
-			$module[$list_key] = $list_val['module'];
-			$image_type[$list_key] = $list_val['image_type'];
-			$image_status[$list_key] = $list_val['status'];
-			$number_of_images = $wpdb->get_results("select image_url from {$wpdb->prefix}ultimate_csv_importer_media where hash_key = '{$list_val['hash_key']}' and image_type = '{$image_type[$list_key]}' ",ARRAY_A);
-			$count[$list_key] = count($number_of_images);
-		}
-		$response['file_name'] = $filename ;
-		$response['module'] = $module ;
-		$response['count'] = $count;
-		$response['image_type'] = $image_type;
-		$response['status'] = $image_status;
-		echo wp_json_encode($response);
-		wp_die();
 	}
 
 	public function image_function($f_img , $post_id , $data_array = null,$option_name = null, $use_existing_image = false,$header_array = null , $value_array = null){

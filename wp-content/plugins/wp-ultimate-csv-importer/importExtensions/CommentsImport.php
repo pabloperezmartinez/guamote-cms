@@ -34,7 +34,43 @@ class CommentsImport {
 		$created_count = $updated_row_counts['created'];
 		$updated_count = $updated_row_counts['updated'];
 		$skipped_count = $updated_row_counts['skipped'];
-		
+
+		//To avoid invalid statements and scripts
+		// if(isset($data_array['comment_content'])){
+		// 	$data_array['comment_content'] = esc_textarea($data_array['comment_content']);
+		// }
+		$allowed_html = ['div' => ['class' => true, 'id' => true, 'style' => true, ], 
+		'a' => ['id' => true, 'href' => true, 'title' => true, 'target' => true, 'class' => true, 'style' => true, 'onclick' => true,], 
+		'strong' => [], 
+		'i' => ['id' => true, 'onclick' => true, 'style' => true, 'class' => true, 'aria-hidden' => true, 'title' => true ], 
+		'p' => ['style' => true, 'name' => true, 'id' => true, ], 
+		'img' => ['id' => true, 'style' => true, 'class' => true, 'src' => true, 'align' => true, 'src' => true, 'width' => true, 'height' => true, 'border' => true, ], 
+		'table' => ['id' => true, 'class' => true, 'style' => true, 'height' => true, 'cellspacing' => true, 'cellpadding' => true, 'border' => true, 'width' => true, 'align' => true, 'background' => true, 'frame' => true, 'rules' => true, ], 
+		'tbody' => [], 
+		'br' => ['bogus' => true, ], 
+		'tr' => ['id' => true, 'class' => true, 'style' => true, ], 
+		'th' => ['id' => true, 'class' => true, 'style' => true, ], 
+		'hr' => ['id' => true, 'class' => true, 'style' => true,], 
+		'h3' => ['style' => true, ], 
+		'td' => ['style' => true, 'id' => true, 'align' => true, 'width' => true, 'valign' => true, 'class' => true, 'colspan' => true, ], 
+		'span' => ['style' => true, 'class' => true, ], 
+		'h1' => ['style' => true, ], 
+		'thead' => [], 
+		'tfoot' => ['id' => true, 'style' => true, ], 
+		'figcaption' => ['id' => true, 'style' => true, ], 
+		'h4' => ['id' => true, 'align' => true, 'style' => true, ],
+		'h2' => ['id' => true, 'align' => true, 'style' => true, 'class' => true],
+		'select' => ['id' => true, 'name' => true, 'class' => true, 'data-size' =>true, 'data-live-search' =>true],
+		'option' => ['value' => true, 'selected' => true],
+		'label' =>['id' => true, 'class' =>true],
+		'input' => ['type' => true, 'value' => true, 'id' => true, 'name' => true, 'class' => true],
+		'form' => ['method' => true, 'name' => true, 'id' => true, 'action' => true]];
+
+		if(isset($data_array['comment_content'])){
+			$content = preg_replace('/<script>.+?<\/script>/i',"",$data_array['comment_content']);
+			$data_array['comment_content'] = wp_kses($content,$allowed_html);
+		}
+			
 		$commentid = '';
 		$post_id = isset($data_array['comment_post_ID']) ? $data_array['comment_post_ID'] :'';
 		$post_exists = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}posts WHERE id = '" . $post_id . "' and post_status in ('publish','draft','future','private','pending')", ARRAY_A);

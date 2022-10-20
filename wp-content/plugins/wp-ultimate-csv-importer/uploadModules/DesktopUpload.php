@@ -33,12 +33,13 @@ class DesktopUpload implements Uploads{
 	 * Upload file from desktop.
 	 */
     public function upload_function(){ 
+        check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
         $validate_instance = ValidateFile::getInstance();
         $zip_instance = ZipHandler::getInstance();
         global $wpdb;
         $file_table_name = $wpdb->prefix ."smackcsv_file_events";
           
-        $file_name = $_FILES['csvFile']['name'];    
+        $file_name = sanitize_file_name($_FILES['csvFile']['name']);    
         $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
         $validate_format = $validate_instance->validate_file_format($file_name);
         
@@ -54,18 +55,27 @@ class DesktopUpload implements Uploads{
                     $zip_response = [];    
                     $path = $upload_dir . $event_key . '.zip';
                     $extract_path = $upload_dir . $event_key;
-                    
+
                     if(move_uploaded_file($_FILES['csvFile']['tmp_name'], $path)){
                         chmod($path, 0777);
 
-                        $zip_response['success'] = true;
-                        $zip_response['filename'] = $file_name;
-                        $zip_response['file_type'] = 'zip'; 
-                        $zip_response['info'] = $zip_instance->zip_upload($path , $extract_path);
+                        $zip_result = $zip_instance->zip_upload($path , $extract_path);
+                       
+                        if($zip_result == 'UnSupported File Format'){
+                            $zip_response['success'] = false;
+                            $zip_response['message'] = "UnSupported File Format Inside Zip";
+                        }
+                        else{
+                            $zip_response['success'] = true;
+                            $zip_response['filename'] = $file_name;
+                            $zip_response['file_type'] = 'zip'; 
+                            $zip_response['info'] = $zip_result; 
+                        }
                     }else{
                         $zip_response['success'] = false;
                         $zip_response['message'] = "Cannot download zip file";
                     }   
+                 
                     echo wp_json_encode($zip_response); 
                     wp_die();
                 }
@@ -101,6 +111,7 @@ class DesktopUpload implements Uploads{
                                 $response['hashkey'] = $event_key;
                                 $response['posttype'] = $get_result['Post Type'];
                                 $response['selectedtype'] = $get_result['selected type'];
+                                $response['taxonomy'] = $get_result['Taxonomy'];
                                 $response['file_type'] = $file_extension;
                                 $response['file_size'] = $filesize;
                                 $response['message'] = 'success';
@@ -150,5 +161,4 @@ class DesktopUpload implements Uploads{
         wp_die();
 
     }
-
 }

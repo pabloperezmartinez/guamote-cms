@@ -42,6 +42,7 @@ class SupportMail {
 	}
 
 	public static function supportMail(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		if($_POST){
 			$email = sanitize_email($_POST['email']);
 			$url = get_option('siteurl');
@@ -67,6 +68,7 @@ class SupportMail {
 	}
 
 	public static function sendSubscribeEmail(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		if($_POST){
 			$email = sanitize_email($_POST['subscribe_email']);
 			$url = get_option('siteurl');

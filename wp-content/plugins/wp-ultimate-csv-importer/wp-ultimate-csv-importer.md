@@ -2,9 +2,9 @@
 
 Contributors: smackcoders, smacksupport
 Requires at least: 5.0
-Tested up to: 5.8.2
-Stable tag: 6.2.2
-Version: 6.2.2
+Tested up to: 6.0
+Stable tag: 6.5.4
+Version: 6.5.4
 Requires PHP: 5.2.4
 Author: smackcoders
 Author URI: https://profiles.wordpress.org/smackcoders/
@@ -205,6 +205,44 @@ If you'd like to help out by translating this plugin, please [sign up for an acc
 [youtube https://www.youtube.com/watch?v=8P8xtRY3bCM&feature=youtu.be]
 
 ## Changelog
+### 6.5.3 
+* Fixed : Added import support for default Categories and Tags
+
+### 6.5.2
+- Fixed : Restricted the internal url upload process
+
+### 6.5.1
+- Updated : Documentation section links
+- Updated : Modulename from export section  
+
+### 6.5 
+- Checked: Compatibility for WordPress 5.9.3
+- Added: Import and Export Support for WP Job Manager.
+
+### 6.4.4 
+- Checked: Compatibility for WordPress 5.9
+- Fixed: Comment content import.
+
+### 6.4.3 
+- Updated: All CSS and JS libraries to the latest version.
+- Added: Proper sanitization and escaping.
+- Fixed: Calling files remotely
+- Removed: wp-load.php and replaced with WordPress ajax call.
+- Fixed: Combining and/or Renaming Javascript Files
+
+### 6.4.2 
+- Added: CSRF Protection
+- Fixed: Security Issues (Removed curl,bitly urls and file_get_contents for remote URL instead used http api)
+- Updated: Bootstrap CSS and JS libraries to the latest.
+- Verified: Nonce Check.
+
+### 6.4.1
+- Fixed: Vulnerability Issue in Zip File Upload
+- Updated: Exporter Pro Buy Now and Upgrade to Pro Price changes
+
+### 6.4
+
+- Added: Import support for latest LearnPress-LMS plugin-V4.1.4.1:Courses,Lessons,Quizzes,Orders and Questions. 
 
 ### 6.3 
 
@@ -918,6 +956,36 @@ If you'd like to help out by translating this plugin, please [sign up for an acc
 - Initial release version. Tested and found works well without any issues.
 
 ## Upgrade Notice
+### 6.5.3 
+- Added: Upgrade now for latest updates.
+
+### 6.5.2 
+- Added: Upgrade now for latest updates.
+
+### 6.5.1
+
+- Added: Upgrade now for latest updates.
+### 6.5
+
+- Added: Upgrade now for latest updates.
+### 6.4.4
+
+- Added: Upgrade now for latest updates.
+### 6.4.3
+
+- Added: Upgrade now for latest updates.
+
+### 6.4.2
+
+- Added: Upgrade now for latest updates.
+
+### 6.4.1
+
+- Added: Upgrade now for latest updates.
+
+### 6.4 
+
+- Added: Upgrade now for latest updates.
 
 ### 6.3 
 

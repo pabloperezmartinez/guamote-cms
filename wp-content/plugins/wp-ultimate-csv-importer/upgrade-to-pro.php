@@ -137,8 +137,8 @@ border-right: 10px solid#00a699;border-bottom: 10px solid#00a699;
     <tr>
       <td style="font-weight:bold;">Price</td>
       <td><span class="txt-top"></span><span class="txt-l">$0</span></td>
-      <td class="text"><span class="txt-top"></span><span class="txt-l">$149</span></td>
-      <td class="default"><span class="txt-top"></span><span class="txt-l">$99</span></td>
+      <td class="text"><span class="txt-top"></span><span class="txt-l">$199</span></td>
+      <td class="default"><span class="txt-top"></span><span class="txt-l">$149</span></td>
     </tr>
     <tr>
       <td>Import</td>
@@ -153,7 +153,7 @@ border-right: 10px solid#00a699;border-bottom: 10px solid#00a699;
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
     </tr>
     <tr>
-      <td>Custom Post</td>
+      <td>Custom Post, BBPress, LearnPress</td>
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td class="text"><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
@@ -171,7 +171,7 @@ border-right: 10px solid#00a699;border-bottom: 10px solid#00a699;
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
     </tr>
     <tr>
-      <td>WP eCommerce, MarketPress</td>
+      <td>WP eCommerce</td>
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td class="text"><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
@@ -180,7 +180,7 @@ border-right: 10px solid#00a699;border-bottom: 10px solid#00a699;
       <td>WooCommerce: Product,Custom Attribute</td>
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td class="text"><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
-      <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
+      <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
     </tr>
     <tr>
       <td>WP Customer Reviews</td>
@@ -201,13 +201,13 @@ border-right: 10px solid#00a699;border-bottom: 10px solid#00a699;
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
     </tr>
     <tr>
-      <td>Custom Fields: ACF, Types, Pods, CMB2, CFS, Custom Press</td>
+      <td>Custom Fields: ACF, Toolset Types, Pods, CMB2, CFS, JetEngine, MetaBox, Custom Field Suite</td>
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
       <td class="text"><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
     </tr>
     <tr>
-      <td>YoastSEO</td>
+      <td>Yoast SEO</td>
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
       <td class="text"><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
@@ -225,13 +225,13 @@ border-right: 10px solid#00a699;border-bottom: 10px solid#00a699;
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
     </tr>
     <tr>
-      <td>WPML</td>
+      <td>WPML, Polylang</td>
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
       <td class="text"><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
     </tr>
     <tr>
-      <td>QTranslateX</td>
+      <td>Rank Math</td>
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
       <td class="text"><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
@@ -249,7 +249,7 @@ border-right: 10px solid#00a699;border-bottom: 10px solid#00a699;
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
     </tr>
     <tr>
-      <td>Events Manager</td>
+      <td>Events Manager, NextGEN Gallery</td>
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>
       <td class="bottom"><i class="fa fa-check" aria-hidden="true" style="font-size: 26px;color: #2CA01C;"></i></td>
       <td><i class="fa fa-times" aria-hidden="true" style="color: #ea1010;font-size: 19px;"></i></td>

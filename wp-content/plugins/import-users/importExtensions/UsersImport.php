@@ -69,6 +69,7 @@ class UsersImport{
 		$data_array = apply_filters('smack_csv_modify_userdata_filter', $data_array);
 
 		if ( $mode == 'Insert' ) {
+			$send_password = $data_array['user_pass'] ;
 			if ( empty( $data_array['user_pass'] ) ) {	
 				$data_array['user_pass'] = wp_generate_password( 12, false );		
 				$additional_meta_info = array(
@@ -92,6 +93,7 @@ class UsersImport{
 				$data_array['smack_uci_import'] = $additional_meta_info;	
 			}
 			$retID = wp_insert_user($data_array);
+			update_user_meta($retID, 'sendPassword', $send_password);
 			if ( !is_wp_error($retID) && !empty( $data_array['user_pass'] ) ) {
 				$wpdb->get_results("UPDATE {$wpdb->prefix}users SET user_pass = '{$data_array['user_pass']}' WHERE ID  = $retID");		
 			}

@@ -44,7 +44,7 @@ class CCTMExtension extends ExtensionHandler{
 			}
 
 			$import_type = $this->import_name_as($import_type);
-			if($import_type =='Posts' || $import_type =='Pages' || $import_type =='CustomPosts' || $import_type =='event' || $import_type =='location' || $import_type == 'event-recurring' || $import_type =='Users' || $import_type =='WooCommerce' || $import_type =='MarketPress' || $import_type =='WPeCommerce' || $import_type =='eShop') {		
+			if($import_type =='Posts' || $import_type =='Pages' || $import_type =='CustomPosts' || $import_type =='event' || $import_type =='location' || $import_type == 'event-recurring' || $import_type =='Users' || $import_type =='WooCommerce' || $import_type =='WPeCommerce') {		
 				return true;
 			}
 			else{

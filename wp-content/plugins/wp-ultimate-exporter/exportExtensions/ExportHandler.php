@@ -38,6 +38,7 @@ class ExportHandler extends ExportExtension{
 
 
 	public  function getPostTypes(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$i = 0;
 		$get_post_types = get_post_types();
 		array_push($get_post_types, 'widgets');
@@ -52,6 +53,7 @@ class ExportHandler extends ExportExtension{
 	}
 
 	public function getAuthors(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$i = 0;
 		$blogusers =  get_users( [ 'role__in' => [ 'administrator', 'author' ] ] );
 		foreach( $blogusers as $user ) { 
@@ -64,6 +66,7 @@ class ExportHandler extends ExportExtension{
 	}
 
 	public function getTaxonomies(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$get_taxonomies = array('product_cat','product_tag','post_tag');
 		$i = 0;
 		foreach ($get_taxonomies as $key => $value) {

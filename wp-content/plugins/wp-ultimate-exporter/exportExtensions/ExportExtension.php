@@ -10,7 +10,9 @@ namespace Smackcoders\SMEXP;
 if ( ! defined( 'ABSPATH' ) )
 	exit; // Exit if accessed directly
 
-class ExportExtension {
+if(class_exists('\Smackcoders\FCSV\MappingExtension')){
+
+class ExportExtension extends \Smackcoders\FCSV\MappingExtension{
 
 	public $response = array();
 	public  $headers = array();
@@ -61,6 +63,7 @@ class ExportExtension {
 
 
 	public function totalRecords(){
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		global $wpdb;
 		//$module = 'WooCommerce';
 		$module = sanitize_text_field($_POST['module']);
@@ -103,10 +106,10 @@ class ExportExtension {
 			echo wp_json_encode(count($get_menu_ids));
 			wp_die();
 		}
-		elseif($module == 'CustomPosts' && $optionalType == 'widgets'){
-			echo wp_json_encode(1);
-			wp_die();
-		}
+		// elseif($module == 'CustomPosts' && $optionalType == 'widgets'){
+		// 	echo wp_json_encode(1);
+		// 	wp_die();
+		// }
 		else {
 			$optional_type = NULL;
 			if($module == 'CustomPosts') {
@@ -153,7 +156,7 @@ class ExportExtension {
 	}
 
 	public  function parseData(){
-
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		if(!empty($_POST)) {
 
 			$this->module          = sanitize_text_field($_POST['module']);
@@ -261,7 +264,7 @@ class ExportExtension {
 		elseif($module == 'CustomerReviews'){
 			$optionalType = 'wpcr3_review';
 		}
-		elseif($module == 'WooCommerce' || $module == 'WooCommerceOrders' || $module == 'WooCommerceCoupons' || $module == 'WooCommerceRefunds' || $module == 'WooCommerceVariations' || $module == 'Marketpress' ){
+		elseif($module == 'WooCommerce' || $module == 'WooCommerceOrders' || $module == 'WooCommerceCoupons' || $module == 'WooCommerceRefunds' || $module == 'WooCommerceVariations'){
 			$optionalType = 'product';
 		}
 		elseif($module == 'WooCommerce'){
@@ -306,14 +309,12 @@ class ExportExtension {
 		case 'Pages':
 		case 'CustomPosts':
 		case 'WooCommerce':
-		case 'Marketpress':
 		case 'WooCommerceVariations':
 		case 'WooCommerceOrders':
 		case 'WooCommerceCoupons':
 		case 'WooCommerceRefunds':
 		case 'WPeCommerce':
 		case 'WPeCommerceCoupons':
-		case 'eShop':
 			self::FetchDataByPostTypes();
 			break;
 		case 'Users':
@@ -323,7 +324,7 @@ class ExportExtension {
 			self::FetchComments();
 			break;
 		case 'CustomerReviews':
-			ExportExtension::$review_export->FetchCustomerReviews($this->module,$this->mode, $this->optionalType, $this->conditions,$this->offset,$this->limit);
+			ExportExtension::$review_export->FetchCustomerReviews($this->module, $this->optionalType, $this->conditions, $this->offset, $this->limit, $this->mode);
 			break;
 		case 'Categories':
 			ExportExtension::$post_export->FetchCategories($this->module,$this->optionalType);
@@ -331,7 +332,7 @@ class ExportExtension {
 		case 'Tags':
 			ExportExtension::$post_export->FetchTags($this->mode,$this->module,$this->optionalType);
 		case 'Taxonomies':
-			ExportExtension::$woocom_export->FetchTaxonomies($this->mode,$this->module,$this->optionalType);
+			ExportExtension::$woocom_export->FetchTaxonomies($this->module, $this->optionalType, $this->mode);
 			break;
 
 		}
@@ -352,13 +353,37 @@ class ExportExtension {
 			if($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to']){
 				$get_available_user_ids .= " where u.user_registered >= '" . $this->conditions['specific_period']['from'] . "'";
 			}else{
-				$get_available_user_ids .= " where u.user_registered >= '" . $this->conditions['specific_period']['from'] . "' and u.user_registered <= '" . $this->conditions['specific_period']['to'] . "'";
+				$get_available_user_ids .= " where u.user_registered >= '" . $this->conditions['specific_period']['from'] . "' and u.user_registered <= '" . $this->conditions['specific_period']['to'] . " 23:00:00'";
 			}
 		}
 		$availableUsers = $wpdb->get_col($get_available_user_ids);
-		$this->totalRowCount = count($availableUsers);
-		$get_available_user_ids .= " order by ID asc limit $this->offset, $this->limit";
-		$availableUserss = $wpdb->get_col($get_available_user_ids);
+		
+		if(!empty($this->conditions['specific_period']['is_check']) && $this->conditions['specific_period']['is_check'] == 'true') {
+			if($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to']){
+				$availableUserss= array();
+				foreach($availableUsers as $user_value){
+					$get_user_date_time = $wpdb->get_results( $wpdb->prepare("SELECT user_registered FROM {$wpdb->prefix}users WHERE ID=$user_value") ,ARRAY_A);
+					$get_user_date = date("Y-m-d",strtotime($get_user_date_time[0]['user_registered'] ));
+					if($get_user_date == $this->conditions['specific_period']['from']){
+						$get_user_id_value[] = $user_value;
+					}		
+	
+				} 
+				$this->totalRowCount = count($get_user_id_value);
+				$availableUserss = $get_user_id_value;
+			}
+			else{
+				$this->totalRowCount = count($availableUsers);
+				$get_available_user_ids .= " order by ID asc limit $this->offset, $this->limit";
+				$availableUserss = $wpdb->get_col($get_available_user_ids);
+			}
+		}
+		else{
+			$this->totalRowCount = count($availableUsers);
+			$get_available_user_ids .= " order by ID asc limit $this->offset, $this->limit";
+			$availableUserss = $wpdb->get_col($get_available_user_ids);
+		}
+
 		if(!empty($availableUserss)) {
 			$whereCondition = '';
 			foreach($availableUserss as $userId) {
@@ -524,7 +549,7 @@ class ExportExtension {
 			if($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to']){
 				$get_comments .= " and comment_date >= '" . $this->conditions['specific_period']['from'] . "'";
 			}else{
-				$get_comments .= " and comment_date >= '" . $this->conditions['specific_period']['from'] . "' and comment_date <= '" . $this->conditions['specific_period']['to'] . "'";
+				$get_comments .= " and comment_date >= '" . $this->conditions['specific_period']['from'] . "' and comment_date <= '" . $this->conditions['specific_period']['to'] . " 23:00:00'";
 			}
 		}
 		// Check for specific authors
@@ -534,9 +559,33 @@ class ExportExtension {
 			}
 		}
 		$comments = $wpdb->get_results( $get_comments );
-		$this->totalRowCount = count($comments);
-		$get_comments .= " order by comment_ID asc limit $this->offset, $this->limit";
-		$limited_comments = $wpdb->get_results( $get_comments );
+		
+		if(!empty($this->conditions['specific_period']['is_check']) && $this->conditions['specific_period']['is_check'] == 'true') {
+			if($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to']){
+				$limited_comments = array();
+				foreach($comments as $comments_value){
+					$get_comment_date_time = $wpdb->get_results( $wpdb->prepare("SELECT comment_date FROM {$wpdb->prefix}comments WHERE comment_id=$comments_value->comment_ID") ,ARRAY_A);
+					$get_comment_date = date("Y-m-d",strtotime($get_comment_date_time[0]['comment_date'] ));
+					if($get_comment_date == $this->conditions['specific_period']['from']){
+						$get_comment_date_value[] = $comments_value;
+					}		
+
+				}
+				$this->totalRowCount = count($get_comment_date_value);
+				$limited_comments = $get_comment_date_value;
+			}
+			else{
+				$this->totalRowCount = count($comments);
+				$get_comments .= " order by comment_ID asc limit $this->offset, $this->limit";
+				$limited_comments = $wpdb->get_results( $get_comments );
+			}
+		}
+		else{
+			$this->totalRowCount = count($comments);
+			$get_comments .= " order by comment_ID asc limit $this->offset, $this->limit";
+			$limited_comments = $wpdb->get_results( $get_comments );
+		}
+
 		if(!empty($limited_comments)) {
 			foreach($limited_comments as $commentInfo) {
 				$user_id=$commentInfo->user_id;
@@ -567,13 +616,12 @@ class ExportExtension {
 	 * @param $module       - Module to be export
 	 * @param $optionalType - Exclusions
 	 */
-	public function generateHeaders ($module, $optionalType) {
-		global $csv_class;
+	public function generateHeaders ($module, $optionalType) {		
 		if($module == 'CustomPosts' || $module == 'Taxonomies'){
-			$default = $csv_class->get_fields($optionalType);
+			$default = $this->get_fields($optionalType); // Call the super class function
 		}
 		else{
-			$default = $csv_class->get_fields($module);
+			$default = $this->get_fields($module);
 		}
 
 		$headers = [];
@@ -612,6 +660,11 @@ class ExportExtension {
 			foreach($recordsToBeExport as $postId) {
 				$this->data[$postId] = $this->getPostsDataBasedOnRecordId($postId);
 				$exp_module = $this->module; 
+
+				if($exp_module == 'Posts' || $exp_module =='WooCommerce' || $exp_module == 'CustomPosts' || $exp_module == 'Categories' || $exp_module == 'Tags' || $exp_module == 'Taxonomies' || $exp_module == 'Pages'){
+					$this->getWPMLData($postId,$this->optionalType,$exp_module);
+				}
+
 				if($exp_module == 'Posts' ||  $exp_module == 'CustomPosts' ||$exp_module == 'Pages'||$exp_module == 'WooCommerce'){
 					$this->getPolylangData($postId,$this->optionalType,$exp_module);
 				}	
@@ -772,7 +825,7 @@ class ExportExtension {
 	public function getTermsAndTaxonomies ($id, $type, $optionalType) {
 		$TermsData = array();
 
-		if($type == 'WooCommerce' || $type == 'Marketpress' || ($type == 'CustomPosts' && $type == 'WooCommerce')) {
+		if($type == 'WooCommerce' || ($type == 'CustomPosts' && $type == 'WooCommerce')) {
 			$type = 'product';
 			$postTags = '';
 			$taxonomies = get_object_taxonomies($type);
@@ -808,7 +861,7 @@ class ExportExtension {
 					$this->data[$id][$taxonomy] = $postCategory;
 				}
 			}
-			if(($type == 'WooCommerce' && $type != 'CustomPosts') || $type == 'Marketpress' ) {
+			if($type == 'WooCommerce' && $type != 'CustomPosts') {
 				$product = wc_get_product	($id);
 				$pro_type = $product->get_type();
 				switch ($pro_type) {
@@ -887,15 +940,32 @@ class ExportExtension {
 			global $wpdb;
 			$postTags = $postCategory = '';
 			$taxonomyId = $wpdb->get_col($wpdb->prepare("select term_taxonomy_id from {$wpdb->prefix}term_relationships where object_id = %d", $id));
+			$taxo = [];
 			foreach($taxonomyId as $taxonomy) {
 				$taxo[] = get_term($taxonomy);
 			}
-			foreach($taxo as $key=>$taxo_val){
-				if($taxo_val->taxonomy == 'category'){
-					$taxo1[]=$taxo_val;
-					
+			foreach($taxonomyId as $taxonomy) {
+				$taxonomytypeid =$wpdb->get_results("SELECT * FROM {$wpdb->prefix}term_taxonomy WHERE term_taxonomy_id='$taxonomy' ");
+				if($taxonomytypeid[0]->taxonomy == 'course_category') {
+					$taxonomyTypeId = $wpdb->get_col($wpdb->prepare("select term_id from {$wpdb->prefix}term_taxonomy where term_taxonomy_id = %d", $taxonomytypeid[0]->term_taxonomy_id));
+					$taxonomy_Type_Id = $taxonomyTypeId[0];
+					$taxo0[] = get_term($taxonomy_Type_Id);
+				}
+				if($taxonomytypeid[0]->taxonomy =='course_tag') {
+					$taxonomyTypeId1 = $wpdb->get_col($wpdb->prepare("select term_id from {$wpdb->prefix}term_taxonomy where term_taxonomy_id = %d", $taxonomytypeid[0]->term_taxonomy_id));
+					$taxonomy_Type_Id1 = $taxonomyTypeId1[0];
+					$taxo2[] = get_term($taxonomy_Type_Id1);
 				}
 			}
+
+			if(!empty($taxo)){
+				foreach($taxo as $key=>$taxo_val){
+					if($taxo_val->taxonomy == 'category'){
+						$taxo1[]=$taxo_val;
+					}
+				}
+			}
+
 			if(!empty($taxonomyId)) {
 				foreach($taxonomyId as $taxonomy) {
 					$taxonomyType = $wpdb->get_col($wpdb->prepare("select taxonomy from {$wpdb->prefix}term_taxonomy where term_taxonomy_id = %d", $taxonomy));
@@ -922,8 +992,24 @@ class ExportExtension {
 											$this->data[$id][$termName] = $taxonomyData[0];
 										}else {
 											$taxonomyID = $wpdb->get_col($wpdb->prepare("select term_id from {$wpdb->prefix}terms where name = %s",$taxonomyData[0]));
-											$postterm = substr($this->hierarchy_based_term_name($taxo, $taxanomy_name), 0 , -1);
-											$this->data[$id][$termName] = $postterm;
+											if($taxanomy_name =='course_category') {
+												foreach($taxo0 as $taxo_key => $taxo_value){
+													$postterm1 .= $taxo_value->name.',';
+												}
+												//$postterm1 = substr($this->hierarchy_based_term_name($taxo0, $taxanomy_name), 0 , -1);
+												$this->data[$id][$termName] =rtrim($postterm1,',');
+											}
+											elseif($taxanomy_name =='course_tag') {
+												foreach($taxo2 as $taxo_key1 => $taxo_value1){
+													$postterm2 .= $taxo_value1->name.',';
+												}
+												//$postterm2 = substr($this->hierarchy_based_term_name($taxo2, $taxanomy_name), 0 , -1);
+												$this->data[$id][$termName] = rtrim($postterm2,',');
+											}
+											else{
+												$postterm = substr($this->hierarchy_based_term_name($taxo, $taxanomy_name), 0 , -1);
+												$this->data[$id][$termName] = $postterm;
+											}
 											//$this->data[$id][$termName] = $get_exist_data . ',' . $this->hierarchy_based_term_name(get_term($taxonomy), $taxanomy_name);
 											//$this->data[$id][$taxanomy_name] = $get_exist_data . '|' . $this->hierarchy_based_term_name(get_term($taxonomy), $taxanomy_name);
 										}
@@ -938,9 +1024,10 @@ class ExportExtension {
 												$postTags .= $tags . ',';
 											}
 											$postTags = substr($postTags, 0, -1);
-											if( $this->data[$id][$termName] == '' ) {
+							
+											//if( $this->data[$id][$termName] == '' ) {
 												$this->data[$id][$termName] = $postTags;
-											}
+											//}
 										}
 										if($termName == 'post_category'){
 											$postCategory = '';
@@ -1172,6 +1259,26 @@ class ExportExtension {
 				$result_query1 = $wpdb->get_results($query1);
 				if (!empty($result_query1)) {
 					foreach ($result_query1 as $posts) {
+
+						//pods export 
+						$post_type=isset($posts->post_type)?$posts->post_type:'';
+						$p_type=$post_type;
+						$posid = $wpdb->get_results("SELECT ID FROM {$wpdb->prefix}posts  where post_name='$p_type' and post_type='_pods_pod'");
+						foreach($posid as $podid){
+							$pods_id = $podid->ID;
+							$storage = $wpdb->get_results("SELECT meta_value FROM {$wpdb->prefix}postmeta  where post_id=$pods_id AND meta_key='storage'");
+							foreach($storage as $pod_storage){
+								$pod_stype = $pod_storage->meta_value;
+							}
+						}
+						if(isset($pod_stype) && $pod_stype=='table'){
+							$tab='pods_'.$p_type;
+							$tab_val = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}$tab where id=$id");
+							foreach($tab_val as $table_key =>$table_val ){
+								$posts = array_merge((array)$posts,(array)$table_val);
+							}
+						}
+
 						foreach ($posts as $post_key => $post_value) {
 							if ($post_key == 'post_status') {
 								if (is_sticky($id)) {
@@ -1201,6 +1308,50 @@ class ExportExtension {
 				}
 
 				return $PostData;
+			}
+
+			public function getWPMLData ($id,$optional_type,$exp_module) {
+				global $wpdb;
+				global $sitepress;
+				if($sitepress != null && is_plugin_active('wpml-ultimate-importer/wpml-ultimate-importer.php')) {
+					$icl_translation_table = $wpdb->prefix.'icl_translations';
+					if($exp_module == 'Categories' || $exp_module == 'Tags' || $exp_module == 'Taxonomies'){
+						$get_element_type = 'tax_'.$optional_type;
+					}
+					else{
+						$get_element_type = 'post_'.$optional_type;
+					}
+					$args = array('element_id' => $id ,'element_type' => $get_element_type);
+					$get_language_code = apply_filters( 'wpml_element_language_code', null, $args );
+					// $code = apply_filters( 'wpml_post_language_details', null,  $id );
+					// $get_language_code = $code['language_code'];
+					//$get_language_code = $wpdb->get_var("select language_code from {$icl_translation_table} where element_id ='{$id}'");
+					$get_source_language = $wpdb->get_var("select source_language_code from {$icl_translation_table} where element_id ='{$id}' and language_code ='{$get_language_code}'");
+					//$get_trid = $wpdb->get_var("select trid from {$icl_translation_table} where element_id ='{$id}'");
+					 
+					$get_trid = apply_filters( 'wpml_element_trid', NULL, $id,$get_element_type );
+					if(!empty($get_source_language)){
+						$original_element_id_prepared = $wpdb->prepare(
+							"SELECT element_id
+							FROM {$wpdb->prefix}icl_translations
+							WHERE trid=%d
+							AND source_language_code IS NULL
+							LIMIT 1",$get_trid
+						);
+
+						$element_id = $wpdb->get_var( $original_element_id_prepared );
+						if($exp_module == 'Posts' || $exp_module == 'WooCommerce' || $exp_module == 'CustomPosts' || $exp_module == 'Pages'){
+							$element_title = get_the_title( $element_id );
+							$this->data[$id]['translated_post_title'] = $element_title;
+						}
+						else{
+							$element_title =  $wpdb->get_var("select name from $wpdb->terms where term_id ='{$element_id}'");
+							$this->data[$id]['translated_taxonomy_title'] = $element_title;
+						}
+					}
+					$this->data[$id]['language_code'] = $get_language_code;
+					return $this->data[$id];
+				}	
 			}
 
 			public function getAttachment($id)
@@ -1290,7 +1441,7 @@ class ExportExtension {
 								else if(isset($rowValue['_'.$key])){ // Is wp custom fields
 									$rowValue[$key] = $this->returnMetaValueAsCustomerInput($rowValue['_'.$key], $hKey);
 								}
-								else if($aioseo_field_value= $this->getaioseoFieldValue($rowValue['ID'])){
+								else if(isset($rowValue['ID']) && $aioseo_field_value = $this->getaioseoFieldValue($rowValue['ID'])){
 									$rowValue['og_title'] = $aioseo_field_value[0]->og_title;
 									$rowValue['og_description']= $aioseo_field_value[0]->og_description;
 									$rowValue['custom_link'] = $aioseo_field_value[0]->canonical_url;
@@ -1802,10 +1953,11 @@ class ExportExtension {
 			public function split_terms_by_arrow($hierarchy_terms,$termParentName){
 
 				krsort($hierarchy_terms);
-				$terms_value.=$termParentName.'>'.$hierarchy_terms[0];
+				$terms_value = $termParentName.'>'.$hierarchy_terms[0];
 				//return implode('>', $hierarchy_terms);
 				return $terms_value;
 			}
 }
 
 return new exportExtension();
+}

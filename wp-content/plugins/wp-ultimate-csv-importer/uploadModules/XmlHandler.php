@@ -28,7 +28,7 @@ class XmlHandler {
 
 
 	public function parse_xml(){
-
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$row_count = intval($_POST['row']);
 		$hash_key = sanitize_key($_POST['HashKey']);
 

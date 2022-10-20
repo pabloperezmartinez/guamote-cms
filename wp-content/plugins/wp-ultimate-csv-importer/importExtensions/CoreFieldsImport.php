@@ -23,10 +23,12 @@ class CoreFieldsImport {
 		return CoreFieldsImport::$core_instance;
 	}
 
-	function set_core_values($header_array ,$value_array , $map , $type , $mode , $line_number , $check , $hash_key, $unmatched_row){
+	function set_core_values($header_array ,$value_array , $map , $type , $mode , $line_number , $check , $hash_key, $unmatched_row, $wpml_array = null){
 		global $wpdb;
 		global $uci_woocomm_instance;
 		global $userimp_class;
+		global $sitepress;
+
 		$helpers_instance = ImportHelpers::getInstance();
 		CoreFieldsImport::$media_instance->header_array = $header_array;
 		CoreFieldsImport::$media_instance->value_array = $value_array;
@@ -49,14 +51,18 @@ endif;
 			$comments_instance = CommentsImport::getInstance();
 			$customer_reviews_instance = CustomerReviewsImport::getInstance();
 			$learnpress_instance = LearnPressImport::getInstance();
+			$taxonomies_instance = TaxonomiesImport::getInstance();
 			
 			$post_values = [];
 			$post_values = $helpers_instance->get_header_values($map , $header_array , $value_array);
+			$wpml_values = $helpers_instance->get_header_values($wpml_array , $header_array , $value_array);
 
 			if($type == 'WooCommerce Product'){
-				$result = $uci_woocomm_instance->woocommerce_product_import($post_values , $mode , $check , $hash_key , $line_number, $unmatched_row);
+				$result = $uci_woocomm_instance->woocommerce_product_import($post_values , $mode , $check , $hash_key , $line_number, $unmatched_row, $wpml_values);
 			}
-
+			if(($type == 'Categories') || ($type == 'Tags')){
+				$result = $taxonomies_instance->taxonomies_import_function($post_values , $mode , $import_type , $unmatched_row, $check , $hash_key ,$line_number ,$header_array ,$value_array);
+			}
 			if($type == 'Users'){
 				$result = $userimp_class->users_import_function($post_values , $mode ,$hash_key , $line_number);
 			}
@@ -109,11 +115,17 @@ endif;
 				elseif( $type == 'Users'){
 					$this->detailed_log[$line_number]['VERIFY'] = "<b> Click here to verify</b> - <a href='" . get_edit_user_link( $post_id , true ) . "' target='_blank' title='" . esc_attr( 'Edit this item' ) . "'> User Profile </a>";
 				}
+				elseif($type == 'Tags' || $type == 'Categories' || $type == 'post_tag' || $type =='Post_category'){
+					$this->detailed_log[$line_number]['VERIFY'] = "<b> Click here to verify</b> - <a href='" . get_edit_term_link( $post_id, $import_type ) . "'target='_blank' title='" . esc_attr( 'Edit this item' ) . "'>Admin View</a>";
+				}
 				elseif($type == 'lp_order'){
 					$this->detailed_log[$line_number]['VERIFY'] = "<b> Click here to verify</b> - <a href='" . get_edit_post_link( $post_id, true ) . "'target='_blank' title='" . esc_attr( 'Edit this item' ) . "'>Admin View</a>";
 				}
-				elseif($type != 'nav_menu_item'){
+				elseif($type != 'nav_menu_item' && isset($post_values['post_title'])){
 					$this->detailed_log[$line_number]['VERIFY'] = "<b> Click here to verify</b> - <a href='" . get_permalink( $post_id ) . "' target='_blank' title='" . esc_attr( sprintf( __( 'View &#8220;%s&#8221;' ), $post_values['post_title'] ) ) . "'rel='permalink'>Web View</a> | <a href='" . get_edit_post_link( $post_id, true ) . "'target='_blank' title='" . esc_attr( 'Edit this item' ) . "'>Admin View</a>";
+				}
+				elseif($type == 'Comments'){					
+					$this->detailed_log[$line_number]['VERIFY'] = "<b> Click here to verify</b> - <a href='" . get_comment_link( $post_id ) . "' target='_blank' title='" . esc_attr( sprintf( __( 'View &#8220;%s&#8221;' ), $post_values['post_title'] ) ) . "'rel='permalink'>Web View</a> | <a href='" . get_edit_comment_link( $post_id, true ) . "'target='_blank' title='" . esc_attr( 'Edit this item' ) . "'>Admin View</a>";
 				}
 				if(isset($post_values['post_status'])){
 
@@ -206,7 +218,37 @@ endif;
 			if($check == 'post_title'){
 				$title = $post_values['post_title'];
 				$title = $wpdb->_real_escape($title);
-				$get_result =  $wpdb->get_results("SELECT ID FROM {$wpdb->prefix}posts WHERE post_title = '$title' AND post_type = '$import_as' AND post_status != 'trash' order by ID DESC ");		
+				
+				if($sitepress != null && is_plugin_active('wpml-ultimate-importer/wpml-ultimate-importer.php')){
+					$get_result =  $wpdb->get_results("SELECT ID FROM {$wpdb->prefix}posts WHERE post_title = '$title' AND post_type = '$import_as' AND post_status != 'trash' order by ID DESC ");		
+					foreach($get_result as $wpml_result){
+						$wpml_id[] = $wpml_result->ID;
+					}	
+					$template_table_name = $wpdb->prefix . "ultimate_csv_importer_mappingtemplate";
+					$background_values = $wpdb->get_results("SELECT mapping FROM $template_table_name WHERE `eventKey` = '$hash_key' ");
+					foreach ($background_values as $values) {
+						$mapped_fields_values = $values->mapping;
+					}
+					$map_wpml = unserialize($mapped_fields_values);
+					
+					$wpml_values = $helpers_instance->get_header_values($map_wpml['WPML'], $header_array , $value_array);
+					$get_results =array();
+					$w = 0;
+					foreach($wpml_id as $w_id){
+						$languagecode =  $wpdb->get_var("SELECT language_code FROM {$wpdb->prefix}icl_translations WHERE element_id = '$w_id'");		
+						if($wpml_values['language_code'] == $languagecode){
+							$get_results[$w]['ID']= $w_id;
+
+							$w++;
+						}
+					}
+					foreach($get_results as $g_result){
+						$getresult[] = (object) $g_result;
+					}
+				}
+				else{
+					$get_result =  $wpdb->get_results("SELECT ID FROM {$wpdb->prefix}posts WHERE post_title = '$title' AND post_type = '$import_as' AND post_status != 'trash' order by ID DESC ");		
+				}		
 			}
 			if($check == 'post_name'){
 				$name = $post_values['post_name'];
@@ -223,14 +265,16 @@ endif;
 			$skipped_count = $updated_row_counts['skipped'];
 
 			if($mode == 'Insert'){
-
+				$orig_img_src = [];
 				if (is_array($get_result) && !empty($get_result)) {
 					$fields = $wpdb->get_results("UPDATE $log_table_name SET skipped = $skipped_count WHERE hash_key = '$hash_key'");
 					$this->detailed_log[$line_number]['Message'] =  "Skipped, Due to duplicate found!.";
 				}else{
 
 					$media_handle = get_option('smack_image_options');
-					if($media_handle['media_settings']['media_handle_option'] == 'true' && $media_handle['media_settings']['enable_postcontent_image'] == 'true'){
+					if($media_handle['media_settings']['media_handle_option'] == 'true' 
+					&& isset($media_handle['media_settings']['enable_postcontent_image'])
+					&& $media_handle['media_settings']['enable_postcontent_image'] == 'true'){
 						if(preg_match("/<img/", $post_values['post_content'])) {
 
 							$content = "<p>".$post_values['post_content']."</p>";
@@ -273,7 +317,33 @@ endif;
 						if(is_plugin_active('multilanguage/multilanguage.php')) {
 							$post_id = $this->multiLang($post_values);
 						}
+						else if($sitepress != null && is_plugin_active('wpml-ultimate-importer/wpml-ultimate-importer.php')){
+							$post_values['post_content']=isset($post_values['post_content'])?$post_values['post_content']:'';
+							$post_values['post_content'] = html_entity_decode($post_values['post_content']);
+							$active_languages = $wpdb->get_results("SELECT tag FROM {$wpdb->prefix}icl_languages where active = 1");
+							foreach($active_languages as $lang){
+								$active [] =$lang->tag;
+							}
+							$template_table_name = $wpdb->prefix . "ultimate_csv_importer_mappingtemplate";
+							$background_values = $wpdb->get_results("SELECT mapping FROM $template_table_name WHERE `eventKey` = '$hash_key' ");
+							foreach ($background_values as $values) {
+								$mapped_fields_values = $values->mapping;
+							}
+							$map_wpml = unserialize($mapped_fields_values);
+							
+							$wpml_values = $helpers_instance->get_header_values($map_wpml['WPML'], $header_array , $value_array);
+							if(in_array($wpml_values['language_code'],$active)){
+								$post_id = wp_insert_post($post_values);
+								$status = $post_values['post_status'];
+								$update=$wpdb->get_results("UPDATE {$wpdb->prefix}posts set post_status = '$status' where id = $post_id");
+							}
+							else{
+								$wpml_message = "The given language code not configured in WPML";
+							}
+						}
 						else{
+							$post_values['post_content']=isset($post_values['post_content'])?$post_values['post_content']:'';
+							$post_values['post_content'] = html_entity_decode($post_values['post_content']);													
 							$post_id = wp_insert_post($post_values);
 						}
 
@@ -304,11 +374,14 @@ endif;
 					if(preg_match("/<img/", $post_values['post_content'])) {
 				
 						$shortcode_table = $wpdb->prefix . "ultimate_csv_importer_shortcode_manager";
-						 foreach ($orig_img_src as $img => $img_val){
-						 	//$shortcode  = $shortcode_img[$img][$img];
-							 $shortcode  = 'inline';
-							 $wpdb->get_results("INSERT INTO $shortcode_table (image_shortcode , original_image , post_id,hash_key) VALUES ( '{$shortcode}', '{$img_val}', $post_id  ,'{$hash_key}')");
-						 }
+						
+						if(!empty($orig_img_src)){						
+							foreach ($orig_img_src as $img => $img_val){
+								//$shortcode  = $shortcode_img[$img][$img];
+								$shortcode  = 'inline';
+								$wpdb->get_results("INSERT INTO $shortcode_table (image_shortcode , original_image , post_id,hash_key) VALUES ( '{$shortcode}', '{$img_val}', $post_id  ,'{$hash_key}')");
+							}
+						}
 				
 						$doc = new \DOMDocument();
 						$searchNode = $doc->getElementsByTagName( "img" );
@@ -327,11 +400,18 @@ endif;
 							$this->detailed_log[$line_number]['Message'] = "Can't insert this " . $post_values['post_type'] . ". " . $post_id->get_error_message();
 						}
 						else {
-							$this->detailed_log[$line_number]['Message'] =  "Can't insert this " . $post_values['post_type'];
+							$wpml_message  = isset($wpml_message )?$wpml_message:'';
+							if($sitepress != null && is_plugin_active('wpml-ultimate-importer/wpml-ultimate-importer.php')){
+								$this->detailed_log[$line_number]['Message'] =  "Can't insert this " . $post_values['post_type'].'. '.$wpml_message;
+							}
+							else{
+								$this->detailed_log[$line_number]['Message'] =  "Can't insert this " . $post_values['post_type'];
+							}
 						}
 						$fields = $wpdb->get_results("UPDATE $log_table_name SET skipped = $skipped_count WHERE hash_key = '$hash_key'");
 					}	
 					else{
+						$post_values['specific_author'] = isset($post_values['specific_author'])?$post_values['specific_author']:'';
 						$this->detailed_log[$line_number]['Message'] = 'Inserted ' . $post_values['post_type'] . ' ID: ' . $post_id . ', ' . $post_values['specific_author'];
 					}
 				}

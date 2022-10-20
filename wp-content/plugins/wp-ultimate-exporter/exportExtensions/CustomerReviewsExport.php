@@ -33,7 +33,7 @@ class CustomerReviewExport extends ExportExtension{
 		$this->plugin = Plugin::getInstance();
 	}
 
-	public function FetchCustomerReviews($module,$mode = null,$optionalType,$conditions,$offset,$limit) {
+	public function FetchCustomerReviews($module, $optionalType, $conditions, $offset, $limit, $mode = null) {
 		global $wpdb;
 		$headers = array();
 		CustomerReviewExport::$export_instance->generateHeaders($module, $optionalType);

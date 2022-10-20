@@ -19,11 +19,10 @@ class MappingExtension{
 		$plugin_pages = ['com.smackcoders.csvimporternew.menu'];
 		global $plugin_ajax_hooks;
 
-		$request_page = isset($_REQUEST['page']) ? $_REQUEST['page'] : '';
-		$request_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+		$request_page = isset($_REQUEST['page']) ?sanitize_text_field($_REQUEST['page']) : '';
+		$request_action = isset($_REQUEST['action']) ? sanitize_text_field($_REQUEST['action']) : '';
 		if (in_array($request_page, $plugin_pages) || in_array($request_action, $plugin_ajax_hooks)) {
 			add_action('wp_ajax_mappingfields',array($this,'mapping_field_function'));
-			add_action('wp_ajax_getfields',array($this,'get_fields'));
 		}
 	}
 
@@ -48,7 +47,7 @@ class MappingExtension{
 	 * @return array - mapping fields
 	 */
 	public function mapping_field_function(){
-
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 		$import_type = sanitize_text_field($_POST['Types']);
 		$hash_key = sanitize_key($_POST['HashKey']);
 		$mode = sanitize_text_field($_POST['Mode']);
@@ -155,28 +154,10 @@ class MappingExtension{
 	}
 
 	/**
-	 * Ajax Call 
-	 * Provides all Widget Fields for Export Section
-	 * @return array - mapping fields
-	 */
-	public function get_export_fields(){
-		$import_type = sanitize_text_field($_POST['Types']);
-		$response = [];
-
-		$value = $this->mapping_fields($import_type);
-		$response['success'] = true;
-		$response['fields'] = $value;
-
-		echo wp_json_encode($response);
-		wp_die();  
-	}
-
-	/**
 	 * Provides all Widget Fields for Export Section
 	 * @return array - mapping fields
 	 */
 	public function get_fields($module){ 
-		
 		$import_type = $module;
 		$response = [];
 		$value = $this->mapping_fields($import_type,'Export');

@@ -10,7 +10,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WP Ultimate CSV Importer
- * Version:     6.3
+ * Version:     7.0
  * Plugin URI:  https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
  * Description: Seamlessly create posts, custom posts, pages, media, SEO and more from your CSV data with ease.
  * Author:      Smackcoders
@@ -38,79 +38,8 @@ namespace Smackcoders\FCSV;
 if ( ! defined( 'ABSPATH' ) )
 	exit; // Exit if accessed directly
 
-include_once('Plugin.php');
 
-include_once('extensionModules/MappingExtension.php');
-include_once('SmackCSVImporterInstall.php');
-include_once('languages/LangIT.php');
-include_once('languages/LangEN.php');
-include_once('languages/LangGE.php');
-include_once('languages/LangFR.php');
-include_once('languages/LangRU.php');
-include_once('languages/LangPT.php');
-include_once('languages/LangTR.php');
-include_once('languages/LangES.php');
-include_once('languages/LangJA.php');
-include_once('languages/LangNL.php');
-include_once('languages/LangenGB.php');
-include_once('languages/LangenCA.php');
-include_once('languages/LangenZA.php');
-include_once('Tables.php');
-include_once('SmackCSVImporterUninstall.php');
-include_once('InstallAddons.php');
-include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-if (is_plugin_active('wp-ultimate-csv-importer/wp-ultimate-csv-importer.php')) {
-
-	$plugin_pages = ['com.smackcoders.csvimporternew.menu'];
-	define('FCSVPLUGINDIR', plugin_dir_path(__FILE__));
-	include __DIR__ . '/wp-csv-hooks.php';
-	global $plugin_ajax_hooks;
-
-	$request_page = isset($_REQUEST['page']) ? $_REQUEST['page'] : '';
-	$request_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
-
-	if (in_array($request_page, $plugin_pages) || in_array($request_action, $plugin_ajax_hooks)) {
-		$extension_uploader = glob( __DIR__ . '/extensionUploader/*.php');
-		foreach ($extension_uploader as $extension_upload_value) {
-			include_once($extension_upload_value);
-		}
-
-		$upload_modules = glob( __DIR__ . '/uploadModules/*.php');
-		foreach ($upload_modules as $upload_module_value) {
-			include_once($upload_module_value);
-		}
-
-		$extension_modules = glob( __DIR__ . '/extensionModules/*.php');
-		foreach ($extension_modules as $extension_module_value) {
-			include_once($extension_module_value);
-		}
-
-		$manager_extension = glob( __DIR__ . '/managerExtensions/*.php');
-		foreach ($manager_extension as $manager_extension_value) {
-			include_once($manager_extension_value);
-		}
-
-		$import_extensions = glob( __DIR__ . '/importExtensions/*.php');
-		foreach ($import_extensions as $import_extension_value) {
-			include_once($import_extension_value);
-		}
-
-		$export_extensions = glob( __DIR__ . '/exportExtensions/*.php');
-		foreach ($export_extensions as $export_extension_value) {
-			include_once($export_extension_value);
-		}
-
-		include_once('SaveMapping.php');
-		include_once('MediaHandling.php');
-		include_once('ImportConfiguration.php');
-		include_once('Dashboard.php');
-		include_once('DragandDropExtension.php');
-		include_once('controllers/SendPassword.php');
-		include_once('controllers/SupportMail.php');
-		include_once('controllers/Security.php');
-	}
-}
-class SmackCSV extends MappingExtension{
+class SmackCSV{
 
 	protected static $instance = null;
 	private static $table_instance = null;
@@ -147,14 +76,16 @@ class SmackCSV extends MappingExtension{
 	private static $japanese_instance = null;
 	private static $dutch_instance = null;
 	private static $en_ZA_instance = null;
+	private static $tamil_instance = null;
+	private static $arabic_instance = null;
+	private static $persian_instance = null;
+	private static $chinese_instance = null;
 	private static $addon_instance = null;
-	public $version = '6.3';
+	public $version = '7.0';
 
 	public function __construct(){ 
 
 		add_action('init', array(__CLASS__, 'show_admin_menus'));
-		// add_action('popup', array(__CLASS__, 'deactivate_popup'));
-		// do_action('popup');
 
 		//action to register in wordpress tools
 		add_action( 'admin_init', array( __CLASS__, 'csv_register_importers' ) );
@@ -169,12 +100,6 @@ class SmackCSV extends MappingExtension{
 		exit;
 	}
 
-	public static function deactivate_popup(){
-		wp_register_script('deactivateJs',plugins_url( 'assets/js/deps/wp-deactivate-popup.js', __FILE__), array('jquery'));
-		wp_enqueue_script('deactivateJs');   
-		wp_enqueue_style('deactivateCss', plugins_url( 'assets/css/deps/wp-deactivate-popup.css', __FILE__));
-	}
-
 	public static function show_admin_menus(){
 		$ucisettings = get_option('sm_uci_pro_settings');
 		if( is_user_logged_in() ) {
@@ -182,11 +107,11 @@ class SmackCSV extends MappingExtension{
 			$role = ( array ) $user->roles;
 		} 
 		if(!empty($role) && !empty($role[0]=='administrator')){
-			if ( is_user_logged_in() &&  current_user_can('administrator') ) {
+			if ( is_user_logged_in() &&  current_user_can('manage_options') ) {
 				add_action('admin_menu',array(__CLASS__,'testing_function'));
 			}
 		}else{
-			if ( is_user_logged_in() && ( current_user_can( 'author') || current_user_can('editor') ) && $ucisettings['author_editor_access'] == "true" ) {
+			if ( is_user_logged_in() && ( current_user_can( 'edit_published_posts')) && $ucisettings['author_editor_access'] == "true" ) {
 				add_action('admin_menu',array(__CLASS__,'editor_menu'));
 			}
 		}
@@ -234,6 +159,10 @@ class SmackCSV extends MappingExtension{
 			SmackCSV::$dutch_instance = LangNL::getInstance();
 			SmackCSV::$turkish_instance = LangJA::getInstance();
 			SmackCSV::$en_ZA_instance = LangEN_ZA::getInstance();
+			SmackCSV::$tamil_instance = LangTA::getInstance();
+			SmackCSV::$arabic_instance = LangAR::getInstance();
+			SmackCSV::$persian_instance = LangFA::getInstance();
+			SmackCSV::$chinese_instance = LangZH::getInstance();
 			add_filter('https_local_ssl_verify', '__return_false' );
 			add_filter('https_ssl_verify', '__return_false');
 			if ( ! function_exists( 'is_plugin_active' ) ) {
@@ -278,18 +207,29 @@ class SmackCSV extends MappingExtension{
 		include_once('hire-us.php');
 	}
 
-	public static function importer_addons_page(){
-		include_once('recommended-addons.php');
+	public static function importer_addons_page(){		
+		wp_register_script('script_csv_importer_recommend_addon',plugins_url( 'assets/js/deps/recommendedAddons.js', __FILE__), array('jquery'));
+		
+			/* Create Nonce */
+			$secure_uniquekey_csv = array(
+				'url' => admin_url('admin-ajax.php') ,
+				'nonce' => wp_create_nonce('smack-ultimate-csv-importer'),
+				'imagePath' => plugins_url('/assets/images/', __FILE__)
+			);
+		   
+			wp_localize_script('script_csv_importer_recommend_addon', 'smack_nonce_object', $secure_uniquekey_csv);
+			wp_enqueue_script('script_csv_importer_recommend_addon');
+		include_once('recommended-addons.php');		
 	}
 
 	public static function load_admin_js() {
 		add_action('admin_enqueue_scripts',array(__CLASS__,'csv_enqueue_function'));
 	}
 
-	public function editor_menu (){
+	public static function editor_menu (){
 
 		remove_menu_page('com.smackcoders.csvimporternew.menu');
-		$my_page = add_menu_page('Ultimate CSV Importer Free', 'Ultimate CSV Importer Free', '2',
+		$my_page = add_menu_page('Ultimate CSV Importer Free', 'Ultimate CSV Importer Free', 'edit_published_posts',
 			'com.smackcoders.csvimporternew.menu',array(__CLASS__,'menu_testing_function'),plugins_url("assets/images/wp-ultimate-csv-importer.png",__FILE__));
 		add_action('load-'.$my_page, array(__CLASS__, 'load_admin_js'));
 	}
@@ -308,15 +248,14 @@ class SmackCSV extends MappingExtension{
 		wp_register_script(SmackCSV::$plugin_instance->getPluginSlug().'bootstrap',plugins_url( 'assets/js/deps/bootstrap.min.js', __FILE__), array('jquery'));
 		wp_enqueue_script(SmackCSV::$plugin_instance->getPluginSlug().'bootstrap');
 		wp_register_script(SmackCSV::$plugin_instance->getPluginSlug().'main-js',plugins_url( 'assets/js/deps/main.js', __FILE__), array('jquery'));
-		wp_enqueue_script(SmackCSV::$plugin_instance->getPluginSlug().'main-js');
-		// wp_register_script(SmackCSV::$plugin_instance->getPluginSlug().'file-tree',plugins_url( 'assets/js/deps/jQueryFileTree.min.js', __FILE__), array('jquery'));
-		// wp_enqueue_script(SmackCSV::$plugin_instance->getPluginSlug().'file-tree');
+		wp_enqueue_script(SmackCSV::$plugin_instance->getPluginSlug().'main-js');		
 		wp_localize_script(SmackCSV::$plugin_instance->getPluginSlug().'script_csv_importer', 'wpr_object', array('imagePath' => plugins_url('/assets/images/', __FILE__)  ));
 		$upload_url = $upload_base_url . '/smack_uci_uploads/imports';
 		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug().'bootstrap-css', plugins_url( 'assets/css/deps/bootstrap.min.css', __FILE__));
 		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug().'filepond-css', plugins_url( 'assets/css/deps/filepond.min.css', __FILE__));
 		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug().'react-datepicker-css', plugins_url( 'assets/css/deps/react-datepicker.css', __FILE__));
-		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug().'react-toasty-css', plugins_url( 'assets/css/deps/ReactToastify.min.css', __FILE__));	
+		//wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug().'react-toasty-css', plugins_url( 'assets/css/deps/ReactToastify.min.css', __FILE__));	
+		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug().'react-toastify-css', plugins_url( 'assets/css/deps/ReactToastify.css', __FILE__));	
 		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug().'csv-importer-css', plugins_url( 'assets/css/deps/csv-importer-free.css', __FILE__));
 		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug().'csv-importer-roboto-css', plugins_url( 'assets/css/deps/csv-importerfree-roboto.css', __FILE__));
 		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug().'csv-importer-poppins-css', plugins_url( 'assets/css/deps/csv-importerfree-poppins.css', __FILE__));
@@ -324,7 +263,8 @@ class SmackCSV extends MappingExtension{
 		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug() . 'style-poppins-css', plugins_url('assets/css/deps/style-poppins.css', __FILE__));
 		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug() . 'style-roboto-css', plugins_url('assets/css/deps/style-roboto.css', __FILE__));
 
-		wp_register_script(SmackCSV::$plugin_instance->getPluginSlug().'main-js',plugins_url( 'assets/js/deps/main.js', __FILE__), array('jquery'));
+		wp_enqueue_style(SmackCSV::$plugin_instance->getPluginSlug() . 'react-confirm-alert-css', plugins_url('assets/css/deps/react-confirm-alert.css', __FILE__));
+
 		wp_enqueue_script(SmackCSV::$plugin_instance->getPluginSlug().'main-js');
 		wp_register_script(SmackCSV::$plugin_instance->getPluginSlug().'script_csv_importer',plugins_url( 'assets/js/admin-v6.1.js', __FILE__), array('jquery'));
 		wp_enqueue_script(SmackCSV::$plugin_instance->getPluginSlug().'script_csv_importer');
@@ -389,11 +329,39 @@ class SmackCSV extends MappingExtension{
 			$response = wp_json_encode($contents);
 			wp_localize_script(SmackCSV::$plugin_instance->getPluginSlug() . 'script_csv_importer', 'wpr_object', array('file' => $response, __FILE__, 'imagePath' => plugins_url('/assets/images/', __FILE__),'logfielpath' => $upload_url));
 		}
+		elseif ($language == 'ta_IN') {
+			$contents = SmackCSV::$tamil_instance->contents();
+			$response = wp_json_encode($contents);
+			wp_localize_script(SmackCSV::$plugin_instance->getPluginSlug() . 'script_csv_importer', 'wpr_object', array('file' => $response, __FILE__, 'imagePath' => plugins_url('/assets/images/', __FILE__),'logfielpath' => $upload_url));
+		}
+		elseif ($language == 'ar') {
+			$contents = SmackCSV::$arabic_instance->contents();
+			$response = wp_json_encode($contents);
+			wp_localize_script(SmackCSV::$plugin_instance->getPluginSlug() . 'script_csv_importer', 'wpr_object', array('file' => $response, __FILE__, 'imagePath' => plugins_url('/assets/images/', __FILE__),'logfielpath' => $upload_url));
+		}
+		elseif ($language == 'fa_IR') {
+			$contents = SmackCSV::$persian_instance->contents();
+			$response = wp_json_encode($contents);
+			wp_localize_script(SmackCSV::$plugin_instance->getPluginSlug() . 'script_csv_importer', 'wpr_object', array('file' => $response, __FILE__, 'imagePath' => plugins_url('/assets/images/', __FILE__),'logfielpath' => $upload_url));
+		}
+		elseif ($language == 'zh_CN') {
+			$contents = SmackCSV::$chinese_instance->contents();
+			$response = wp_json_encode($contents);
+			wp_localize_script(SmackCSV::$plugin_instance->getPluginSlug() . 'script_csv_importer', 'wpr_object', array('file' => $response, __FILE__, 'imagePath' => plugins_url('/assets/images/', __FILE__),'logfielpath' => $upload_url));
+		}
 		else{
 			$contents = SmackCSV::$en_instance->contents();
 			$response = wp_json_encode($contents);
 			wp_localize_script(SmackCSV::$plugin_instance->getPluginSlug().'script_csv_importer', 'wpr_object', array( 'file' => $response,__FILE__ , 'imagePath' => plugins_url('/assets/images/', __FILE__),'logfielpath' => $upload_url));
 		}
+
+		/* Create Nonce */
+        $secure_uniquekey_csv = array(
+            'url' => admin_url('admin-ajax.php') ,
+            'nonce' => wp_create_nonce('smack-ultimate-csv-importer')
+        );
+       
+		wp_localize_script(SmackCSV::$plugin_instance->getPluginSlug().'script_csv_importer', 'smack_nonce_object', $secure_uniquekey_csv);
 	}
 
 
@@ -461,8 +429,7 @@ class SmackCSV extends MappingExtension{
 		) );
 	}
 
-	public function activate_maintenance_mode() { 
-		include(ABSPATH . "wp-includes/pluggable.php");
+	public function activate_maintenance_mode() { 		
 		global $maintainance_text;
 		$maintainance_text = "Site is under maintenance mode. Please wait few min!";
 		if(!current_user_can('manage_options')) {
@@ -472,8 +439,36 @@ class SmackCSV extends MappingExtension{
 	} 
 }
 
-global $csv_class;
-$csv_class = new SmackCSV();
+include_once('Plugin.php');
+include_once('extensionModules/MappingExtension.php');
+include_once('SmackCSVImporterInstall.php');
+include_once('languages/LangIT.php');
+include_once('languages/LangEN.php');
+include_once('languages/LangGE.php');
+include_once('languages/LangFR.php');
+include_once('languages/LangRU.php');
+include_once('languages/LangPT.php');
+include_once('languages/LangTR.php');
+include_once('languages/LangES.php');
+include_once('languages/LangJA.php');
+include_once('languages/LangNL.php');
+include_once('languages/LangenGB.php');
+include_once('languages/LangenCA.php');
+include_once('languages/LangenZA.php');
+include_once('languages/LangTA.php');
+include_once('languages/LangAR.php');
+include_once('languages/LangFA.php');
+include_once('languages/LangZH.php');
+include_once('Tables.php');
+include_once('SmackCSVImporterUninstall.php');
+include_once('InstallAddons.php');
+if ( ! function_exists( 'is_plugin_active' ) ) {
+	include_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+if (is_plugin_active('wp-ultimate-csv-importer/wp-ultimate-csv-importer.php')) {	
+	global $csv_class;
+	$csv_class = new SmackCSV();		
+}
 
 $activate_plugin = new SmackCSVInstall();
 $deactive_plugin = SmackUCIUnInstall::getInstance();
@@ -481,17 +476,71 @@ register_activation_hook( __FILE__, array($activate_plugin,'install'));
 register_deactivation_hook(__FILE__, array($deactive_plugin, 'unInstall'));
 add_action( 'plugins_loaded', 'Smackcoders\\FCSV\\onpluginsload' );
 
-function onpluginsload(){
+function onpluginsload(){	
+	$ucisettings = get_option('sm_uci_pro_settings');
+	if( is_user_logged_in() ) {
+		$user = wp_get_current_user();
+		$role = ( array ) $user->roles;
+	} 
+	if(!empty($role) && !empty($role[0]=='administrator')){
+		if ( is_user_logged_in() &&  current_user_can('manage_options') ) {
+			loadbasic();
+		}
+	}else{
+		if ( is_user_logged_in() && ( current_user_can( 'edit_published_posts')) && $ucisettings['author_editor_access'] == "true" ) {
+			loadbasic();
+		}
+	}
+}
+
+function loadbasic(){
 	$plugin_pages = ['com.smackcoders.csvimporternew.menu'];
 	include __DIR__ . '/wp-csv-hooks.php';
 	global $plugin_ajax_hooks;
 
-	$request_page = isset($_REQUEST['page']) ? $_REQUEST['page'] : '';
-	$request_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+	$request_page = isset($_REQUEST['page']) ? sanitize_text_field($_REQUEST['page']) : '';
+	$request_action = isset($_REQUEST['action']) ? sanitize_text_field($_REQUEST['action']): '';	
 
-	if (in_array($request_page, $plugin_pages) || in_array($request_action, $plugin_ajax_hooks)) {	
-		$plugin = SmackCSV::getInstance();	
-	}
+	if (in_array($request_page, $plugin_pages) || in_array($request_action, $plugin_ajax_hooks)) {		
+		$extension_uploader = glob( __DIR__ . '/extensionUploader/*.php');
+		foreach ($extension_uploader as $extension_upload_value) {
+			include_once($extension_upload_value);
+		}		
+
+		$upload_modules = glob( __DIR__ . '/uploadModules/*.php');
+		foreach ($upload_modules as $upload_module_value) {
+			include_once($upload_module_value);
+		}
+
+		$extension_modules = glob( __DIR__ . '/extensionModules/*.php');
+		foreach ($extension_modules as $extension_module_value) {
+			include_once($extension_module_value);
+		}
+
+		$manager_extension = glob( __DIR__ . '/managerExtensions/*.php');
+		foreach ($manager_extension as $manager_extension_value) {
+			include_once($manager_extension_value);
+		}
+
+		$import_extensions = glob( __DIR__ . '/importExtensions/*.php');
+		foreach ($import_extensions as $import_extension_value) {
+			include_once($import_extension_value);
+		}
+
+		$export_extensions = glob( __DIR__ . '/exportExtensions/*.php');
+		foreach ($export_extensions as $export_extension_value) {
+			include_once($export_extension_value);
+		}		
+		include_once('SaveMapping.php');
+		include_once('MediaHandling.php');
+		include_once('ImportConfiguration.php');
+		include_once('Dashboard.php');
+		include_once('DragandDropExtension.php');
+		include_once('controllers/SendPassword.php');
+		include_once('controllers/SupportMail.php');
+		include_once('controllers/Security.php');
+		$plugin = SmackCSV::getInstance();			
+	}	
 }
 
 ?>

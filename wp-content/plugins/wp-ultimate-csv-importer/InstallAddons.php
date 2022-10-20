@@ -39,28 +39,36 @@ class InstallAddons {
     }
     
     public function install(){
-			delete_option("WP_ULTIMATE_ADDONS_FAILED");
-		
-			$fields = $_POST;
-			foreach($fields as $fieldKey => $fieldVal ){
-				if( is_array($fieldVal)){
-					$postvalue[$fieldKey] = array_map( 'sanitize_text_field', $fieldVal );
-				}
-				else{
-					$postvalue[$fieldKey] = sanitize_text_field($fieldVal);
-				}
-			}
-			
-			$all_addons = $postvalue['all_addons'];
-			$selected_addons = $postvalue['addons'];
-			$last_iteration = $postvalue['last_iteration'];
+		check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
+		delete_option("WP_ULTIMATE_ADDONS_FAILED");
 	
+		$fields = $_POST;
+		foreach($fields as $fieldKey => $fieldVal ){
+			if( is_array($fieldVal)){
+				$postvalue[$fieldKey] = array_map( 'sanitize_text_field', $fieldVal );
+			}
+			else{
+				$postvalue[$fieldKey] = sanitize_text_field($fieldVal);
+			}
+		}
+		
+		$all_addons = $postvalue['all_addons'];
+		$selected_addons = $postvalue['addons'];
+		$last_iteration = $postvalue['last_iteration'];
+
+		if(count($all_addons) == 0){
+			update_option("WP_ULTIMATE_SELECTED_ADDON_Users", "unchecked");
+            update_option("WP_ULTIMATE_SELECTED_ADDON_WooCommerce", "unchecked");
+            update_option("WP_ULTIMATE_SELECTED_ADDON_Exporter", "unchecked");
+		}
+		else{
 			self::plugin_install($selected_addons, $last_iteration);
 			self::activate_all($all_addons);
-			print "Plugin Installed";
 		}
+		print "Plugin Installed";
+	}
 
-		public function activate_all($get_all_selected_addons){
+		public function activate_all($get_all_selected_addons){		
 			foreach($get_all_selected_addons as $selected_addon){
 				if($selected_addon == 'Users'){
 					activate_plugin('import-users/import-users.php');
@@ -151,7 +159,7 @@ class InstallAddons {
 		}
 	
 		if ( $installed ) {
-			$activate = activate_plugin( $plugin_slug );
+			$activate = activate_plugin( $plugin_slug );			
 			if ( is_null($activate) ) {
 			}
 		} else {
@@ -185,8 +193,10 @@ class InstallAddons {
 	/**
 	 * Code for Install plugin  
 	 **/
-	public function install_plugin( $plugin_zip ) {
-		include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+	public function install_plugin( $plugin_zip ) {	
+		if ( ! class_exists( 'Plugin_Upgrader' ) ) {
+			include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+		}			
 		wp_cache_flush();
 		$upgrader = new \Plugin_Upgrader();
 		$installed = $upgrader->install( $plugin_zip );
@@ -196,7 +206,9 @@ class InstallAddons {
 	}
 
 	public function upgrade_plugin( $plugin_slug ) {
-		include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+		if ( ! class_exists( 'Plugin_Upgrader' ) ) {
+			include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+		}		
 		wp_cache_flush();
 		$upgrader = new \Plugin_Upgrader();
 		$upgraded = $upgrader->upgrade( $plugin_slug );
