@@ -1,7 +1,6 @@
 /**
  * External dependencies
  */
-import { kebabCase } from 'lodash';
 import { decodeEntities } from '@wordpress/html-entities';
 import type { ProductResponseItemData } from '@woocommerce/type-defs/product-response';
 
@@ -30,20 +29,17 @@ const ProductDetails = ( {
 	return (
 		<ul className="wc-block-components-product-details">
 			{ details.map( ( detail ) => {
-				const className = detail.name
-					? `wc-block-components-product-details__${ kebabCase(
-							detail.name
-					  ) }`
-					: '';
+				// Support both `key` and `name` props
+				const name = detail?.key || detail.name || '';
 				return (
 					<li
-						key={ detail.name + ( detail.display || detail.value ) }
-						className={ className }
+						key={ name + ( detail.display || detail.value ) }
+						className="wc-block-components-product-details__item"
 					>
-						{ detail.name && (
+						{ name && (
 							<>
 								<span className="wc-block-components-product-details__name">
-									{ decodeEntities( detail.name ) }:
+									{ decodeEntities( name ) }:
 								</span>{ ' ' }
 							</>
 						) }
