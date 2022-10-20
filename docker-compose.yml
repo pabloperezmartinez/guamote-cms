@@ -15,7 +15,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
 
   web:
-    image: php:7.3.16-apache
+    image: php:7.4.32-apache
     domainname: uiofxco.test
     container_name: uiofxco.test
     build:
